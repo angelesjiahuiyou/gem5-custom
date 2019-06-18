@@ -1,0 +1,11 @@
+2-2-2-2,8-8-8-2
+4-11-2-2,8-14-8-2
+8-14-2-2,14-28-8-2
+
+# Row (separated by comma):
+# - L1 {read, write, tag, resp} latency,
+# - L2 {read, write, tag, resp} latency.
+# Column (separated by new line):
+# - SRAM,
+# - STT-MRAM typical case,
+# - STT-MRAM worst case.
