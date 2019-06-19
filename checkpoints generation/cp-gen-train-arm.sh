@@ -60,12 +60,12 @@ cp -r $SPEC/464.h264ref/data/train/input/* .
 cd ../../..
 
 # 465.tonto
-echo "465.tonto"
-mkdir -p 465.tonto/checkpoint/train 465.tonto/checkpoint/tmp_train
-cd 465.tonto/checkpoint/tmp_train
-cp -r $SPEC/465.tonto/data/train/input/* .
-(time $GEM5/build/ARM/gem5.opt --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/465.tonto/simpoint/simpoint_train,$BENCH_DATA/arm/465.tonto/simpoint/weight_train,100000000,0 --output=../train/465tonto.out --mem-size=64GB --cmd=$SPEC/465.tonto/exe/tonto_base.arm --options="< stdin") &> ../train/gem5.465tonto.log &
-cd ../../..
+#echo "465.tonto"
+#mkdir -p 465.tonto/checkpoint/train 465.tonto/checkpoint/tmp_train
+#cd 465.tonto/checkpoint/tmp_train
+#cp -r $SPEC/465.tonto/data/train/input/* .
+#(time $GEM5/build/ARM/gem5.opt --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/465.tonto/simpoint/simpoint_train,$BENCH_DATA/arm/465.tonto/simpoint/weight_train,100000000,0 --output=../train/465tonto.out --mem-size=64GB --cmd=$SPEC/465.tonto/exe/tonto_base.arm --options="< stdin") &> ../train/gem5.465tonto.log &
+#cd ../../..
 
 # 470.lbm
 echo "470.lbm"
@@ -93,14 +93,14 @@ cp -r $SPEC/473.astar/data/train/input/* .
 cd ../../..
 
 # 481.wrf
-echo "481.wrf"
-mkdir -p 481.wrf/checkpoint/train 481.wrf/checkpoint/tmp_train
-cd 481.wrf/checkpoint/tmp_train
-cp -r $SPEC/481.wrf/data/all/input/* .
-cp -r $SPEC/481.wrf/data/train/input/* .
-cp -r le/32/* .
-(time $GEM5/build/ARM/gem5.opt --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/481.wrf/simpoint/simpoint_train,$BENCH_DATA/arm/481.wrf/simpoint/weight_train,100000000,0 --output=../train/481wrf.out --mem-size=64GB --cmd=$SPEC/481.wrf/exe/wrf_base.arm) &> ../train/gem5.481wrf.log &
-cd ../../..
+#echo "481.wrf"
+#mkdir -p 481.wrf/checkpoint/train 481.wrf/checkpoint/tmp_train
+#cd 481.wrf/checkpoint/tmp_train
+#cp -r $SPEC/481.wrf/data/all/input/* .
+#cp -r $SPEC/481.wrf/data/train/input/* .
+#cp -r le/32/* .
+#(time $GEM5/build/ARM/gem5.opt --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/481.wrf/simpoint/simpoint_train,$BENCH_DATA/arm/481.wrf/simpoint/weight_train,100000000,0 --output=../train/481wrf.out --mem-size=64GB --cmd=$SPEC/481.wrf/exe/wrf_base.arm) &> ../train/gem5.481wrf.log &
+#cd ../../..
 
 # 482.sphinx3
 echo "482.sphinx3"

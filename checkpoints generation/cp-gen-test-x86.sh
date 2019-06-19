@@ -55,12 +55,12 @@ cp -r $SPEC/464.h264ref/data/test/input/* .
 cd ../../..
 
 # 465.tonto
-echo "465.tonto"
-mkdir -p 465.tonto/checkpoint/test 465.tonto/checkpoint/tmp_test
-cd 465.tonto/checkpoint/tmp_test
-cp -r $SPEC/465.tonto/data/test/input/* .
-(time $GEM5/build/X86/gem5.opt --outdir=../test $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/465.tonto/simpoint/simpoint_test,$BENCH_DATA/x86/465.tonto/simpoint/weight_test,100000000,0 --output=../test/465tonto.out --cmd=$SPEC/465.tonto/exe/tonto_base.x86 --options="< stdin") &> ../test/gem5.465tonto.log &
-cd ../../..
+#echo "465.tonto"
+#mkdir -p 465.tonto/checkpoint/test 465.tonto/checkpoint/tmp_test
+#cd 465.tonto/checkpoint/tmp_test
+#cp -r $SPEC/465.tonto/data/test/input/* .
+#(time $GEM5/build/X86/gem5.opt --outdir=../test $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/465.tonto/simpoint/simpoint_test,$BENCH_DATA/x86/465.tonto/simpoint/weight_test,100000000,0 --output=../test/465tonto.out --cmd=$SPEC/465.tonto/exe/tonto_base.x86 --options="< stdin") &> ../test/gem5.465tonto.log &
+#cd ../../..
 
 # 470.lbm
 echo "470.lbm"
