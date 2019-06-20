@@ -59,12 +59,12 @@ then
     mkdir -p 459.GemsFDTD/valgrind
 fi
 cd 459.GemsFDTD
-cp $SPEC/459.GemsFDTD/data/test/input/* .
+ln -s $SPEC/459.GemsFDTD/data/test/input/* .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.459GemsFDTD.test --pc-out-file=valgrind/pc.459GemsFDTD.test $SPEC/459.GemsFDTD/exe/GemsFDTD_base.arm &> valgrind/459GemsFDTD_test.out
 wait
 echo "- generated test bbv"
 rm sphere.pec test.in yee.dat sphere_td.nft
-cp $SPEC/459.GemsFDTD/data/train/input/* .
+ln -s $SPEC/459.GemsFDTD/data/train/input/* .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.459GemsFDTD.train --pc-out-file=valgrind/pc.459GemsFDTD.train $SPEC/459.GemsFDTD/exe/GemsFDTD_base.arm &> valgrind/459GemsFDTD_train.out
 wait
 echo "- generated train bbv"
@@ -93,7 +93,7 @@ then
     mkdir -p 464.h264ref/valgrind
 fi
 cd 464.h264ref
-cp $SPEC/464.h264ref/data/all/input/foreman_qcif.yuv .
+ln -s $SPEC/464.h264ref/data/all/input/foreman_qcif.yuv .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.464h264ref.test --pc-out-file=valgrind/pc.464h264ref.test $SPEC/464.h264ref/exe/h264ref_base.arm -d $SPEC/464.h264ref/data/test/input/foreman_test_encoder_baseline.cfg &> valgrind/464h264ref_test.out
 wait
 echo "- generated test bbv"
@@ -112,12 +112,12 @@ then
     mkdir -p 465.tonto/valgrind
 fi
 cd 465.tonto
-cp $SPEC/465.tonto/data/test/input/stdin .
+ln -s $SPEC/465.tonto/data/test/input/stdin .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.465tonto.test --pc-out-file=valgrind/pc.465tonto.test $SPEC/465.tonto/exe/tonto_base.arm &> valgrind/465tonto_test.out
 wait
 echo "- generated test bbv"
 rm stdin stdout
-cp $SPEC/465.tonto/data/train/input/stdin .
+ln -s $SPEC/465.tonto/data/train/input/stdin .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.465tonto.train --pc-out-file=valgrind/pc.465tonto.train $SPEC/465.tonto/exe/tonto_base.arm &> valgrind/465tonto_train.out
 wait
 echo "- generated train bbv"
@@ -131,12 +131,12 @@ then
     mkdir -p 470.lbm/valgrind
 fi
 cd 470.lbm
-cp $SPEC/470.lbm/data/test/input/100_100_130_cf_a.of .
+ln -s $SPEC/470.lbm/data/test/input/100_100_130_cf_a.of .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.470lbm.test --pc-out-file=valgrind/pc.470lbm.test $SPEC/470.lbm/exe/lbm_base.arm 20 reference.dat 0 1 100_100_130_cf_a.of &> valgrind/470lbm_test.out
 wait
 echo "- generated test bbv"
 rm 100_100_130_cf_a.of
-cp $SPEC/470.lbm/data/train/input/100_100_130_cf_b.of .
+ln -s $SPEC/470.lbm/data/train/input/100_100_130_cf_b.of .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.470lbm.train --pc-out-file=valgrind/pc.470lbm.train $SPEC/470.lbm/exe/lbm_base.arm 300 reference.dat 0 1 100_100_130_cf_b.of &> valgrind/470lbm_train.out
 wait
 echo "- generated train bbv"
@@ -150,12 +150,12 @@ then
     mkdir -p 471.omnetpp/valgrind
 fi
 cd 471.omnetpp
-cp $SPEC/471.omnetpp/data/test/input/omnetpp.ini .
+ln -s $SPEC/471.omnetpp/data/test/input/omnetpp.ini .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.471omnetpp.test --pc-out-file=valgrind/pc.471omnetpp.test $SPEC/471.omnetpp/exe/omnetpp_base.arm &> valgrind/471omnetpp_test.out
 wait
 echo "- generated test bbv"
 rm omnetpp.ini omnetpp.sca
-cp $SPEC/471.omnetpp/data/train/input/omnetpp.ini .
+ln -s $SPEC/471.omnetpp/data/train/input/omnetpp.ini .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.471omnetpp.train --pc-out-file=valgrind/pc.471omnetpp.train $SPEC/471.omnetpp/exe/omnetpp_base.arm &> valgrind/471omnetpp_train.out
 wait
 echo "- generated train bbv"
@@ -169,13 +169,13 @@ then
     mkdir -p 473.astar/valgrind
 fi
 cd 473.astar
-cp $SPEC/473.astar/data/test/input/lake.bin .
+ln -s $SPEC/473.astar/data/test/input/lake.bin .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.473astar.test --pc-out-file=valgrind/pc.473astar.test $SPEC/473.astar/exe/astar_base.arm $SPEC/473.astar/data/test/input/lake.cfg &> valgrind/473astar_test.out
 wait
 echo "- generated test bbv"
 rm lake.bin
-cp $SPEC/473.astar/data/train/input/BigLakes1024.bin .
-cp $SPEC/473.astar/data/train/input/rivers.bin .
+ln -s $SPEC/473.astar/data/train/input/BigLakes1024.bin .
+ln -s $SPEC/473.astar/data/train/input/rivers.bin .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.473astar.BigLakes1024.train --pc-out-file=valgrind/pc.473astar.BigLakes1024.train $SPEC/473.astar/exe/astar_base.arm $SPEC/473.astar/data/train/input/BigLakes1024.cfg &> valgrind/473astar_BigLakes1024_train.out
 wait
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.473astar.rivers.train --pc-out-file=valgrind/pc.473astar.rivers.train $SPEC/473.astar/exe/astar_base.arm $SPEC/473.astar/data/train/input/rivers1.cfg &> valgrind/473astar_rivers_train.out
@@ -191,14 +191,14 @@ then
     mkdir -p 481.wrf/valgrind
 fi
 cd 481.wrf
-cp -r $SPEC/481.wrf/data/all/input/* .
-cp le/32/RRTM_DATA .
-cp $SPEC/481.wrf/data/test/input/* .
+ln -s $SPEC/481.wrf/data/all/input/* .
+ln -s le/32/RRTM_DATA .
+ln -s $SPEC/481.wrf/data/test/input/* .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.481wrf.test --pc-out-file=valgrind/pc.481wrf.test $SPEC/481.wrf/exe/wrf_base.arm &> valgrind/481wrf_test.out
 wait
 echo "- generated test bbv"
 rm namelist.input  wrfbdy_d01  wrfinput_d01
-cp $SPEC/481.wrf/data/train/input/* .
+ln -s $SPEC/481.wrf/data/train/input/* .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.481wrf.train --pc-out-file=valgrind/pc.481wrf.train $SPEC/481.wrf/exe/wrf_base.arm &> valgrind/481wrf_train.out
 wait
 echo "- generated train bbv"
@@ -214,8 +214,8 @@ then
     mkdir -p 482.sphinx3/valgrind
 fi
 cd 482.sphinx3
-cp -r $SPEC/482.sphinx3/data/all/input/* .
-cp $SPEC/482.sphinx3/data/test/input/* .
+ln -s $SPEC/482.sphinx3/data/all/input/* .
+ln -s $SPEC/482.sphinx3/data/test/input/* .
 rm *.be.raw
 for file in *.le.raw
 do
@@ -226,7 +226,7 @@ valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.482sphinx3.test --pc-out-f
 wait
 echo "- generated test bbv"
 rm an406-fcaw-b.raw an407-fcaw-b.raw args.an4 beams.dat ctlfile considered.out total_considered.out
-cp $SPEC/482.sphinx3/data/train/input/* .
+ln -s $SPEC/482.sphinx3/data/train/input/* .
 rm *.be.raw
 for file in *.le.raw
 do
@@ -247,12 +247,12 @@ then
     mkdir -p 483.xalancbmk/valgrind
 fi
 cd 483.xalancbmk
-cp $SPEC/483.xalancbmk/data/test/input/100mb.xsd .
+ln -s $SPEC/483.xalancbmk/data/test/input/100mb.xsd .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.483xalancbmk.test --pc-out-file=valgrind/pc.483xalancbmk.test $SPEC/483.xalancbmk/exe/Xalan_base.arm -v $SPEC/483.xalancbmk/data/test/input/test.xml $SPEC/483.xalancbmk/data/test/input/xalanc.xsl &> valgrind/483xalancbmk_test.out
 wait
 echo "- generated test bbv"
 rm 100mb.xsd
-cp $SPEC/483.xalancbmk/data/train/input/train.xsd .
+ln -s $SPEC/483.xalancbmk/data/train/input/train.xsd .
 valgrind --tool=exp-bbv --bb-out-file=valgrind/bb.out.483xalancbmk.train --pc-out-file=valgrind/pc.483xalancbmk.train $SPEC/483.xalancbmk/exe/Xalan_base.arm -v $SPEC/483.xalancbmk/data/train/input/allbooks.xml $SPEC/483.xalancbmk/data/train/input/xalanc.xsl &> valgrind/483xalancbmk_train.out
 wait
 rm train.xsd

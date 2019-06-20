@@ -105,10 +105,10 @@ do
                 do
                     mkdir -p cp$cp/tmp
                     cd cp$cp/tmp
-                    cp -r $bench_dir/data/$dataset/input/* .
+                    ln -s $bench_dir/data/$dataset/input/* .
                     if [ -d "$bench_dir/data/all/input/" ]
                     then
-                        cp -r $bench_dir/data/all/input/* .
+                        ln -s $bench_dir/data/all/input/* .
                     fi
                     (time $gem5_dir/build/ARM/gem5.fast \
                     --outdir=.. \
