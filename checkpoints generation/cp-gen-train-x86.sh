@@ -84,7 +84,7 @@ echo "436.cactusADM"
 mkdir -p 436.cactusADM/checkpoint/{train,tmp_train}
 cd 436.cactusADM/checkpoint/tmp_train
 ln -s $SPEC/436.cactusADM/data/train/input/* .
-(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/436.cactusADM/simpoint/simpoint_train,$BENCH_DATA/x86/436.cactusADM/simpoint/weight_train,100000000,0 --output=../train/436cactusADM.out --cmd=$SPEC/436.cactusADM/exe/cactusADM_base.x86 --options="benchADM.par") &> ../train/gem5.436cactusADM.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/436.cactusADM/simpoint/simpoint_train,$BENCH_DATA/x86/436.cactusADM/simpoint/weight_train,100000000,0 --output=../train/436cactusADM.out --mem-size=2GB --cmd=$SPEC/436.cactusADM/exe/cactusADM_base.x86 --options="benchADM.par") &> ../train/gem5.436cactusADM.log &
 cd ../../..
 
 # 437.leslie3d
