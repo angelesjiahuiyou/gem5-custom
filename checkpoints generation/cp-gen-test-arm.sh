@@ -129,7 +129,7 @@ echo "450.soplex"
 mkdir -p 450.soplex/checkpoint/{test,tmp_test}
 cd 450.soplex/checkpoint/tmp_test
 ln -s $SPEC/450.soplex/data/test/input/* .
-(time $GEM5/build/ARM/gem5.fast --outdir=../test $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_test,$BENCH_DATA/arm/450.soplex/simpoint/weight_test,100000000,0 --output=../test/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-m10000 test.mps") &> ./test/gem5.450soplex.log &
+(time $GEM5/build/ARM/gem5.fast --outdir=../test $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_test,$BENCH_DATA/arm/450.soplex/simpoint/weight_test,100000000,0 --output=../test/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-m10000 test.mps") &> ../test/gem5.450soplex.log &
 cd ../../..
 
 # 453.povray

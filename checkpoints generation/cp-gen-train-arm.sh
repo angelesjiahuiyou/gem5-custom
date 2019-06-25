@@ -133,8 +133,8 @@ echo "450.soplex"
 mkdir -p 450.soplex/checkpoint/{pds-20,train,tmp}_train
 cd 450.soplex/checkpoint/tmp_train
 ln -s $SPEC/450.soplex/data/train/input/* .
-(time $GEM5/build/ARM/gem5.fast --outdir=../pds-20_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_pds-20_train,$BENCH_DATA/arm/450.soplex/simpoint/weight_pds-20_train,100000000,0 --output=../pds-20_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-s1 -e -m5000 pds-20.mps") &> ./pds-20_train/gem5.450soplex.log &
-(time $GEM5/build/ARM/gem5.fast --outdir=../train_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_train_train,$BENCH_DATA/arm/450.soplex/simpoint/weight_train_train,100000000,0 --output=../train_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-m1200 train.mps") &> ./train_train/gem5.450soplex.log &
+(time $GEM5/build/ARM/gem5.fast --outdir=../pds-20_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_pds-20_train,$BENCH_DATA/arm/450.soplex/simpoint/weight_pds-20_train,100000000,0 --output=../pds-20_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-s1 -e -m5000 pds-20.mps") &> ../pds-20_train/gem5.450soplex.log &
+(time $GEM5/build/ARM/gem5.fast --outdir=../train_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/arm/450.soplex/simpoint/simpoint_train_train,$BENCH_DATA/arm/450.soplex/simpoint/weight_train_train,100000000,0 --output=../train_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.arm --options="-m1200 train.mps") &> ../train_train/gem5.450soplex.log &
 cd ../../..
 
 # 453.povray
