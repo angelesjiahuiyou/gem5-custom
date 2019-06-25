@@ -2,6 +2,141 @@
 mkdir -p ~/cp_data_x86
 cd ~/cp_data_x86
 
+# 400.perlbench
+echo "400.perlbench"
+mkdir -p 400.perlbench/checkpoint/{scrabbl,suns,tmp}_train
+cd 400.perlbench/checkpoint/tmp_train
+ln -s $SPEC/400.perlbench/data/all/input/* .
+ln -s $SPEC/400.perlbench/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../scrabbl_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/400.perlbench/simpoint/simpoint_scrabbl_train,$BENCH_DATA/x86/400.perlbench/simpoint/weight_scrabbl_train,100000000,0 --output=../scrabbl_train/400perlbench.out --cmd=$SPEC/400.perlbench/exe/perlbench_base.x86 --options="-I. -I./lib scrabbl.pl") &> ../scrabbl_train/gem5.400perlbench.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../suns_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/400.perlbench/simpoint/simpoint_suns_train,$BENCH_DATA/x86/400.perlbench/simpoint/weight_suns_train,100000000,0 --output=../suns_train/400perlbench.out --cmd=$SPEC/400.perlbench/exe/perlbench_base.x86 --options="-I. -I./lib suns.pl") &> ../suns_train/gem5.400perlbench.log &
+cd ../../..
+
+# 401.bzip2
+echo "401.bzip2"
+mkdir -p 401.bzip2/checkpoint/{byoudoin_5,input_combined_80,input_program_10,tmp}_train
+cd 401.bzip2/checkpoint/tmp_train
+ln -s $SPEC/401.bzip2/data/all/input/* .
+ln -s $SPEC/401.bzip2/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../byoudoin_5_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/401.bzip2/simpoint/simpoint_byoudoin_5_train,$BENCH_DATA/x86/401.bzip2/simpoint/weight_byoudoin_5_train,100000000,0 --output=../byoudoin_5_train/401bzip.out --cmd=$SPEC/401.bzip2/exe/bzip2_base.x86 --options="byoudoin.jpg 5") &> ../byoudoin_5_train/gem5.401bzip2.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../input_combined_80_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/401.bzip2/simpoint/simpoint_input_combined_80_train,$BENCH_DATA/x86/401.bzip2/simpoint/weight_input_combined_80_train,100000000,0 --output=../input_combined_80_train/401bzip.out --cmd=$SPEC/401.bzip2/exe/bzip2_base.x86 --options="input.combined 80") &> ../input_combined_80_train/gem5.401bzip2.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../input_program_10_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/401.bzip2/simpoint/simpoint_input_program_10_train,$BENCH_DATA/x86/401.bzip2/simpoint/weight_input_program_10_train,100000000,0 --output=../input_program_10_train/401bzip.out --cmd=$SPEC/401.bzip2/exe/bzip2_base.x86 --options="input.program 10") &> ../input_program_10_train/gem5.401bzip2.log &
+cd ../../..
+
+# 403.gcc
+echo "403.gcc"
+mkdir -p 403.gcc/checkpoint/{train,tmp_train}
+cd 403.gcc/checkpoint/tmp_train
+ln -s $SPEC/403.gcc/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/403.gcc/simpoint/simpoint_train,$BENCH_DATA/x86/403.gcc/simpoint/weight_train,100000000,0 --output=../train/403gcc.out --cmd=$SPEC/403.gcc/exe/gcc_base.x86 --options="integrate.in -o integrate.s") &> ../train/gem5.403gcc.log &
+cd ../../..
+
+# 410.bwaves
+echo "410.bwaves"
+mkdir -p 410.bwaves/checkpoint/{train,tmp_train}
+cd 410.bwaves/checkpoint/tmp_train
+ln -s $SPEC/410.bwaves/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/410.bwaves/simpoint/simpoint_train,$BENCH_DATA/x86/410.bwaves/simpoint/weight_train,100000000,0 --output=../train/410bwaves.out --cmd=$SPEC/410.bwaves/exe/bwaves_base.x86 --options="bwaves.in") &> ../train/gem5.410bwaves.log &
+cd ../../..
+
+# 416.gamess
+#echo "416.gamess"
+#mkdir -p 416.gamess/checkpoint/{train,tmp_train}
+#cd 416.gamess/checkpoint/tmp_train
+#ln -s $SPEC/416.gamess/data/train/input/* .
+#(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/416.gamess/simpoint/simpoint_train,$BENCH_DATA/x86/416.gamess/simpoint/weight_train,100000000,0 --output=../train/416gamess.out --mem-size=2GB --cmd=$SPEC/416.gamess/exe/gamess_base.x86 --input="h2ocu2+_energy.config") &> ../train/gem5.416gamess.log &
+#cd ../../..
+
+# 429.mcf
+echo "429.mcf"
+mkdir -p 429.mcf/checkpoint/{train,tmp_train}
+cd 429.mcf/checkpoint/tmp_train
+ln -s $SPEC/429.mcf/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/429.mcf/simpoint/simpoint_train,$BENCH_DATA/x86/429.mcf/simpoint/weight_train,100000000,0 --output=../train/429mcf.out --cmd=$SPEC/429.mcf/exe/mcf_base.x86 --options="inp.in") &> ../train/gem5.429mcfb.log &
+cd ../../..
+
+# 433.milc
+echo "433.milc"
+mkdir -p 433.milc/checkpoint/{train,tmp_train}
+cd 433.milc/checkpoint/tmp_train
+ln -s $SPEC/433.milc/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/433.milc/simpoint/simpoint_train,$BENCH_DATA/x86/433.milc/simpoint/weight_train,100000000,0 --output=../train/433milc.out --cmd=$SPEC/433.milc/exe/milc_base.x86 --input="su3imp.in") &> ../train/gem5.429mcf.log &
+cd ../../..
+
+# 434.zeusmp
+echo "434.zeusmp"
+mkdir -p 434.zeusmp/checkpoint/{train,tmp_train}
+cd 434.zeusmp/checkpoint/tmp_train
+ln -s $SPEC/434.zeusmp/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/434.zeusmp/simpoint/simpoint_train,$BENCH_DATA/x86/434.zeusmp/simpoint/weight_train,100000000,0 --output=../train/434zeusmp.out --mem-size=2GB --cmd=$SPEC/434.zeusmp/exe/zeusmp_base.x86) &> ../train/gem5.434zeusmp.log &
+cd ../../..
+
+# 435.gromacs
+echo "435.gromacs"
+mkdir -p 435.gromacs/checkpoint/{train,tmp_train}
+cd 435.gromacs/checkpoint/tmp_train
+ln -s $SPEC/435.gromacs/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/435.gromacs/simpoint/simpoint_train,$BENCH_DATA/x86/435.gromacs/simpoint/weight_train,100000000,0 --output=../train/435gromacs.out --cmd=$SPEC/435.gromacs/exe/gromacs_base.x86 --options="-silent -deffnm gromacs -nice 0") &> ../train/gem5.435gromacs.log &
+cd ../../..
+
+# 436.cactusADM
+echo "436.cactusADM"
+mkdir -p 436.cactusADM/checkpoint/{train,tmp_train}
+cd 436.cactusADM/checkpoint/tmp_train
+ln -s $SPEC/436.cactusADM/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/436.cactusADM/simpoint/simpoint_train,$BENCH_DATA/x86/436.cactusADM/simpoint/weight_train,100000000,0 --output=../train/436cactusADM.out --cmd=$SPEC/436.cactusADM/exe/cactusADM_base.x86 --options="benchADM.par") &> ../train/gem5.436cactusADM.log &
+cd ../../..
+
+# 437.leslie3d
+echo "437.leslie3d"
+mkdir -p 437.leslie3d/checkpoint/{train,tmp_train}
+cd 437.leslie3d/checkpoint/tmp_train
+ln -s $SPEC/437.leslie3d/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/437.leslie3d/simpoint/simpoint_train,$BENCH_DATA/x86/437.leslie3d/simpoint/weight_train,100000000,0 --output=../train/437leslie3d.out --cmd=$SPEC/437.leslie3d/exe/leslie3d_base.x86 --input="leslie3d.in") &> ../train/gem5.437leslie3d.log &
+cd ../../..
+
+# 444.namd
+echo "444.namd"
+mkdir -p 444.namd/checkpoint/{train,tmp_train}
+cd 444.namd/checkpoint/tmp_train
+ln -s $SPEC/444.namd/data/all/input/* .
+ln -s $SPEC/444.namd/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/444.namd/simpoint/simpoint_train,$BENCH_DATA/x86/444.namd/simpoint/weight_train,100000000,0 --output=../train/444namd.out --cmd=$SPEC/444.namd/exe/namd_base.x86 --options="--input namd.input --iterations 1 --output ../train/namd.out") &> ../train/gem5.444namd.log &
+cd ../../..
+
+# 445.gobmk
+echo "445.gobmk"
+mkdir -p 445.gobmk/checkpoint/{arb,arend,arion,atari,blunder,buzco,nicklas2,nicklas4,tmp}_train
+cd 445.gobmk/checkpoint/tmp_train
+ln -s $SPEC/445.gobmk/data/all/input/* .
+ln -s $SPEC/445.gobmk/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../arb_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_arb_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_arb_train,100000000,0 --output=../arb_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="arb.tst") &> ../arb_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../arend_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_arend_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_arend_train,100000000,0 --output=../arend_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="arend.tst") &> ../arend_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../arion_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_arion_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_arion_train,100000000,0 --output=../arion_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="arion.tst") &> ../arion_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../atari_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_atari_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_atari_train,100000000,0 --output=../atari_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="atari.tst") &> ../atari_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../blunder_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_blunder_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_blunder_train,100000000,0 --output=../blunder_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="blunder.tst") &> ../blunder_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../buzco_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_buzco_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_buzco_train,100000000,0 --output=../buzco_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="buzco.tst") &> ../buzco_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../nicklas2_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_nicklas2_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_nicklas2_train,100000000,0 --output=../nicklas2_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="nicklas2.tst") &> ../nicklas2_train/gem5.445gobmk.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../nicklas4_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/445.gobmk/simpoint/simpoint_nicklas4_train,$BENCH_DATA/x86/445.gobmk/simpoint/weight_nicklas4_train,100000000,0 --output=../nicklas4_train/445gobmk.out --cmd=$SPEC/445.gobmk/exe/gobmk_base.x86 --options="--quiet --mode gtp" --input="nicklas4.tst") &> ../nicklas4_train/gem5.445gobmk.log &
+cd ../../..
+
+# 447.dealII
+echo "447.dealII"
+mkdir -p 447.dealII/checkpoint/{train,tmp_train}
+cd 447.dealII/checkpoint/tmp_train
+ln -s $SPEC/447.dealII/data/all/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/447.dealII/simpoint/simpoint_train,$BENCH_DATA/x86/447.dealII/simpoint/weight_train,100000000,0 --output=../train/447dealII.out --cmd=$SPEC/447.dealII/exe/dealII_base.x86 --options="10") &> ../train/gem5.447dealII.log &
+cd ../../..
+
+# 450.soplex
+echo "450.soplex"
+mkdir -p 450.soplex/checkpoint/{pds-20,train,tmp}_train
+cd 450.soplex/checkpoint/tmp_train
+ln -s $SPEC/450.soplex/data/train/input/* .
+(time $GEM5/build/X86/gem5.fast --outdir=../pds-20_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/450.soplex/simpoint/simpoint_pds-20_train,$BENCH_DATA/x86/450.soplex/simpoint/weight_pds-20_train,100000000,0 --output=../pds-20_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.x86 --options="-s1 -e -m5000 pds-20.mps") &> ./pds-20_train/gem5.450soplex.log &
+(time $GEM5/build/X86/gem5.fast --outdir=../train_train $GEM5/configs/example/se.py --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=$BENCH_DATA/x86/450.soplex/simpoint/simpoint_train_train,$BENCH_DATA/x86/450.soplex/simpoint/weight_train_train,100000000,0 --output=../train_train/450soplex.out --cmd=$SPEC/450.soplex/exe/soplex_base.x86 --options="-m1200 train.mps") &> ./train_train/gem5.450soplex.log &
+cd ../../..
+
 # 453.povray
 echo "453.povray"
 mkdir -p 453.povray/checkpoint/train 453.povray/checkpoint/tmp_train
