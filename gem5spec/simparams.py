@@ -1,5 +1,5 @@
-# CPU CONFIGURATION FILES
-# -----------------------
+# CPU MODELS
+# ----------
 
 cpu_models = {
     "arm" : {
