@@ -108,6 +108,14 @@ def spawn(cmd, dir, logpath, sem):
             stderr=subprocess.STDOUT)
         proc.wait()
         logfile.close()
+
+        # Delete the temporary folder, if present
+        subdir = dir.split("/")[-1]
+        if subdir == "tmp":
+            for f in os.listdir(dir):
+                os.unlink(dir + "/" + f)
+            os.rmdir(dir)
+
         # Release the semaphore (makes space for other processes)
         sem.release()
         return
@@ -433,6 +441,110 @@ def cp_sim(args, sem):
     return
 
 
+def full_sim(args, sem):
+    full_sim_threads = []
+
+    # Check if gem5 exists in specified path
+    gem5_exe_dir  = args.gem5_dir + "/build/" + args.arch.upper() 
+    gem5_exe_path = gem5_exe_dir + "/gem5.fast"
+    if not os.path.isfile(gem5_exe_path):
+        print("error: gem5.fast executable not found in " + gem5_exe_dir)
+        exit(2)
+
+    # Check if specified NVMAIN configuration file exists
+    if not os.path.isfile(args.nvmain_cfg):
+        print("error: file " + args.nvmain_cfg + " not found")
+        exit(2)
+
+    print("Full benchmark simulation:")
+    for b_name in args.benchmarks:
+        print("- " + b_name)
+
+        b_spl = b_name.split('.')
+        b_abbr = b_spl[0] + b_spl[1]
+        b_set = args.set[0]
+
+        # Get benchmark general parameters from benchlist.py
+        success, b_params = get_params(args, b_name)
+        
+        # Skip this benchmark if some error occurred
+        if not success:
+            continue
+
+        b_exe_path = b_params[0]
+        b_preproc  = b_params[1]
+        b_mem_size = b_params[2]
+
+        # Get benchmark subset parameters from benchlist.py
+        ss_params = get_ss_params(b_name, b_set) 
+
+        for subset in ss_params:
+
+            # Select CPU architecture and corresponding configuration file
+            cpu = []
+            for model in simparams.cpu_models[args.arch]:
+                cpu.append((model, simparams.cpu_models[args.arch][model]))
+
+            # Simulate all possible cases
+            instances = [(model, tech, case) for model in cpu
+                for tech in simparams.mem_technologies
+                for case in simparams.mem_cases]
+            for i in instances:
+                model = i[0]
+                tech  = i[1]
+                case  = i[2]
+
+                model_name = model[0]
+                model_conf = model[1]
+                hier  = simparams.mem_technologies[tech]
+
+                out_dir, tmp_dir = prepare_env(args, b_name,
+                    b_preproc, "simulation/" + subset[0] + "/" + model_name +
+                    "/" + tech + "/" + case + "/full")
+
+                out_filepath = out_dir + "/" + b_abbr + ".out"
+                log_filepath = out_dir + "/gem5." + b_abbr + ".out"
+                nstats_filepath = out_dir + "/nvmain_stats." + b_abbr + ".log"
+                nconf_filepath = out_dir + "/nvmain_config." + b_abbr + ".log"
+            
+                latencies = simparams.mem_latencies[model_name]
+                cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
+                    " " + args.gem5_dir + "/configs/example/" + model_conf +
+                    " --caches --l2cache" +
+                    (" --l2-enable-bank --l2-num-banks=" + str(args.num_banks)
+                        if args.num_banks else "") +
+                    " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
+                    " --l1d-write-lat=" + str(latencies[hier[0]][case][0][1]) +
+                    " --l1d-tag-lat=" + str(latencies[hier[0]][case][0][2]) +
+                    " --l1d-resp-lat=" + str(latencies[hier[0]][case][0][3]) +
+                    " --l1i-data-lat=" + str(latencies[hier[1]][case][0][0]) +
+                    " --l1i-write-lat=" + str(latencies[hier[1]][case][0][1]) +
+                    " --l1i-tag-lat=" + str(latencies[hier[1]][case][0][2]) +
+                    " --l1i-resp-lat=" + str(latencies[hier[1]][case][0][3]) +
+                    " --l2-data-lat=" + str(latencies[hier[2]][case][1][0]) +
+                    " --l2-write-lat=" + str(latencies[hier[2]][case][1][1]) +
+                    " --l2-tag-lat=" + str(latencies[hier[2]][case][1][2]) +
+                    " --l2-resp-lat=" + str(latencies[hier[2]][case][1][3]) +
+                    " --num-cpus=1" +
+                    " --cpu-type=" + model_name +
+                    " --output=" + out_filepath +
+                    " --mem-size=" + (str(b_mem_size) if b_mem_size else
+                        "512MB") +
+                    " --cmd=" + b_exe_path +
+                    (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
+                    (" --input=" + subset[2] if subset[2] else "") +
+                    " --mem-type=NVMainMemory" +
+                    " --nvmain-config=" + args.nvmain_cfg +
+                    " --nvmain-StatsFile=" + nstats_filepath +
+                    " --nvmain-ConfigLog=" + nconf_filepath +
+                    ")")
+                full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
+
+    wait_all(full_sim_threads)
+    print("done")
+    return
+
+
 def main():
     try:
         benchlist.benchmarks
@@ -459,6 +571,8 @@ def main():
         help="generate checkpoints with gem5")
     parser.add_argument("-x", "--execute", action="store_true",
         help="simulate target benchmarks from checkpoints")
+    parser.add_argument("-f", "--full", action="store_true",
+        help="simulate target benchmarks normally")
     parser.add_argument("--arch", action="store", type=str, default="arm",
         choices=["arm","x86"], help="cpu architecture (default: %(default)s)")
     parser.add_argument("--maxk", action="store", type=int, metavar="N",
@@ -500,15 +614,16 @@ def main():
     ops.append(args.simpoints)
     ops.append(args.checkpoints)
     ops.append(args.execute)
+    ops.append(args.full)
 
     # Check if any operation has been selected
     if not True in ops:
         parser.error("no operation selected")
-    # Check if ops contains non-consecutive operations
+    # Check if ops contains non-consecutive simpoint operations
     elif ((ops[1] == True and ops[2] == False and ops[3] == True) or
         (ops[0] == True and ops[1] == False and ops[2] == True) or
         (ops[0] == True and ops[1] == False and ops[3] == True)):
-        parser.error("selected operations are not consecutive")
+        parser.error("simpoint-related operations are not consecutive")
 
     # Check if specified benchmarks actually exist
     for b_name in args.benchmarks:
@@ -516,8 +631,8 @@ def main():
             print("error: unknown benchmark " + b_name)
             exit(1)
 
-    for i in range(4):
-        if ops[i] == 1:
+    for i in range(len(ops)):
+        if ops[i] == True:
             if i == 0:
                 bbv_gen(args, sem)
             elif i == 1:
@@ -526,6 +641,9 @@ def main():
                 cp_gen(args, sem)
             elif i == 3:
                 cp_sim(args, sem)
+            elif i == 4:
+                full_sim(args, sem)
+
             # Next operation must fetch data from generated output
             args.data_dir = args.out_dir
             # Add a new line
