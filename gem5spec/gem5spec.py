@@ -331,7 +331,7 @@ def cp_sim(args, sem):
         exit(2)
 
     # Check if specified NVMAIN configuration file exists
-    if not os.path.isfile(args.nvmain_cfg):
+    if args.mm_sim == "nvmain" and not os.path.isfile(args.nvmain_cfg):
         print("error: file " + args.nvmain_cfg + " not found")
         exit(2)
 
@@ -404,7 +404,7 @@ def cp_sim(args, sem):
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
                     " " + args.gem5_dir + "/configs/example/" + model_conf +
                     " --caches --l2cache" +
-                    (" --l2-enable-bank --l2-num-banks=" + str(args.num_banks)
+                    (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
                     " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(latencies[hier[0]][case][0][1]) +
@@ -429,10 +429,11 @@ def cp_sim(args, sem):
                     " --cmd=" + b_exe_path +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
-                    " --mem-type=NVMainMemory" +
+                    (" --mem-type=NVMainMemory" +
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
-                    " --nvmain-ConfigLog=" + nconf_filepath +
+                    " --nvmain-ConfigLog=" + nconf_filepath
+                    if args.mm_sim == "nvmain" else "") +
                     ")")
                 cp_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
 
@@ -452,7 +453,7 @@ def full_sim(args, sem):
         exit(2)
 
     # Check if specified NVMAIN configuration file exists
-    if not os.path.isfile(args.nvmain_cfg):
+    if args.mm_sim == "nvmain" and not os.path.isfile(args.nvmain_cfg):
         print("error: file " + args.nvmain_cfg + " not found")
         exit(2)
 
@@ -511,7 +512,7 @@ def full_sim(args, sem):
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
                     " " + args.gem5_dir + "/configs/example/" + model_conf +
                     " --caches --l2cache" +
-                    (" --l2-enable-bank --l2-num-banks=" + str(args.num_banks)
+                    (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
                     " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(latencies[hier[0]][case][0][1]) +
@@ -533,10 +534,11 @@ def full_sim(args, sem):
                     " --cmd=" + b_exe_path +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
-                    " --mem-type=NVMainMemory" +
+                    (" --mem-type=NVMainMemory" +
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
-                    " --nvmain-ConfigLog=" + nconf_filepath +
+                    " --nvmain-ConfigLog=" + nconf_filepath
+                    if args.mm_sim == "nvmain" else "") +
                     ")")
                 full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
 
@@ -585,6 +587,9 @@ def main():
         default=8, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
         default=32, help="number of processes that can run concurrently " +
+        "(default: %(default)s)")
+    parser.add_argument("--mm-sim", nargs=1, type=str, default="none",
+        choices=["none","nvmain","ramulator"], help="main memory simulator " +
         "(default: %(default)s)")
     parser.add_argument("--sp-dir", action="store", type=str, metavar="DIR",
         default=(home + "/simpoint"), help="path to simpoint utility " +
