@@ -595,7 +595,7 @@ def main():
         default=(home + "/simpoint"), help="path to simpoint utility " +
         "(default: %(default)s)")
     parser.add_argument("--gem5-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/gem5-lirmm"), help="path to gem5 simulator " +
+        default=(home + "/gem5-artecs"), help="path to gem5 simulator " +
         "(default: %(default)s)")
     parser.add_argument("--nvmain-cfg", action="store", type=str,
         metavar="FILE",
