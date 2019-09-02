@@ -96,7 +96,7 @@ params = {
         "471.omnetpp"       : "omnetpp.ini",
         "473.astar"         : "lake.cfg",
         "482.sphinx3"       : "ctlfile . args.an4",
-        "483.xalancbmk"     : "test.xml xalanc.xsl",
+        "483.xalancbmk"     : "-v test.xml xalanc.xsl",
         "998.specrand"      : "1 3",
         "999.specrand"      : "1 3"
     },
@@ -122,7 +122,7 @@ params = {
         "471.omnetpp"       : "omnetpp.ini",
         "473.astar"         : ("BigLakes1024.cfg", "rivers1.cfg"),
         "482.sphinx3"       : "ctlfile . args.an4",
-        "483.xalancbmk"     : "test.xml xalanc.xsl",
+        "483.xalancbmk"     : "-v allbooks.xml xalanc.xsl",
         "998.specrand"      : "324342 24239",
         "999.specrand"      : "324342 24239"
     },

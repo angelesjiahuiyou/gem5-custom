@@ -57,8 +57,8 @@ def get_ss_params(b_name, b_set):
         for i, ss in enumerate(benchlist_subset[b_name]):
             b_subset = ss + "_" + b_set
             arguments.append((b_subset,
-                b_params[i] if isinstance(b_params, list) else "",
-                b_input[i]  if isinstance(b_input, list) else ""))
+                b_params[i] if isinstance(b_params, tuple) else "",
+                b_input[i]  if isinstance(b_input, tuple) else ""))
     else:
         b_subset = b_set
         arguments.append((b_subset, b_params, b_input))
