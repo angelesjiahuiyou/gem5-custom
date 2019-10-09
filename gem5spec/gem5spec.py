@@ -631,8 +631,15 @@ def main():
         parser.error("simpoint-related operations are not consecutive")
 
     # Check if specified benchmarks actually exist
-    for b_name in args.benchmarks:
-        if b_name not in benchlist.benchmarks:
+    for i, b_name in enumerate(args.benchmarks):
+        b_found = False
+        for bl_bench in benchlist.benchmarks:
+            if (b_name == bl_bench or
+                b_name == bl_bench.split('.')[0]):
+                args.benchmarks[i] = bl_bench
+                b_found = True
+                break
+        if b_found == False:
             print("error: unknown benchmark " + b_name)
             exit(1)
 
