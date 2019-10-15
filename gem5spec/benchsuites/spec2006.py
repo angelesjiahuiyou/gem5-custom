@@ -40,7 +40,7 @@ exe_name = {
 
 
 preprocessing = {
-    "481.wrf"           : ("ln -s le/32/* .", "ln -s le/64/* ."),
+    "481.wrf"           : ("ln -s le/32/* .", "ln -s le/64/* .", "ln -s be/32/* .", "ln -s be/64/* ."),
     "482.sphinx3"       : ("rm *.be.raw && for file in *.le.raw; do mv \"$file\" \"${file%.le.raw}.raw\"; done && wc -c $(ls *.raw) | awk -F\".raw\" \'{print $1}\' | awk \'{print $2 \" \" $1}\' | head -n -1 > ctlfile",
                            "rm *.le.raw && for file in *.be.raw; do mv \"$file\" \"${file%.be.raw}.raw\"; done && wc -c $(ls *.raw) | awk -F\".raw\" \'{print $1}\' | awk \'{print $2 \" \" $1}\' | head -n -1 > ctlfile")
 }
@@ -156,10 +156,16 @@ input = {
 
 def get_preprocessing(b_name, arch_bits, endianness):
     if b_name == "481.wrf":
-        if arch_bits == 32:
-            return preprocessing[b_name][0]
+        if endianness == "le":
+            if arch_bits == 32:
+                return preprocessing[b_name][0]
+            else:
+                return preprocessing[b_name][1]
         else:
-            return preprocessing[b_name][1]
+            if arch_bits == 32:
+                return preprocessing[b_name][2]
+            else:
+                return preprocessing[b_name][3]
     elif b_name == "482.sphinx3":
         if endianness == "le":
             return preprocessing[b_name][0]
