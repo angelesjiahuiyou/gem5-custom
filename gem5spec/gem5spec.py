@@ -597,7 +597,7 @@ def main():
     parser.add_argument("--int-size", action="store", type=int, metavar="N",
         default=100000000, help="bbv interval size (default: %(default)s)")
     parser.add_argument("--warmup", action="store", type=int, metavar="N",
-        default=0, help="number of warmup instuctions (default: %(default)s)")
+        default=0, help="number of warmup instructions (default: %(default)s)")
     parser.add_argument("--num-banks", action="store", type=int, metavar="N",
         default=8, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
@@ -618,7 +618,7 @@ def main():
         help="path to NVMAIN configuration file (default: %(default)s)")
     parser.add_argument("--spec-dir", action="store", type=str, metavar="DIR",
         default=(home + "/cpu" + bsyear + "/benchspec/CPU" + bsyear),
-        help="path to spec benchmark suite (default: %(default)s)")
+        help="path to SPEC benchmark suite (default: %(default)s)")
     parser.add_argument("--data-dir", action="store", type=str, metavar="DIR",
         default=(home + "/benchmarks/SPECCPU/speccpu" + bsyear),
         help="path to benchmark simulation data (default: %(default)s)")
