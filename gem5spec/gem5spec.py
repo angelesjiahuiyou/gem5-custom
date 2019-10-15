@@ -1,13 +1,28 @@
+# Select the benchmark suite to use
+# (allowed values: spec2006, spec2017)
+benchsuite = "spec2006"
+
 import sys
 import os
 import argparse
 import subprocess
 import platform
 import threading
-import benchlist
 import simparams
 
+try:
+    if benchsuite == "spec2006":
+        import benchsuites.spec2006 as benchlist
+    elif benchsuite == "spec2017":
+        import benchsuites.spec2017 as benchlist
+    else:
+        raise ImportError("Invalid benchmark suite") 
+except ImportError as error:
+    print(error)
+    exit(1)
+
 home = os.path.expanduser("~")
+bsyear = ''.join(c for c in benchsuite if c.isdigit())
 
 def cmd_exists(cmd):
     return any(
@@ -602,11 +617,11 @@ def main():
         default=(os.getcwd() + "/LPDDR3_micron_512Meg_x32_qdp.config"),
         help="path to NVMAIN configuration file (default: %(default)s)")
     parser.add_argument("--spec-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/cpu2006/benchspec/CPU2006"), help="path to spec " +
-        "benchmark suite (default: %(default)s)")
+        default=(home + "/cpu" + bsyear + "/benchspec/CPU" + bsyear),
+        help="path to spec benchmark suite (default: %(default)s)")
     parser.add_argument("--data-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/benchmarks/SPECCPU/speccpu2006"), help="path to " +
-        "benchmark simulation data (default: %(default)s)")
+        default=(home + "/benchmarks/SPECCPU/speccpu" + bsyear),
+        help="path to benchmark simulation data (default: %(default)s)")
     parser.add_argument("--out-dir", action="store", type=str, metavar="DIR",
         default=(home + "/bench_data"), help="output directory " +
         "(default: %(default)s)")
