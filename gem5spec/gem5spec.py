@@ -189,14 +189,16 @@ def bbv_gen(args, sem):
 
         # Execute valgrind exp-bbv tool
         for subset in ss_params:
-            bbv_filepath = out_dir + "/bb.out." + b_abbr + "." + subset[0]
-            pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
-            log_filepath = out_dir + "/" + b_abbr + "." + subset[0] + ".out"
 
             # Prepare the execution environment
             out_dir, tmp_dir = prepare_env(args, b_name, b_preproc,
                 "valgrind/" + subset[0])
 
+            bbv_filepath = out_dir + "/bb.out." + b_abbr + "." + subset[0]
+            pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
+            log_filepath = out_dir + "/" + b_abbr + "." + subset[0] + ".out"
+
+            # Execute valgrind with exp-bbv tool
             cmd = ("valgrind --tool=exp-bbv --bb-out-file=" + bbv_filepath +
                 " --pc-out-file=" + pc_filepath + " " + b_exe_path +
                 " " + subset[1] + (" < " + subset[2] if subset[2] else ""))
@@ -253,11 +255,11 @@ def sp_gen(args, sem):
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir, mode=0o755)
 
-            # Execute the simpoint utility
             sp_filepath = out_dir + "/simpoint_" + subset[0]
             wgt_filepath = out_dir + "/weight_" + subset[0]
             log_filepath = out_dir + "/log_" + subset[0]
 
+            # Execute the simpoint utility
             cmd = (simpoint_exec + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
                 " -saveSimpointWeights " + wgt_filepath)
@@ -322,6 +324,7 @@ def cp_gen(args, sem):
 
             out_filepath = out_dir + "/" + b_abbr + ".out"
             log_filepath = out_dir + "/gem5." + b_abbr + ".out"
+
             cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir + " " +
                 args.gem5_dir + "/configs/example/se.py " +
                 "--cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
