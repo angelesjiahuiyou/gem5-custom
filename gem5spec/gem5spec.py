@@ -184,9 +184,6 @@ def bbv_gen(args, sem):
         b_exe_path = b_params[0]
         b_preproc  = b_params[1]
 
-        # Prepare the execution environment
-        out_dir, tmp_dir = prepare_env(args, b_name, b_preproc, "valgrind")
-
         # Get benchmark subset parameters from benchlist.py
         ss_params = get_ss_params(b_name, b_set) 
 
@@ -195,6 +192,10 @@ def bbv_gen(args, sem):
             bbv_filepath = out_dir + "/bb.out." + b_abbr + "." + subset[0]
             pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
             log_filepath = out_dir + "/" + b_abbr + "." + subset[0] + ".out"
+
+            # Prepare the execution environment
+            out_dir, tmp_dir = prepare_env(args, b_name, b_preproc,
+                "valgrind/" + subset[0])
 
             cmd = ("valgrind --tool=exp-bbv --bb-out-file=" + bbv_filepath +
                 " --pc-out-file=" + pc_filepath + " " + b_exe_path +
@@ -220,8 +221,6 @@ def sp_gen(args, sem):
         print("- " + b_name)
 
         base_subfolder = "/" + args.arch + "/" + b_name
-        out_dir = args.out_dir + base_subfolder + "/simpoint"
-        data_dir = args.data_dir + base_subfolder + "/valgrind"
         b_spl = b_name.split('.')
         b_abbr = b_spl[0] + b_spl[1]
         b_set = args.set[0]
@@ -230,6 +229,9 @@ def sp_gen(args, sem):
         ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
+            out_dir = args.out_dir + base_subfolder + "/simpoint/" + subset[0]
+            data_dir = (args.data_dir + base_subfolder + "/valgrind/" +
+                subset[0])
             bbv_filename = "bb.out." + b_abbr + "." + subset[0]
             bbv_filepath = data_dir + "/" + bbv_filename
 
@@ -249,7 +251,7 @@ def sp_gen(args, sem):
 
             # Create the output folder if not present
             if not os.path.exists(out_dir):
-                os.makedirs(out_dir , mode=0o755)
+                os.makedirs(out_dir, mode=0o755)
 
             # Execute the simpoint utility
             sp_filepath = out_dir + "/simpoint_" + subset[0]
@@ -281,7 +283,6 @@ def cp_gen(args, sem):
         print("- " + b_name)
 
         base_subfolder = "/" + args.arch + "/" + b_name
-        data_dir = args.data_dir + base_subfolder + "/simpoint"
         b_spl = b_name.split('.')
         b_abbr = b_spl[0] + b_spl[1]
         b_set = args.set[0]
@@ -301,6 +302,8 @@ def cp_gen(args, sem):
         ss_params = get_ss_params(b_name, b_set) 
 
         for subset in ss_params:
+            data_dir = (args.data_dir + base_subfolder + "/simpoint/" +
+                subset[0])
             sp_filename = "simpoint_" + subset[0]
             wgt_filename = "weight_" + subset[0]
             sp_filepath = data_dir + "/" + sp_filename
