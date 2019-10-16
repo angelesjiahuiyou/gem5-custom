@@ -623,7 +623,7 @@ def main():
         default=(home + "/benchmarks/SPECCPU/speccpu" + bsyear),
         help="path to benchmark simulation data (default: %(default)s)")
     parser.add_argument("--out-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/bench_data"), help="output directory " +
+        default=(home + "/benchdata_" + benchsuite), help="output directory " +
         "(default: %(default)s)")
     args = parser.parse_args()
     sem  = threading.Semaphore(args.max_proc)
