@@ -623,7 +623,8 @@ def main():
         default=(os.getcwd() + "/LPDDR3_micron_512Meg_x32_qdp.config"),
         help="path to NVMAIN configuration file (default: %(default)s)")
     parser.add_argument("--spec-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/cpu" + bsyear + "/benchspec/CPU" + bsyear),
+        default=(home + "/cpu" + bsyear + "/benchspec/CPU" + (bsyear if
+        benchsuite != "spec2017" else "")),
         help="path to SPEC benchmark suite (default: %(default)s)")
     parser.add_argument("--data-dir", action="store", type=str, metavar="DIR",
         default=(home + "/benchmarks/SPECCPU/speccpu" + bsyear),
