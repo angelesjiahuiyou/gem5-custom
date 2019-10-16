@@ -101,7 +101,7 @@ params = {
         "520.omnetpp_r"   : ("-c General -r 0"), 
 ##        "520.omnetpp_r"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "523.xalancbmk_r" : ("-v test.xml xalanc.xsl"),
-        "525.x264_r"      : ("--dumpyuv 50 --frames 156 -o BuckBunny_New.264 BuckBunny.yuv 1280x720")
+        "525.x264_r"      : ("--dumpyuv 50 --frames 156 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"),
         "526.blender_r"   : ("cube.blend --render-output cube_ --threads 1 -b -F RAWTGA -s 1 -e 1 -a"),
         "531.deepsjeng_r" : ("test.txt"),
         "538.imagick_r"   : ("-limit disk 0 test_input.tga -shear 25 -resize 640x480 -negate -alpha Off test_output.tga"),
@@ -119,7 +119,7 @@ params = {
                              "cpu2006docs.tar.xz 4 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1428548 -1 2",
                              "cpu2006docs.tar.xz 4 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1034828 -1 3e",
                              "cpu2006docs.tar.xz 4 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1061968 -1 4",
-                             "cpu2006docs.tar.xz 4 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1034588 -1 4e")
+                             "cpu2006docs.tar.xz 4 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1034588 -1 4e"),
          "997.specrand_fr": ("324342 24239"),
          "999.specrand_ir": ("324342 24239")
 
@@ -141,7 +141,7 @@ params = {
         "520.omnetpp_r"   : ("-c General -r 0"),
 ##        "520.omnetpp_r"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "523.xalancbmk_r" : ("-v allbooks.xml xalanc.xsl "),
-        "525.x264_r"      : ("--dumpyuv 50 --frames 142 -o BuckBunny_New.264 BuckBunny.yuv 1280x720")
+        "525.x264_r"      : ("--dumpyuv 50 --frames 142 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"),
         "526.blender_r"   : ("sh5_reduced.blend --render-output sh5_reduced_ --threads 1 -b -F RAWTGA -s 234 -e 234 -a"),
         "531.deepsjeng_r" : ("train.txt"),
         "538.imagick_r"   : ("-limit disk 0 train_input.tga -resize 320x240 -shear 31 -edge 140 -negate -flop -resize 900x900 -edge 10 train_output.tga"),
@@ -200,19 +200,16 @@ params = {
 input = {
     "test" : {
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in"),
-#       "508.namd_r"      : ("--input apoa1.input --iterations 1 --output apoa1.test.output"), TODO input and output words are explicit, do they pass as parameters or need to split the cmd?
         "554.roms_r"      : ("ocean_benchmark0.in.x"),
 
     },
     "train" : {
-        "500.perlbench_r" : ("", "", "scrabbl.in", "", ""), ## TODO only the 3rd one takes input this way
+        "500.perlbench_r" : ("", "", "scrabbl.in", "", ""),
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in"),
-#       "508.namd_r"      : ("--input apoa1.input --iterations 1 --output apoa1.test.output"), TODO input and output words are explicit, do they pass as parameters or need to split the cmd?
         "554.roms_r"      : ("ocean_benchmark1.in.x"),
     },
     "ref" : {
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in", "bwaves_3.in", "bwaves_4.in"),
-#       "508.namd_r"      : ("--input apoa1.input --iterations 1 --output apoa1.test.output"), TODO input and output words are explicit, do they pass as parameters or need to split the cmd?
         "554.roms_r"      : ("ocean_benchmark2.in.x"),
     }
 }
