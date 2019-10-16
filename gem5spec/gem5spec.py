@@ -1,6 +1,6 @@
 # Select the benchmark suite to use
 # (allowed values: spec2006, spec2017)
-benchsuite = "spec2006"
+benchsuite = "spec2017"
 
 import sys
 import os
