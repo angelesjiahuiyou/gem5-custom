@@ -29,7 +29,8 @@ benchmarks = (
 
 # If the executable binary name differs from the benchmark, note it here
 exe_name = {
-    "523.xalancbmk_r"   : "cpuxalan_r",
+    "502.gcc_r"         : "cpugcc_r",
+    "523.xalancbmk_r"   : "cpuxalan_r"
 
 #    "482.sphinx3"       : "sphinx_livepretend",
 #    "483.xalancbmk"     : "Xalan"

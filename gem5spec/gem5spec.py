@@ -24,6 +24,7 @@ except ImportError as error:
 home = os.path.expanduser("~")
 bsyear = ''.join(c for c in benchsuite if c.isdigit())
 
+
 def cmd_exists(cmd):
     return any(
         os.access(os.path.join(path, cmd), os.X_OK) 
@@ -45,15 +46,15 @@ def get_params(args, b_name):
         b_exe_name = benchlist.exe_name[b_name] + "_base." + args.arch
     else:
         b_exe_name = b_spl[1] + "_base." + args.arch
-    b_exe_folder = args.spec_dir + "/" + b_name + "/exe"
-    b_exe_path = b_exe_folder + "/" + b_exe_name
+    b_exe_folder = os.path.join(args.spec_dir, b_name, "exe")
+    b_exe_path = os.path.join(b_exe_folder, b_exe_name)
     if not os.path.isfile(b_exe_path):
         print("warning: executable not found in " + b_exe_folder)
         return False, (None, None, None)
 
     b_preproc  = benchlist.preprocessing.get(b_name, "")
     b_mem_size = benchlist.mem_size.get(b_name, "")
-    arguments = (b_exe_path, b_preproc, b_mem_size)
+    arguments = (b_exe_name, b_preproc, b_mem_size)
     return True, arguments
 
 
@@ -80,25 +81,48 @@ def get_ss_params(b_name, b_set):
     return arguments
 
 
-def prepare_env(args, b_name, b_preproc, target_dir):
-    spec_b_folder = args.spec_dir + "/" + b_name
-    base_subfolder = "/" + args.arch + "/" + b_name
-    out_dir = args.out_dir + base_subfolder + "/" + target_dir
-    tmp_dir = out_dir + "/tmp"
+def remove_dir(target):
+    for root, dirs, files in os.walk(target, topdown=False):
+        for name in files:
+            os.unlink(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+    os.rmdir(target)
 
-    # Create the output folder and the temporary one
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir , mode=0o755)
-    for f in os.listdir(tmp_dir):
-        os.unlink(tmp_dir + "/" + f)
+
+def mirror_dir(orig, dest):
+    for root, dirs, files in os.walk(orig):
+        subroot = root.split(orig + "/")[1] if root != orig else ""
+        for name in dirs:
+            os.mkdir(os.path.join(dest, subroot, name), 0o755)
+        for name in files:
+            os.symlink(os.path.join(root, name),
+                os.path.join(dest, subroot, name))
+
+
+def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
+    spec_b_folder = os.path.join(args.spec_dir, b_name)
+    base_subfolder = os.path.join(args.arch, b_name)
+    out_dir = os.path.join(args.out_dir, base_subfolder, target_dir)
+    tmp_dir = os.path.join(out_dir, "tmp")
+
+    # Remove the temporary folder if it already exists
+    if os.path.exists(tmp_dir):
+        remove_dir(tmp_dir)
+
+    # Create the temporary folder and consequently the output folder
+    os.makedirs(tmp_dir, mode=0o755)        
 
     # Make a symlink to input data in the temporary directory
-    input_folder = [spec_b_folder + "/data/" + args.set[0] + "/input", 
-        spec_b_folder + "/data/all/input"]
-    for d in input_folder:
+    input_folders = [os.path.join(spec_b_folder, "data", args.set[0], "input"), 
+        os.path.join(spec_b_folder, "data/all/input")]
+    for d in input_folders:
         if os.path.exists(d):
-            for f in os.listdir(d):
-                os.symlink(d + "/" + f, tmp_dir + "/" + f)
+            mirror_dir(d, tmp_dir)
+
+    # Make a symlink to the executable in the temporary directory
+    b_exe_path = os.path.join(spec_b_folder, "exe", b_exe_name)
+    os.symlink(b_exe_path, os.path.join(tmp_dir, b_exe_name))
 
     # Do preprocessing of input data if necessary
     arch_bits = 64
@@ -127,9 +151,7 @@ def spawn(cmd, dir, logpath, sem):
         # Delete the temporary folder, if present
         subdir = dir.split("/")[-1]
         if subdir == "tmp":
-            for f in os.listdir(dir):
-                os.unlink(dir + "/" + f)
-            os.rmdir(dir)
+            remove_dir(dir)
 
         # Release the semaphore (makes space for other processes)
         sem.release()
@@ -181,7 +203,7 @@ def bbv_gen(args, sem):
         if not success:
             continue
 
-        b_exe_path = b_params[0]
+        b_exe_name = b_params[0]
         b_preproc  = b_params[1]
 
         # Get benchmark subset parameters from benchlist.py
@@ -191,8 +213,8 @@ def bbv_gen(args, sem):
         for subset in ss_params:
 
             # Prepare the execution environment
-            out_dir, tmp_dir = prepare_env(args, b_name, b_preproc,
-                "valgrind/" + subset[0])
+            out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
+                os.path.join("valgrind", subset[0]))
 
             bbv_filepath = out_dir + "/bb.out." + b_abbr + "." + subset[0]
             pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
@@ -200,7 +222,7 @@ def bbv_gen(args, sem):
 
             # Execute valgrind with exp-bbv tool
             cmd = ("valgrind --tool=exp-bbv --bb-out-file=" + bbv_filepath +
-                " --pc-out-file=" + pc_filepath + " " + b_exe_path +
+                " --pc-out-file=" + pc_filepath + " ./" + b_exe_name +
                 " " + subset[1] + (" < " + subset[2] if subset[2] else ""))
             bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
 
@@ -296,7 +318,7 @@ def cp_gen(args, sem):
         if not success:
             continue
 
-        b_exe_path = b_params[0]
+        b_exe_name = b_params[0]
         b_preproc  = b_params[1]
         b_mem_size = b_params[2]
 
@@ -319,8 +341,8 @@ def cp_gen(args, sem):
                 print("warning: " + wgt_filename + " not found in " + data_dir)
                 continue
 
-            out_dir, tmp_dir = prepare_env(args, b_name, b_preproc,
-                "checkpoint/" + subset[0])
+            out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
+                os.path.join("checkpoint", subset[0]))
 
             out_filepath = out_dir + "/" + b_abbr + ".out"
             log_filepath = out_dir + "/gem5." + b_abbr + ".out"
@@ -331,7 +353,7 @@ def cp_gen(args, sem):
                 sp_filepath + "," + wgt_filepath + "," + str(args.int_size) +
                 "," + str(args.warmup) + " --output=" + out_filepath +
                 " --mem-size=" + (str(b_mem_size) if b_mem_size else "512MB") +
-                " --cmd=" + b_exe_path + (" --options=\"" + subset[1] + "\""
+                " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
                 else "") + ")")
             cp_gen_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
@@ -373,7 +395,7 @@ def cp_sim(args, sem):
         if not success:
             continue
 
-        b_exe_path = b_params[0]
+        b_exe_name = b_params[0]
         b_preproc  = b_params[1]
         b_mem_size = b_params[2]
 
@@ -412,9 +434,9 @@ def cp_sim(args, sem):
                 model_conf = model[1]
                 hier  = simparams.mem_technologies[tech]
 
-                out_dir, tmp_dir = prepare_env(args, b_name,
-                    b_preproc, "simulation/" + subset[0] + "/" + model_name +
-                    "/" + tech + "/" + case + "/" + cpt)
+                out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name,
+                    b_preproc, os.path.join("simulation", subset[0],
+                    model_name, tech, case, cpt))
 
                 out_filepath = out_dir + "/" + b_abbr + ".out"
                 log_filepath = out_dir + "/gem5." + b_abbr + ".out"
@@ -447,7 +469,7 @@ def cp_sim(args, sem):
                     " --output=" + out_filepath +
                     " --mem-size=" + (str(b_mem_size) if b_mem_size else
                         "512MB") +
-                    " --cmd=" + b_exe_path +
+                    " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
                     (" --mem-type=NVMainMemory" +
@@ -493,7 +515,7 @@ def full_sim(args, sem):
         if not success:
             continue
 
-        b_exe_path = b_params[0]
+        b_exe_name = b_params[0]
         b_preproc  = b_params[1]
         b_mem_size = b_params[2]
 
@@ -520,9 +542,9 @@ def full_sim(args, sem):
                 model_conf = model[1]
                 hier  = simparams.mem_technologies[tech]
 
-                out_dir, tmp_dir = prepare_env(args, b_name,
-                    b_preproc, "simulation/" + subset[0] + "/" + model_name +
-                    "/" + tech + "/" + case + "/full")
+                out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name,
+                    b_preproc, os.path.join("simulation", subset[0],
+                    model_name, tech, case, "full"))
 
                 out_filepath = out_dir + "/" + b_abbr + ".out"
                 log_filepath = out_dir + "/gem5." + b_abbr + ".out"
@@ -552,7 +574,7 @@ def full_sim(args, sem):
                     " --output=" + out_filepath +
                     " --mem-size=" + (str(b_mem_size) if b_mem_size else
                         "512MB") +
-                    " --cmd=" + b_exe_path +
+                    " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
                     (" --mem-type=NVMainMemory" +
