@@ -113,6 +113,10 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     # Create the temporary folder and consequently the output folder
     os.makedirs(tmp_dir, mode=0o755)        
 
+    # Make a symlink to the executable in the temporary directory
+    b_exe_path = os.path.join(spec_b_folder, "exe", b_exe_name)
+    os.symlink(b_exe_path, os.path.join(tmp_dir, b_exe_name))
+
     # Prepare the temporary directory with symlinks to input data
     b_set = args.set[0]
     if benchsuite == "spec2017":
@@ -134,10 +138,6 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
         # Any invalid path will be ignored
         if os.path.isdir(d):
             mirror_dir(d, tmp_dir)
-
-    # Make a symlink to the executable in the temporary directory
-    b_exe_path = os.path.join(spec_b_folder, "exe", b_exe_name)
-    os.symlink(b_exe_path, os.path.join(tmp_dir, b_exe_name))
 
     # Do preprocessing of input data if necessary
     arch_bits = 64
