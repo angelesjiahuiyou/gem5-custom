@@ -113,10 +113,25 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     # Create the temporary folder and consequently the output folder
     os.makedirs(tmp_dir, mode=0o755)        
 
-    # Make a symlink to input data in the temporary directory
-    input_folders = [os.path.join(spec_b_folder, "data", args.set[0], "input"), 
+    # Prepare the temporary directory with symlinks to input data
+    b_set = args.set[0]
+    if benchsuite == "spec2017":
+        # If there's no data folder check in the rate benchmark folder
+        if not os.path.exists(os.path.join(spec_b_folder, "data")):
+            rate_b_name = "5" + b_name[1:len(b_name)-1] + "r"
+            spec_b_folder = os.path.join(args.spec_dir, rate_b_name)
+        if b_set == "ref":
+            if "_s" in b_name:
+                # If there's no refspeed folder try with refrate
+                b_set = ("refspeed" if os.path.exists(os.path.join(
+                    spec_b_folder,"data/refspeed")) else "refrate")
+            else:
+                b_set = "refrate"
+
+    input_folders = [os.path.join(spec_b_folder, "data", b_set, "input"), 
         os.path.join(spec_b_folder, "data/all/input")]
     for d in input_folders:
+        # Any invalid path will be ignored
         if os.path.exists(d):
             mirror_dir(d, tmp_dir)
 
@@ -407,9 +422,11 @@ def cp_sim(args, sem):
             cpt_prefix = "cpt.simpoint_"
 
             # Check if checkpoints are present in the specified data directory
+            if (not os.path.isdir(data_ss_dir)):
+                print("warning: directory " + data_ss_dir + " not found")
+                continue        
             cpt_folders = [d for d in sorted(os.listdir(data_ss_dir))
                 if cpt_prefix in d]
-
             if (not any(cpt_folders)):
                 print("warning: no checkpoints found in " + data_ss_dir)
                 continue

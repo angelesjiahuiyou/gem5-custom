@@ -48,7 +48,7 @@ benchmarks = (
     "657.xz_s",
     "996.specrand_fs",
     "997.specrand_fr",
-    "998.specrand_is"
+    "998.specrand_is",
     "999.specrand_ir"
 )
 
