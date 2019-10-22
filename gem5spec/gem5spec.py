@@ -37,7 +37,7 @@ def get_params(args, b_name):
     b_spl = b_name.split('.')
 
     # Check if the benchmark folder is present in SPEC path
-    if not os.path.exists(spec_b_folder):
+    if not os.path.isdir(spec_b_folder):
         print("warning: " + b_name + " not found in " + args.spec_dir)
         return False, (None, None, None)
 
@@ -107,7 +107,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     tmp_dir = os.path.join(out_dir, "tmp")
 
     # Remove the temporary folder if it already exists
-    if os.path.exists(tmp_dir):
+    if os.path.isdir(tmp_dir):
         remove_dir(tmp_dir)
 
     # Create the temporary folder and consequently the output folder
@@ -117,13 +117,13 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     b_set = args.set[0]
     if benchsuite == "spec2017":
         # If there's no data folder check in the rate benchmark folder
-        if not os.path.exists(os.path.join(spec_b_folder, "data")):
+        if not os.path.isdir(os.path.join(spec_b_folder, "data")):
             rate_b_name = "5" + b_name[1:len(b_name)-1] + "r"
             spec_b_folder = os.path.join(args.spec_dir, rate_b_name)
         if b_set == "ref":
             if "_s" in b_name:
                 # If there's no refspeed folder try with refrate
-                b_set = ("refspeed" if os.path.exists(os.path.join(
+                b_set = ("refspeed" if os.path.isdir(os.path.join(
                     spec_b_folder,"data/refspeed")) else "refrate")
             else:
                 b_set = "refrate"
@@ -132,7 +132,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
         os.path.join(spec_b_folder, "data/all/input")]
     for d in input_folders:
         # Any invalid path will be ignored
-        if os.path.exists(d):
+        if os.path.isdir(d):
             mirror_dir(d, tmp_dir)
 
     # Make a symlink to the executable in the temporary directory
@@ -289,7 +289,7 @@ def sp_gen(args, sem):
                 continue
 
             # Create the output folder if not present
-            if not os.path.exists(out_dir):
+            if not os.path.isdir(out_dir):
                 os.makedirs(out_dir, mode=0o755)
 
             sp_filepath = out_dir + "/simpoint_" + subset[0]
