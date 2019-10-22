@@ -28,15 +28,11 @@ benchmarks = (
     "603.bwaves_s",
     "605.mcf_s",
     "607.cactuBSSN_s",
-    "608.namd_s",
-    "610.parest_s",
-    "611.povray_s",
     "619.lbm_s",
     "620.omnetpp_s",
     "621.wrf_s",
     "623.xalancbmk_s",
     "625.x264_s",
-    "626.blender_s",
     "627.cam4_s",
     "631.deepsjeng_s",
     "638.imagick_s",
@@ -115,10 +111,10 @@ subset = {
         "525.x264_r"         : ("pass1", "pass2", "seek"),
         "557.xz_r"           : ("cld", "cpu2006docs", "combined"),
         "600.perlbench_s"    : ("checkspam", "diffmail", "splitmail"),
-        "602.gcc_s"          : ("gcc-ppo3", "gcc-ppo2", "gcc-smaller", "ref32o5", "ref32o3"),
-        "603.bwaves_s"       : ("bwaves1", "bwaves2", "bwaves3", "bwaves4"),
+        "602.gcc_s"          : ("noil", "il1000", "il24000"),
+        "603.bwaves_s"       : ("bwaves1", "bwaves2"),
         "625.x264_s"         : ("pass1", "pass2", "seek"),
-        "657.xz_s"           : ("cld", "cpu2006docs", "combined")
+        "657.xz_s"           : ("cld", "cpu2006docs")
     }
 }
 
@@ -162,15 +158,11 @@ params = {
         "603.bwaves_s"    : ("bwaves_1", "bwaves_2"),
         "605.mcf_s"       : ("inp.in"),
         "607.cactuBSSN_s" : ("spec_test.par"),
-        "608.namd_s"      : ("--input apoa1.input --iterations 1 --output apoa1.test.output"),
-        "610.parest_s"    : ("test.prm"),
-        "611.povray_s"    : ("SPEC-benchmark-test.ini"),
-        "619.lbm_s"       : ("20 reference.dat 0 1 100_100_130_cf_a.of"),
+        "619.lbm_s"       : ("20 reference.dat 0 1 200_200_260_ldc.of"),
         "620.omnetpp_s"   : ("-c General -r 0"), 
 ##        "620.omnetpp_s"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "623.xalancbmk_s" : ("-v test.xml xalanc.xsl"),
         "625.x264_s"      : ("--dumpyuv 50 --frames 156 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"),
-        "626.blender_s"   : ("cube.blend --render-output cube_ --threads 1 -b -F RAWTGA -s 1 -e 1 -a"),
         "631.deepsjeng_s" : ("test.txt"),
         "638.imagick_s"   : ("-limit disk 0 test_input.tga -shear 25 -resize 640x480 -negate -alpha Off test_output.tga"),
         "641.leela_s"     : ("test.sgf"),
@@ -229,15 +221,11 @@ params = {
         "603.bwaves_s"    : ("bwaves_1", "bwaves_2"),
         "605.mcf_s"       : ("inp.in"),
         "607.cactuBSSN_s" : ("spec_train.par"),
-        "608.namd_s"      : ("--input apoa1.input --iterations 7 --output apoa1.train.output"),
-        "610.parest_s"    : ("train.prm"),
-        "611.povray_s"    : ("SPEC-benchmark-train.ini"),
-        "619.lbm_s"       : ("300 reference.dat 0 1 100_100_130_cf_b.of"),
+        "619.lbm_s"       : ("300 reference.dat 0 1 200_200_260_ldc.of"),
         "620.omnetpp_s"   : ("-c General -r 0"),
 ##        "620.omnetpp_s"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "623.xalancbmk_s" : ("-v allbooks.xml xalanc.xsl "),
         "625.x264_s"      : ("--dumpyuv 50 --frames 142 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"),
-        "626.blender_s"   : ("sh5_reduced.blend --render-output sh5_reduced_ --threads 1 -b -F RAWTGA -s 234 -e 234 -a"),
         "631.deepsjeng_s" : ("train.txt"),
         "638.imagick_s"   : ("-limit disk 0 train_input.tga -resize 320x240 -shear 31 -edge 140 -negate -flop -resize 900x900 -edge 10 train_output.tga"),
         "641.leela_s"     : ("train.sgf"),
@@ -286,19 +274,13 @@ params = {
                              "input.combined.xz 250 a841f68f38572a49d86226b7ff5baeb31bd19dc637a922a972b2e6d1257a890f6a544ecab967c313e370478c74f760eb229d4eef8a8d2836d233d3e9dd1430bf 40401484 41217675 7"
                             ),
         "600.perlbench_s" : ("-I./lib checkspam.pl 2500 5 25 11 150 1 1 1 1", "-I./lib diffmail.pl 4 800 10 17 19 300", "-I./lib splitmail.pl 6400 12 26 16 100 0"),
-        "602.gcc_s"       : ("gcc-pp.c -O3 -finline-limit=0 -fif-conversion -fif-conversion2 -o gcc-pp.opts-O3_-finline-limit_0_-fif-conversion_-fif-conversion2.s",
-                             "gcc-pp.c -O2 -finline-limit=36000 -fpic -o gcc-pp.opts-O2_-finline-limit_36000_-fpic.s",
-                             "gcc-smaller.c -O3 -fipa-pta -o gcc-smaller.opts-O3_-fipa-pta.s > gcc-smaller.opts-O3_-fipa-pta.out",
-                             "ref32.c -O5 -o ref32.opts-O5.s",
-                             "ref32.c -O3 -fselective-scheduling -fselective-scheduling2 -o ref32.opts-O3_-fselective-scheduling_-fselective-scheduling2.s"
-                            ),
-        "603.bwaves_s"    : ("bwaves_1", "bwaves_2", "bwaves_3", "bwaves_4"),
+        "602.gcc_s"       : ("gcc-pp.c -O5 -fipa-pta -o gcc-pp.opts-O5_-fipa-pta.s",
+                             "gcc-pp.c -O5 -finline-limit=1000 -fselective-scheduling -fselective-scheduling2 -o gcc-pp.opts-O5_-finline-limit_1000_-fselective-scheduling_-fselective-scheduling2.s",
+                             "gcc-pp.c -O5 -finline-limit=24000 -fgcse -fgcse-las -fgcse-lm -fgcse-sm -o gcc-pp.opts-O5_-finline-limit_24000_-fgcse_-fgcse-las_-fgcse-lm_-fgcse-sm.s"),
+        "603.bwaves_s"    : ("bwaves_1", "bwaves_2"),
         "605.mcf_s"       : ("inp.in"),
         "607.cactuBSSN_s" : ("spec_ref.par"),
-        "608.namd_s"      : ("--input apoa1.input --output apoa1.ref.output --iterations 65"),
-        "610.parest_s"    : ("ref.prm"),
-        "611.povray_s"    : ("SPEC-benchmark-ref.ini"),
-        "619.lbm_s"       : ("3000 reference.dat 0 0 100_100_130_ldc.of"),
+        "619.lbm_s"       : ("2000 reference.dat 0 0 200_200_260_ldc.of"),
         "620.omnetpp_s"   : ("-c General -r 0"),
 ##        "620.omnetpp_s"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "623.xalancbmk_s" : ("-v t5.xml xalanc.xsl"),
@@ -306,20 +288,17 @@ params = {
                              "--pass 2 --stats x264_stats.log --bitrate 1000 --dumpyuv 200 --frames 1000 -o BuckBunny_New.264 BuckBunny.yuv 1280x720",
                              "--seek 500 --dumpyuv 200 --frames 1250 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"
                             ),
-        "626.blender_s"   : ("sh3_no_char.blend --render-output sh3_no_char_ --threads 1 -b -F RAWTGA -s 849 -e 849 -a"),
         "631.deepsjeng_s" : ("ref.txt"),
-        "638.imagick_s"   : ("-limit disk 0 refrate_input.tga -edge 41 -resample 181% -emboss 31 -colorspace YUV -mean-shift 19x19+15% -resize 30% refrate_output.tga	"),
+        "638.imagick_s"   : ("-limit disk 0 refspeed_input.tga -resize 817% -rotate -2.76 -shave 540x375 -alpha remove -auto-level -contrast-stretch 1x1% -colorspace Lab -channel R -equalize +channel -colorspace sRGB -define histogram:unique-colors=false -adaptive-blur 0x5 -despeckle -auto-gamma -adaptive-sharpen 55 -enhance -brightness-contrast10x10 -resize 30% refspeed_output.tga"),
         "641.leela_s"     : ("ref.sgf"),
-        "644.nab_s"       : ("1am0 1122214447 122"),
+        "644.nab_s"       : ("3j1n 20140317 220"),
         "648.exchange2_s" : ("6"),
-        "657.xz_s"        : ("cld.tar.xz 160 19cf30ae51eddcbefda78dd06014b4b96281456e078ca7c13e1c0c9e6aaea8dff3efb4ad6b0456697718cede6bd5454852652806a657bb56e07d61128434b474 59796407 61004416 6",
-                             "cpu2006docs.tar.xz 250 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 23047774 23513385 6e",
-                             "input.combined.xz 250 a841f68f38572a49d86226b7ff5baeb31bd19dc637a922a972b2e6d1257a890f6a544ecab967c313e370478c74f760eb229d4eef8a8d2836d233d3e9dd1430bf 40401484 41217675 7"
-                            ),
-        "996.specrand_fs": ("1255432124 234923"),
-        "997.specrand_fr": ("1255432124 234923"),
-        "998.specrand_is": ("1255432124 234923"),
-        "999.specrand_ir": ("1255432124 234923")
+        "657.xz_s"        : ("cld.tar.xz 1400 19cf30ae51eddcbefda78dd06014b4b96281456e078ca7c13e1c0c9e6aaea8dff3efb4ad6b0456697718cede6bd5454852652806a657bb56e07d61128434b474 536995164 539938872 8",
+                             "cpu2006docs.tar.xz 6643 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1036078272 1111795472 4"),
+        "996.specrand_fs" : ("1255432124 234923"),
+        "997.specrand_fr" : ("1255432124 234923"),
+        "998.specrand_is" : ("1255432124 234923"),
+        "999.specrand_ir" : ("1255432124 234923")
     }
 }
 
@@ -328,16 +307,21 @@ input = {
     "test" : {
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in"),
         "554.roms_r"      : ("ocean_benchmark0.in.x"),
-
+        "603.bwaves_s"    : ("bwaves_1.in", "bwaves_2.in"),
+        "654.roms_s"      : ("ocean_benchmark0.in.x")
     },
     "train" : {
         "500.perlbench_r" : ("", "", "scrabbl.in", "", ""),
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in"),
         "554.roms_r"      : ("ocean_benchmark1.in.x"),
+        "603.bwaves_s"    : ("bwaves_1.in", "bwaves_2.in"),
+        "654.roms_s"      : ("ocean_benchmark1.in.x")
     },
     "ref" : {
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in", "bwaves_3.in", "bwaves_4.in"),
         "554.roms_r"      : ("ocean_benchmark2.in.x"),
+        "603.bwaves_s"    : ("bwaves_1.in", "bwaves_2.in"),
+        "654.roms_s"      : ("ocean_benchmark3.in.x")
     }
 }
 
