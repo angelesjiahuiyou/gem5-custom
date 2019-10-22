@@ -53,9 +53,8 @@ exe_name = {
     "502.gcc_r"         : "cpugcc_r",
     "507.cactuBSSN_r"   : "cactusBSSN_r",
     "523.xalancbmk_r"   : "cpuxalan_r",
-    "602.gcc_s"         : "cpugcc_s",
-    "607.cactuBSSN_s"   : "cactusBSSN_s",
-    "623.xalancbmk_s"   : "cpuxalan_s"
+    "602.gcc_s"         : "sgcc",
+    "607.cactuBSSN_s"   : "cactusBSSN_s"
 }
 
 # Specify actions to take before launching benchmarks (from the perl (object.pm) script)
