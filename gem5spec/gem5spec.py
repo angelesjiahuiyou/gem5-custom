@@ -151,7 +151,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     return out_dir, tmp_dir
 
 
-def spawn(cmd, dir, logpath, sem):
+def spawn(cmd, dir, logpath, sem, keep_tmp):
     # Create a thread for each child, to release the semaphore after execution
     # (this is needed because with subprocess it is only possible to wait for
     # a specific child to terminate, but we want to perform the operation when
@@ -163,10 +163,11 @@ def spawn(cmd, dir, logpath, sem):
         proc.wait()
         logfile.close()
 
-        # Delete the temporary folder, if present
-        subdir = dir.split("/")[-1]
-        if subdir == "tmp":
-            remove_dir(dir)
+        if not keep_tmp:
+            # Delete the temporary folder, if present
+            subdir = dir.split("/")[-1]
+            if subdir == "tmp":
+                remove_dir(dir)
 
         # Release the semaphore (makes space for other processes)
         sem.release()
@@ -239,7 +240,8 @@ def bbv_gen(args, sem):
             cmd = ("valgrind --tool=exp-bbv --bb-out-file=" + bbv_filepath +
                 " --pc-out-file=" + pc_filepath + " ./" + b_exe_name +
                 " " + subset[1] + (" < " + subset[2] if subset[2] else ""))
-            bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
+            bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
+                args.keep_tmp))
 
     wait_all(bbv_threads)
     print("done")
@@ -300,7 +302,8 @@ def sp_gen(args, sem):
             cmd = (simpoint_exec + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
                 " -saveSimpointWeights " + wgt_filepath)
-            sp_threads.append(spawn(cmd, out_dir, log_filepath, sem))    
+            sp_threads.append(spawn(cmd, out_dir, log_filepath, sem,
+                args.keep_tmp))    
 
     wait_all(sp_threads)
     print("done")
@@ -371,7 +374,8 @@ def cp_gen(args, sem):
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
                 else "") + ")")
-            cp_gen_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
+            cp_gen_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
+                args.keep_tmp))
 
     wait_all(cp_gen_threads)
     print("done")
@@ -495,7 +499,8 @@ def cp_sim(args, sem):
                     " --nvmain-ConfigLog=" + nconf_filepath
                     if args.mm_sim == "nvmain" else "") +
                     ")")
-                cp_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
+                cp_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
+                    args.keep_tmp))
 
     wait_all(cp_sim_threads)
     print("done")
@@ -600,7 +605,8 @@ def full_sim(args, sem):
                     " --nvmain-ConfigLog=" + nconf_filepath
                     if args.mm_sim == "nvmain" else "") +
                     ")")
-                full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem))
+                full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
+                    args.keep_tmp))
 
     wait_all(full_sim_threads)
     print("done")
@@ -671,6 +677,8 @@ def main():
     parser.add_argument("--out-dir", action="store", type=str, metavar="DIR",
         default=(home + "/benchdata_" + benchsuite), help="output directory " +
         "(default: %(default)s)")
+    parser.add_argument("--keep-tmp", action="store_true",
+        help="do not remove temporary folders after the execution")
     args = parser.parse_args()
     sem  = threading.Semaphore(args.max_proc)
 
