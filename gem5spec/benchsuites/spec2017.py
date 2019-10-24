@@ -34,6 +34,7 @@ benchmarks = (
     "623.xalancbmk_s",
     "625.x264_s",
     "627.cam4_s",
+    "628.pop2_s",
     "631.deepsjeng_s",
     "638.imagick_s",
     "641.leela_s",
