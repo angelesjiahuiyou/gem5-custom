@@ -55,7 +55,8 @@ exe_name = {
     "507.cactuBSSN_r"   : "cactusBSSN_r",
     "523.xalancbmk_r"   : "cpuxalan_r",
     "602.gcc_s"         : "sgcc",
-    "607.cactuBSSN_s"   : "cactusBSSN_s"
+    "628.pop2_s"        : "speed_pop2",
+    "654.roms_s"        : "sroms"
 }
 
 # Specify actions to take before launching benchmarks (from the perl (object.pm) script)
