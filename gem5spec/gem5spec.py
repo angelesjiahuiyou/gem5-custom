@@ -88,6 +88,7 @@ def remove_dir(target):
         for name in dirs:
             os.rmdir(os.path.join(root, name))
     os.rmdir(target)
+    return
 
 
 def mirror_dir(orig, dest):
@@ -98,6 +99,7 @@ def mirror_dir(orig, dest):
         for name in files:
             os.symlink(os.path.join(root, name),
                 os.path.join(dest, subroot, name))
+    return
 
 
 def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
