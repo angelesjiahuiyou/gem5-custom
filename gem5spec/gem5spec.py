@@ -81,6 +81,7 @@ def get_ss_params(b_name, b_set):
     return arguments
 
 
+# Remove directories prepared with mirror_dir
 def remove_dir(target):
     for root, dirs, files in os.walk(target, topdown=False):
         for name in files:
@@ -91,6 +92,7 @@ def remove_dir(target):
     return
 
 
+# Create a clone of the origin folder with symlinks to all the files
 def mirror_dir(orig, dest):
     for root, dirs, files in os.walk(orig):
         subroot = root.split(orig + "/")[1] if root != orig else ""
@@ -102,6 +104,7 @@ def mirror_dir(orig, dest):
     return
 
 
+# Prepare the execution environment copying necessary files
 def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     spec_b_folder = os.path.join(args.spec_dir, b_name)
     base_subfolder = os.path.join(args.arch, b_name)
@@ -192,19 +195,27 @@ def wait_all(threads):
 def bbv_gen(args, sem):
     bbv_threads = []
 
-    # Check if valgrind exists in current system
-    if not cmd_exists("valgrind"):
-        print("error: valgrind utility not found in env path")
-        exit(2)
+    if not args.use_gem5:
+        # Check if valgrind exists in current system
+        if not cmd_exists("valgrind"):
+            print("error: valgrind utility not found in env path")
+            exit(2)
 
-    # Check if the CPU architecture matches the execution platform
-    machine = platform.machine()
-    if ((machine in ("i386", "i686", "x86", "x86_64", "x64") and
-        args.arch != "x86") or
-        (machine in ("arm", "aarch64_be", "aarch64", "armv8b", "armv8l",
-            "arm64", "armv7b", "armv7l", "armhf") and args.arch != "arm")):
-        print("error: architecture mismatch")
-        exit(3)
+        # Check if the CPU architecture matches the execution platform
+        machine = platform.machine()
+        if ((machine in ("i386", "i686", "x86", "x86_64", "x64") and
+            args.arch != "x86") or
+            (machine in ("arm", "aarch64_be", "aarch64", "armv8b", "armv8l",
+                "arm64", "armv7b", "armv7l", "armhf") and args.arch != "arm")):
+            print("error: architecture mismatch")
+            exit(3)
+    else:
+        # Check if gem5 exists in specified path
+        gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+        gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
+        if not os.path.isfile(gem5_exe_path):
+            print("error: gem5.fast executable not found in " + gem5_exe_dir)
+            exit(2)
 
     print("BBV generation:")
     for b_name in args.benchmarks:
@@ -238,10 +249,22 @@ def bbv_gen(args, sem):
             pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
             log_filepath = out_dir + "/" + b_abbr + "." + subset[0] + ".out"
 
-            # Execute valgrind with exp-bbv tool
-            cmd = ("valgrind --tool=exp-bbv --bb-out-file=" + bbv_filepath +
-                " --pc-out-file=" + pc_filepath + " ./" + b_exe_name +
-                " " + subset[1] + (" < " + subset[2] if subset[2] else ""))
+            if not args.use_gem5:
+                # Execute valgrind with exp-bbv tool
+                cmd = ("valgrind --tool=exp-bbv --bb-out-file=" +
+                    bbv_filepath + " --pc-out-file=" + pc_filepath + " ./" +
+                    b_exe_name + " " + subset[1] + (" < " + subset[2] if
+                    subset[2] else ""))
+            else:
+                cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
+                    " " + args.gem5_dir + "/configs/example/se.py" +
+                    " --cpu-type=AtomicSimpleCPU --simpoint-profile" +
+                    " --simpoint-interval=" + str(args.int_size) +
+                    " --output=" + out_filepath +
+                    " --mem-size=" + (str(b_mem_size) if b_mem_size else
+                    "512MB") + " --cmd=./" + b_exe_name +
+                    (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
+                    (" --input=" + subset[2] if subset[2] else "") + ")")
             bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
                 args.keep_tmp))
 
@@ -316,8 +339,8 @@ def cp_gen(args, sem):
     cp_gen_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = args.gem5_dir + "/build/" + args.arch.upper() 
-    gem5_exe_path = gem5_exe_dir + "/gem5.fast"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -368,8 +391,8 @@ def cp_gen(args, sem):
             log_filepath = out_dir + "/gem5." + b_abbr + ".out"
 
             cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir + " " +
-                args.gem5_dir + "/configs/example/se.py " +
-                "--cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
+                args.gem5_dir + "/configs/example/se.py" +
+                " --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
                 sp_filepath + "," + wgt_filepath + "," + str(args.int_size) +
                 "," + str(args.warmup) + " --output=" + out_filepath +
                 " --mem-size=" + (str(b_mem_size) if b_mem_size else "512MB") +
@@ -388,8 +411,8 @@ def cp_sim(args, sem):
     cp_sim_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = args.gem5_dir + "/build/" + args.arch.upper() 
-    gem5_exe_path = gem5_exe_dir + "/gem5.fast"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -513,8 +536,8 @@ def full_sim(args, sem):
     full_sim_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = args.gem5_dir + "/build/" + args.arch.upper() 
-    gem5_exe_path = gem5_exe_dir + "/gem5.fast"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -634,7 +657,7 @@ def main():
     parser.add_argument("benchmarks", nargs="+", type=str,
         help="list of target benchmarks")
     parser.add_argument("-b", "--bbv", action="store_true",
-        help="generate bbv with valgrind")
+        help="generate basic block vectors")
     parser.add_argument("-s", "--simpoints", action="store_true",
         help="generate simulation points")
     parser.add_argument("-c", "--checkpoints", action="store_true",
@@ -681,6 +704,8 @@ def main():
         "(default: %(default)s)")
     parser.add_argument("--keep-tmp", action="store_true",
         help="do not remove temporary folders after the execution")
+    parser.add_argument("--use-gem5", action="store_true",
+        help="use gem5 for bbv generation")
     args = parser.parse_args()
     sem  = threading.Semaphore(args.max_proc)
 
