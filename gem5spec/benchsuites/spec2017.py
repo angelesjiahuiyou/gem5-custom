@@ -61,17 +61,10 @@ exe_name = {
 
 # Specify actions to take before launching benchmarks (from the perl (object.pm) script)
 preprocessing = {
-# TODO check 525, 511, 521, 526, 527, 538, 549 Done! but verify is there are problems
-# Checked 525 (probably don't need any treatment, but there are extra functions apparently to fetch the parameters from the /data/[refrec|test|train]/input/control) file
-# 511 (only fetching params perhamps)
-# 521 (adds imagevalidate program, is it compulsory?)
-# 526  same as 521
-# 527  (adds cam4_validate program, is it compulsory?)
-# 538  same as 521
-# 549  sets for spec17/bin/specxz but not used the subroutine under invoke
-##    "481.wrf"           : ("ln -s le/32/* .", "ln -s le/64/* ."),
-##    "482.sphinx3"       : ("rm *.be.raw && for file in *.le.raw; do mv \"$file\" \"${file%.le.raw}.raw\"; done && wc -c $(ls *.raw) | awk -F\".raw\" \'{print $1}\' | awk \'{print $2 \" \" $1}\' | head -n -1 > ctlfile",
-##                           "rm *.le.raw && for file in *.be.raw; do mv \"$file\" \"${file%.be.raw}.raw\"; done && wc -c $(ls *.raw) | awk -F\".raw\" \'{print $1}\' | awk \'{print $2 \" \" $1}\' | head -n -1 > ctlfile")
+    # 525 needs preprocessing (yuv file generation), but better doing it before and leaving the file in the data folder
+    # 549 needs preprocessing (OBJ.dat.xz extraction with specxz), but better doing it before and leaving the file in the data folder
+    # 628 renaming .in files is just fine as long as we don't need multithreading
+    "628.pop2_s"        : "find . -name \"*.in\" -print0 | xargs -0 rename .in \"\""
 }
 
 # Memory size limit in GiB, for gem5 (default: 512MiB)
