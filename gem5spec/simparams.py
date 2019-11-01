@@ -17,10 +17,10 @@ cpu_models = {
 # Tuple: (L1D, L1I, L2)
 
 mem_technologies = {
-    "stt-all"       : ("stt-mram", "stt-mram", "stt-mram"),
-    "stt-l1d"       : ("stt-mram", "sram", "sram"),
-    "stt-l1d-l2"    : ("stt-mram", "sram", "stt-mram"),
-    "stt-l1i"       : ("sram", "stt-mram", "sram"),
+    #"stt-all"       : ("stt-mram", "stt-mram", "stt-mram"),
+    #"stt-l1d"       : ("stt-mram", "sram", "sram"),
+    #"stt-l1d-l2"    : ("stt-mram", "sram", "stt-mram"),
+    #"stt-l1i"       : ("sram", "stt-mram", "sram"),
     "stt-l2"        : ("sram", "sram", "stt-mram"),
     "stt-none"      : ("sram", "sram", "sram")
 }
