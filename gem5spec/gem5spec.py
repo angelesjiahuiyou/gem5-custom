@@ -33,7 +33,7 @@ def cmd_exists(cmd):
 
 
 def get_params(args, b_name):
-    spec_b_folder = args.spec_dir + "/" + b_name
+    spec_b_folder = os.path.join(args.spec_dir, b_name)
     b_spl = b_name.split('.')
 
     # Check if the benchmark folder is present in SPEC path
@@ -133,12 +133,12 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
             if "_s" in b_name:
                 # If there's no refspeed folder try with refrate
                 b_set = ("refspeed" if os.path.isdir(os.path.join(
-                    spec_b_folder,"data/refspeed")) else "refrate")
+                    spec_b_folder, "data", "refspeed")) else "refrate")
             else:
                 b_set = "refrate"
 
     input_folders = [os.path.join(spec_b_folder, "data", b_set, "input"), 
-        os.path.join(spec_b_folder, "data/all/input")]
+        os.path.join(spec_b_folder, "data", "all", "input")]
     for d in input_folders:
         # Any invalid path will be ignored
         if os.path.isdir(d):
@@ -234,6 +234,7 @@ def bbv_gen(args, sem):
 
         b_exe_name = b_params[0]
         b_preproc  = b_params[1]
+        b_mem_size = b_params[2]
 
         # Get benchmark subset parameters from benchlist.py
         ss_params = get_ss_params(b_name, b_set) 
@@ -245,9 +246,14 @@ def bbv_gen(args, sem):
             out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
                 os.path.join("valgrind", subset[0]))
 
-            bbv_filepath = out_dir + "/bb.out." + b_abbr + "." + subset[0]
-            pc_filepath = out_dir + "/pc." + b_abbr + "." + subset[0]
-            log_filepath = out_dir + "/" + b_abbr + "." + subset[0] + ".out"
+            bbv_filepath = os.path.join(out_dir, "bb.out." + b_abbr + "." +
+                subset[0])
+            pc_filepath = os.path.join(out_dir, "pc." + b_abbr + "." +
+                subset[0])
+            out_filepath = os.path.join(out_dir, b_abbr + "." + subset[0] +
+                ".out")
+            log_filepath = os.path.join(out_dir, b_abbr + "." + subset[0] +
+                ".log")
 
             if not args.use_gem5:
                 # Execute valgrind with exp-bbv tool
@@ -257,12 +263,12 @@ def bbv_gen(args, sem):
                     subset[2] else ""))
             else:
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
-                    " " + args.gem5_dir + "/configs/example/se.py" +
-                    " --cpu-type=AtomicSimpleCPU --simpoint-profile" +
-                    " --simpoint-interval=" + str(args.int_size) +
-                    " --output=" + out_filepath +
-                    " --mem-size=" + (str(b_mem_size) if b_mem_size else
-                    "512MB") + " --cmd=./" + b_exe_name +
+                    " " + os.path.join(args.gem5_dir, "configs", "example", 
+                    "se.py") + " --cpu-type=NonCachingSimpleCPU" +
+                    " --simpoint-profile --simpoint-interval=" +
+                    str(args.int_size) + " --output=" + out_filepath +
+                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
+                    " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") + ")")
             bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
@@ -277,8 +283,8 @@ def sp_gen(args, sem):
     sp_threads = []
 
     # Check if simpoint tool exists in specified path
-    simpoint_exec = args.sp_dir + "/bin/simpoint"
-    if not os.path.isfile(simpoint_exec):
+    simpoint_exe = os.path.join(args.sp_dir, "bin", "simpoint")
+    if not os.path.isfile(simpoint_exe):
         print("error: simpoint executable not found in " + args.sp_dir)
         exit(2)
 
@@ -286,7 +292,7 @@ def sp_gen(args, sem):
     for b_name in args.benchmarks:
         print("- " + b_name)
 
-        base_subfolder = "/" + args.arch + "/" + b_name
+        base_subfolder = os.path.join(args.arch, b_name)
         b_spl = b_name.split('.')
         b_abbr = b_spl[0] + b_spl[1]
         b_set = args.set[0]
@@ -295,11 +301,12 @@ def sp_gen(args, sem):
         ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
-            out_dir = args.out_dir + base_subfolder + "/simpoint/" + subset[0]
-            data_dir = (args.data_dir + base_subfolder + "/valgrind/" +
+            out_dir = os.path.join(args.out_dir, base_subfolder, "simpoint",
+                subset[0])
+            data_dir = os.path.join(args.data_dir, base_subfolder, "valgrind",
                 subset[0])
             bbv_filename = "bb.out." + b_abbr + "." + subset[0]
-            bbv_filepath = data_dir + "/" + bbv_filename
+            bbv_filepath = os.path.join(data_dir, bbv_filename)
 
             # Check if bbv files are present in the specified data directory
             if (not os.path.isfile(bbv_filepath)):
@@ -319,12 +326,12 @@ def sp_gen(args, sem):
             if not os.path.isdir(out_dir):
                 os.makedirs(out_dir, mode=0o755)
 
-            sp_filepath = out_dir + "/simpoint_" + subset[0]
-            wgt_filepath = out_dir + "/weight_" + subset[0]
-            log_filepath = out_dir + "/log_" + subset[0]
+            sp_filepath = os.path.join(out_dir, "simpoint_" + subset[0])
+            wgt_filepath = os.path.join(out_dir, "weight_" + subset[0])
+            log_filepath = os.path.join(out_dir, "log_" + subset[0])
 
             # Execute the simpoint utility
-            cmd = (simpoint_exec + " -loadFVFile " + bbv_filepath + " -maxK " +
+            cmd = (simpoint_exe + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
                 " -saveSimpointWeights " + wgt_filepath)
             sp_threads.append(spawn(cmd, out_dir, log_filepath, sem,
@@ -349,7 +356,7 @@ def cp_gen(args, sem):
     for b_name in args.benchmarks:
         print("- " + b_name)
 
-        base_subfolder = "/" + args.arch + "/" + b_name
+        base_subfolder = os.path.join(args.arch, b_name)
         b_spl = b_name.split('.')
         b_abbr = b_spl[0] + b_spl[1]
         b_set = args.set[0]
@@ -369,12 +376,12 @@ def cp_gen(args, sem):
         ss_params = get_ss_params(b_name, b_set) 
 
         for subset in ss_params:
-            data_dir = (args.data_dir + base_subfolder + "/simpoint/" +
+            data_dir = os.path.join(args.data_dir, base_subfolder, "simpoint",
                 subset[0])
             sp_filename = "simpoint_" + subset[0]
             wgt_filename = "weight_" + subset[0]
-            sp_filepath = data_dir + "/" + sp_filename
-            wgt_filepath = data_dir + "/" + wgt_filename
+            sp_filepath = os.path.join(data_dir, sp_filename)
+            wgt_filepath = os.path.join(data_dir, wgt_filename)
 
             # Check if simpoints are present in the specified data directory
             if (not os.path.isfile(sp_filepath)):
@@ -387,15 +394,15 @@ def cp_gen(args, sem):
             out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
                 os.path.join("checkpoint", subset[0]))
 
-            out_filepath = out_dir + "/" + b_abbr + ".out"
-            log_filepath = out_dir + "/gem5." + b_abbr + ".out"
+            out_filepath = os.path.join(out_dir, b_abbr + ".out")
+            log_filepath = os.path.join(out_dir, "gem5." + b_abbr + ".out")
 
             cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir + " " +
-                args.gem5_dir + "/configs/example/se.py" +
+                os.path.join(args.gem5_dir, "configs", "example", "se.py") +
                 " --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
                 sp_filepath + "," + wgt_filepath + "," + str(args.int_size) +
                 "," + str(args.warmup) + " --output=" + out_filepath +
-                " --mem-size=" + (str(b_mem_size) if b_mem_size else "512MB") +
+                " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
                 else "") + ")")
@@ -426,8 +433,8 @@ def cp_sim(args, sem):
     for b_name in args.benchmarks:
         print("- " + b_name)
 
-        base_subfolder = "/" + args.arch + "/" + b_name
-        data_dir = args.data_dir + base_subfolder + "/checkpoint"
+        base_subfolder = os.path.join(args.arch, b_name)
+        data_dir = os.path.join(args.data_dir, base_subfolder, "checkpoint")
         b_spl = b_name.split('.')
         b_abbr = b_spl[0] + b_spl[1]
         b_set = args.set[0]
@@ -484,15 +491,17 @@ def cp_sim(args, sem):
                     b_preproc, os.path.join("simulation", subset[0],
                     model_name, tech, case, cpt))
 
-                out_filepath = out_dir + "/" + b_abbr + ".out"
-                log_filepath = out_dir + "/gem5." + b_abbr + ".out"
-                nstats_filepath = out_dir + "/nvmain_stats." + b_abbr + ".log"
-                nconf_filepath = out_dir + "/nvmain_config." + b_abbr + ".log"
+                out_filepath = os.path.join(out_dir, b_abbr + ".out")
+                log_filepath = os.path.join(out_dir, "gem5." + b_abbr + ".out")
+                nstats_filepath = os.path.join(out_dir, "nvmain_stats." +
+                    b_abbr + ".log")
+                nconf_filepath = os.path.join(out_dir, "nvmain_config." +
+                    b_abbr + ".log")
             
                 latencies = simparams.mem_latencies[model_name]
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
-                    " " + args.gem5_dir + "/configs/example/" + model_conf +
-                    " --caches --l2cache" +
+                    " " + os.path.join(args.gem5_dir, "configs", "example", 
+                    model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
                     " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
@@ -513,8 +522,7 @@ def cp_sim(args, sem):
                     " --checkpoint-dir=" + data_ss_dir +
                     " --checkpoint-restore=" + str(cpt_folders.index(cpt)+1) +
                     " --output=" + out_filepath +
-                    " --mem-size=" + (str(b_mem_size) if b_mem_size else
-                        "512MB") +
+                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
@@ -593,15 +601,17 @@ def full_sim(args, sem):
                     b_preproc, os.path.join("simulation", subset[0],
                     model_name, tech, case, "full"))
 
-                out_filepath = out_dir + "/" + b_abbr + ".out"
-                log_filepath = out_dir + "/gem5." + b_abbr + ".out"
-                nstats_filepath = out_dir + "/nvmain_stats." + b_abbr + ".log"
-                nconf_filepath = out_dir + "/nvmain_config." + b_abbr + ".log"
+                out_filepath = os.path.join(out_dir, b_abbr + ".out")
+                log_filepath = os.path.join(out_dir, "gem5." + b_abbr + ".out")
+                nstats_filepath = os.path.join(out_dir, "nvmain_stats." +
+                    b_abbr + ".log")
+                nconf_filepath = os.path.join(out_dir, "nvmain_config." +
+                    b_abbr + ".log")
             
                 latencies = simparams.mem_latencies[model_name]
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
-                    " " + args.gem5_dir + "/configs/example/" + model_conf +
-                    " --caches --l2cache" +
+                    " " + os.path.join(args.gem5_dir, "configs", "example", 
+                    model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
                     " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
@@ -619,8 +629,7 @@ def full_sim(args, sem):
                     " --num-cpus=1" +
                     " --cpu-type=" + model_name +
                     " --output=" + out_filepath +
-                    " --mem-size=" + (str(b_mem_size) if b_mem_size else
-                        "512MB") +
+                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +

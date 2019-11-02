@@ -67,12 +67,9 @@ preprocessing = {
     "628.pop2_s"        : "find . -name \"*.in\" -print0 | xargs -0 rename .in \"\""
 }
 
-# Memory size limit in GiB, for gem5 (default: 512MiB)
+# Memory size limit for gem5 (default: 512MB)
 mem_size = {
-#    "434.zeusmp"        : 2,
-#    "459.GemsFDTD"      : 4,
-#    "465.tonto"         : 4,
-#    "481.wrf"           : 4
+    "628.pop2_s"        : "2GB"
 }
 
 # Define if there are several inputs for any benchmarks
