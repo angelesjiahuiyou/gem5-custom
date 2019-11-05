@@ -2,12 +2,16 @@
 # ----------
 
 cpu_models = {
+    "amd64" : {
+        "DerivO3CPU"    : "se_multi.py"
+    },
     "arm" : {
         "CortexA7"      : "se_multi.py",
         "CortexA15"     : "se_multi.py"
     },
-    "x86" : {
-        "DerivO3CPU"    : "se_multi.py"
+    "arm64" : {
+        "CortexA7"      : "se_multi.py",
+        "CortexA15"     : "se_multi.py"
     }
 }
 

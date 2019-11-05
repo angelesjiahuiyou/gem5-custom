@@ -69,7 +69,7 @@ preprocessing = {
 
 # Memory size limit for gem5 (default: 512MB)
 mem_size = {
-    "628.pop2_s"        : "2GB"
+    "628.pop2_s"        : "4GB"
 }
 
 # Define if there are several inputs for any benchmarks

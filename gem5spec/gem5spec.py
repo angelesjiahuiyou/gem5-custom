@@ -203,15 +203,18 @@ def bbv_gen(args, sem):
 
         # Check if the CPU architecture matches the execution platform
         machine = platform.machine()
-        if ((machine in ("i386", "i686", "x86", "x86_64", "x64") and
-            args.arch != "x86") or
-            (machine in ("arm", "aarch64_be", "aarch64", "armv8b", "armv8l",
-                "arm64", "armv7b", "armv7l", "armhf") and args.arch != "arm")):
+        archs_amd64 = ("x86_64", "x64", "amd64")
+        archs_arm = ("arm", "armv7b", "armv7l", "armhf")
+        archs_arm64 = ("aarch64_be", "aarch64", "armv8b", "armv8l", "arm64")         
+        if ((args.arch == "amd64" and machine not in archs_amd64) or
+            (args.arch == "arm" and machine not in archs_arm) or
+            (args.arch == "arm64" and machine not in archs_arm64)):
             print("error: architecture mismatch")
             exit(3)
     else:
         # Check if gem5 exists in specified path
-        gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+        gem5_build = "X86" if args.arch == "amd64" else "ARM"
+        gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
         gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
         if not os.path.isfile(gem5_exe_path):
             print("error: gem5.fast executable not found in " + gem5_exe_dir)
@@ -346,7 +349,8 @@ def cp_gen(args, sem):
     cp_gen_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_build = "X86" if args.arch == "amd64" else "ARM"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
     gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
@@ -418,7 +422,8 @@ def cp_sim(args, sem):
     cp_sim_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_build = "X86" if args.arch == "amd64" else "ARM"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
     gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
@@ -544,7 +549,8 @@ def full_sim(args, sem):
     full_sim_threads = []
 
     # Check if gem5 exists in specified path
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", args.arch.upper())
+    gem5_build = "X86" if args.arch == "amd64" else "ARM"
+    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
     gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
@@ -676,7 +682,8 @@ def main():
     parser.add_argument("-f", "--full", action="store_true",
         help="simulate target benchmarks normally")
     parser.add_argument("--arch", action="store", type=str, default="arm",
-        choices=["arm","x86"], help="cpu architecture (default: %(default)s)")
+        choices=["amd64","arm","arm64"], help="cpu architecture " +
+        "(default: %(default)s)")
     parser.add_argument("--maxk", action="store", type=int, metavar="N",
         default=30, help="maxK parameter for simpoint (default: %(default)s)")
     parser.add_argument("--int-size", action="store", type=int, metavar="N",
