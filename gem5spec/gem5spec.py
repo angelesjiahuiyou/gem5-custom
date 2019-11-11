@@ -166,6 +166,10 @@ def spawn(cmd, dir, logpath, sem, keep_tmp):
         proc = subprocess.Popen(cmd, shell=True, cwd=dir, stdout=logfile,
             stderr=subprocess.STDOUT)
         proc.wait()
+
+        # Close the log file (after flushing internal buffers)
+        logfile.flush()
+        os.fsync(logfile.fileno())
         logfile.close()
 
         if not keep_tmp:
