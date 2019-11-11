@@ -64,7 +64,7 @@ preprocessing = {
     # 525 needs preprocessing (yuv file generation), but better doing it before and leaving the file in the data folder
     # 549 needs preprocessing (OBJ.dat.xz extraction with specxz), but better doing it before and leaving the file in the data folder
     # 628 renaming .in files is just fine as long as we don't need multithreading
-    "628.pop2_s"        : "find . -name \"*.in\" -print0 | xargs -0 rename .in \"\""
+    "628.pop2_s"        : "for i in $(find . -name '*.in'); do mv $i ${i%.in}; done"
 }
 
 # Memory size limit for gem5 (default: 512MB)
