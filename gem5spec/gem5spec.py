@@ -717,10 +717,10 @@ def main():
         benchsuite != "spec2017" else "")),
         help="path to SPEC benchmark suite (default: %(default)s)")
     parser.add_argument("--data-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/benchmarks/SPECCPU/speccpu" + bsyear),
+        default=(home + "/benchmark-data/SPECCPU/speccpu" + bsyear),
         help="path to benchmark simulation data (default: %(default)s)")
     parser.add_argument("--out-dir", action="store", type=str, metavar="DIR",
-        default=(home + "/benchdata_" + benchsuite), help="output directory " +
+        default=(home + "/out_" + benchsuite), help="output directory " +
         "(default: %(default)s)")
     parser.add_argument("--keep-tmp", action="store_true",
         help="do not remove temporary folders after the execution")
