@@ -507,24 +507,30 @@ def cp_sim(args, sem):
                 nconf_filepath = os.path.join(out_dir, "nvmain_config." +
                     b_abbr + ".log")
             
-                latencies = simparams.mem_latencies[model_name]
+                cache = simparams.mem_configs[model_name]
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
                     model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
-                    " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
-                    " --l1d-write-lat=" + str(latencies[hier[0]][case][0][1]) +
-                    " --l1d-tag-lat=" + str(latencies[hier[0]][case][0][2]) +
-                    " --l1d-resp-lat=" + str(latencies[hier[0]][case][0][3]) +
-                    " --l1i-data-lat=" + str(latencies[hier[1]][case][0][0]) +
-                    " --l1i-write-lat=" + str(latencies[hier[1]][case][0][1]) +
-                    " --l1i-tag-lat=" + str(latencies[hier[1]][case][0][2]) +
-                    " --l1i-resp-lat=" + str(latencies[hier[1]][case][0][3]) +
-                    " --l2-data-lat=" + str(latencies[hier[2]][case][1][0]) +
-                    " --l2-write-lat=" + str(latencies[hier[2]][case][1][1]) +
-                    " --l2-tag-lat=" + str(latencies[hier[2]][case][1][2]) +
-                    " --l2-resp-lat=" + str(latencies[hier[2]][case][1][3]) +
+                    " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
+                    " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
+                    " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
+                    " --l1d-resp-lat=" +  str(cache[hier[0]][case][0][3]) +
+                    " --l1d-size=" +      str(cache[hier[0]][case][0][4]) +
+                    " --l1d-assoc=" +     str(cache[hier[0]][case][0][5]) +
+                    " --l1i-data-lat=" +  str(cache[hier[1]][case][1][0]) +
+                    " --l1i-write-lat=" + str(cache[hier[1]][case][1][1]) +
+                    " --l1i-tag-lat=" +   str(cache[hier[1]][case][1][2]) +
+                    " --l1i-resp-lat=" +  str(cache[hier[1]][case][1][3]) +
+                    " --l1i-size=" +      str(cache[hier[1]][case][1][4]) +
+                    " --l1i-assoc=" +     str(cache[hier[1]][case][1][5]) +
+                    " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
+                    " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
+                    " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
+                    " --l2-resp-lat=" +   str(cache[hier[2]][case][2][3]) +
+                    " --l2-size=" +       str(cache[hier[2]][case][2][4]) +
+                    " --l2-assoc=" +      str(cache[hier[2]][case][2][5]) +
                     " --num-cpus=1" +
                     " --cpu-type=" + model_name +
                     " --restore-simpoint-checkpoint"
@@ -618,24 +624,30 @@ def full_sim(args, sem):
                 nconf_filepath = os.path.join(out_dir, "nvmain_config." +
                     b_abbr + ".log")
             
-                latencies = simparams.mem_latencies[model_name]
+                cache = simparams.mem_configs[model_name]
                 cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
                     model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
                         if args.num_banks else "") +
-                    " --l1d-data-lat=" + str(latencies[hier[0]][case][0][0]) +
-                    " --l1d-write-lat=" + str(latencies[hier[0]][case][0][1]) +
-                    " --l1d-tag-lat=" + str(latencies[hier[0]][case][0][2]) +
-                    " --l1d-resp-lat=" + str(latencies[hier[0]][case][0][3]) +
-                    " --l1i-data-lat=" + str(latencies[hier[1]][case][0][0]) +
-                    " --l1i-write-lat=" + str(latencies[hier[1]][case][0][1]) +
-                    " --l1i-tag-lat=" + str(latencies[hier[1]][case][0][2]) +
-                    " --l1i-resp-lat=" + str(latencies[hier[1]][case][0][3]) +
-                    " --l2-data-lat=" + str(latencies[hier[2]][case][1][0]) +
-                    " --l2-write-lat=" + str(latencies[hier[2]][case][1][1]) +
-                    " --l2-tag-lat=" + str(latencies[hier[2]][case][1][2]) +
-                    " --l2-resp-lat=" + str(latencies[hier[2]][case][1][3]) +
+                    " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
+                    " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
+                    " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
+                    " --l1d-resp-lat=" +  str(cache[hier[0]][case][0][3]) +
+                    " --l1d-size=" +      str(cache[hier[0]][case][0][4]) +
+                    " --l1d-assoc=" +     str(cache[hier[0]][case][0][5]) +
+                    " --l1i-data-lat=" +  str(cache[hier[1]][case][1][0]) +
+                    " --l1i-write-lat=" + str(cache[hier[1]][case][1][1]) +
+                    " --l1i-tag-lat=" +   str(cache[hier[1]][case][1][2]) +
+                    " --l1i-resp-lat=" +  str(cache[hier[1]][case][1][3]) +
+                    " --l1i-size=" +      str(cache[hier[1]][case][1][4]) +
+                    " --l1i-assoc=" +     str(cache[hier[1]][case][1][5]) +
+                    " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
+                    " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
+                    " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
+                    " --l2-resp-lat=" +   str(cache[hier[2]][case][2][3]) +
+                    " --l2-size=" +       str(cache[hier[2]][case][2][4]) +
+                    " --l2-assoc=" +      str(cache[hier[2]][case][2][5]) +
                     " --num-cpus=1" +
                     " --cpu-type=" + model_name +
                     " --output=" + out_filepath +
