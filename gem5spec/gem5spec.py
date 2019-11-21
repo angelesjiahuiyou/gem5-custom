@@ -541,11 +541,11 @@ def cp_sim(args, sem):
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
-                    (" --mem-type=NVMainMemory" +
+                    " --mem-type=" + ("NVMainMemory" +
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "") +
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32") +
                     ")")
                 cp_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
                     args.keep_tmp))
@@ -655,11 +655,11 @@ def full_sim(args, sem):
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
-                    (" --mem-type=NVMainMemory" +
+                    " --mem-type=" + ("NVMainMemory" +
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "") +
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32") +
                     ")")
                 full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
                     args.keep_tmp))
