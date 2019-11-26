@@ -219,7 +219,8 @@ def bbv_gen(args, sem):
         # Check if gem5 exists in specified path
         gem5_build = "X86" if args.arch == "amd64" else "ARM"
         gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-        gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
+        gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
+        gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
         if not os.path.isfile(gem5_exe_path):
             print("error: gem5.fast executable not found in " + gem5_exe_dir)
             exit(2)
@@ -355,7 +356,8 @@ def cp_gen(args, sem):
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
     gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
+    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
+    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -428,7 +430,8 @@ def cp_sim(args, sem):
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
     gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
+    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
+    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -561,7 +564,8 @@ def full_sim(args, sem):
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
     gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_path = os.path.join(gem5_exe_dir, "gem5.fast")
+    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
+    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
     if not os.path.isfile(gem5_exe_path):
         print("error: gem5.fast executable not found in " + gem5_exe_dir)
         exit(2)
@@ -738,6 +742,8 @@ def main():
         help="do not remove temporary folders after the execution")
     parser.add_argument("--use-gem5", action="store_true",
         help="use gem5 for bbv generation")
+    parser.add_argument("--debug", action="store_true",
+        help="use gem5.opt instead of gem5.fast")
     args = parser.parse_args()
     sem  = threading.Semaphore(args.max_proc)
 
