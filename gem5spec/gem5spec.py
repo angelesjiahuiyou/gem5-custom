@@ -10,11 +10,13 @@ import platform
 import threading
 import simparams
 
+dfl_ram = "512MB"
 try:
     if benchsuite == "spec2006":
         import benchsuites.spec2006 as benchlist
     elif benchsuite == "spec2017":
         import benchsuites.spec2017 as benchlist
+        dfl_ram = "2GB"
     else:
         raise ImportError("Invalid benchmark suite") 
 except ImportError as error:
@@ -275,7 +277,7 @@ def bbv_gen(args, sem):
                     "se.py") + " --cpu-type=NonCachingSimpleCPU" +
                     " --simpoint-profile --simpoint-interval=" +
                     str(args.int_size) + " --output=" + out_filepath +
-                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
+                    " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") + ")")
@@ -412,7 +414,7 @@ def cp_gen(args, sem):
                 " --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
                 sp_filepath + "," + wgt_filepath + "," + str(args.int_size) +
                 "," + str(args.warmup) + " --output=" + out_filepath +
-                " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
+                " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
                 else "") + ")")
@@ -540,7 +542,7 @@ def cp_sim(args, sem):
                     " --checkpoint-dir=" + data_ss_dir +
                     " --checkpoint-restore=" + str(cpt_folders.index(cpt)+1) +
                     " --output=" + out_filepath +
-                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
+                    " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +
@@ -655,7 +657,7 @@ def full_sim(args, sem):
                     " --num-cpus=1" +
                     " --cpu-type=" + model_name +
                     " --output=" + out_filepath +
-                    " --mem-size=" + (b_mem_size if b_mem_size else "512MB") +
+                    " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else "") +

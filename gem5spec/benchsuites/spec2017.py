@@ -69,12 +69,8 @@ preprocessing = {
 
 # Memory size limit for gem5 (default: 512MB)
 mem_size = {
-    "602.gcc_s"         : "2GB",
-    "605.mcf_s"         : "2GB",
-    "607.cactuBSSN_s"   : "2GB",
     "628.pop2_s"        : "4GB",
-    "649.fotonik3d_s"   : "2GB",
-    "654.roms_s"        : "2GB"
+    "654.roms_s"        : "4GB"
 }
 
 # Define if there are several inputs for any benchmarks
