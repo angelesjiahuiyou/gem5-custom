@@ -4,6 +4,7 @@ benchsuite = "spec2017"
 
 import sys
 import os
+import time
 import argparse
 import subprocess
 import platform
@@ -23,9 +24,14 @@ except ImportError as error:
     print(error)
     exit(1)
 
+uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
 home = os.path.expanduser("~")
 bsyear = ''.join(c for c in benchsuite if c.isdigit())
 
+# List of all the spawned subprocesses
+sp_pids = []
+# List of all the failed subprocesses
+sp_fail = []
 
 def cmd_exists(cmd):
     return any(
@@ -67,7 +73,7 @@ def get_ss_params(b_name, b_set):
     if any(v is None for v in
         (benchlist_subset, benchlist_params, benchlist_input)):
         print("error: couldn't find benchmark set")
-        exit(3)
+        exit(1)
     arguments = []
     b_params  = benchlist_params.get(b_name, "")
     b_input   = benchlist_input.get(b_name, "")
@@ -158,48 +164,132 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
     return out_dir, tmp_dir
 
 
-def spawn(cmd, dir, logpath, sem, keep_tmp):
-    # Create a thread for each child, to release the semaphore after execution
-    # (this is needed because with subprocess it is only possible to wait for
-    # a specific child to terminate, but we want to perform the operation when
-    # ANY of them terminates, regardless of which one does)
-    def run_in_thread(cmd, dir):
-        logfile = open(logpath, "w")
-        proc = subprocess.Popen(cmd, shell=True, cwd=dir, stdout=logfile,
-            stderr=subprocess.STDOUT)
-        proc.wait()
-
-        # Close the log file (after flushing internal buffers)
-        logfile.flush()
-        os.fsync(logfile.fileno())
-        logfile.close()
-
-        if not keep_tmp:
-            # Delete the temporary folder, if present
-            subdir = dir.split("/")[-1]
-            if subdir == "tmp":
-                remove_dir(dir)
-
-        # Release the semaphore (makes space for other processes)
-        sem.release()
-        return
-
-    # Acquire the semaphore (limits the number of active processes)
-    sem.acquire()
-    thread = threading.Thread(target=run_in_thread, args=(cmd, dir))
-    thread.start()
-    return thread
+# Get host system memory utilization from /proc/meminfo
+def get_host_mem():
+    try:
+        with open(os.path.join("/proc", "meminfo"), "r") as pidfile:
+            stat = pidfile.readline()
+            total = int(stat.split()[1])
+            pidfile.readline()
+            stat = pidfile.readline()
+            avail = int(stat.split()[1])
+            return(total, avail)
+    except IOError:
+        print("error: unable to read from /proc")
+        exit(3)
+    return 0
 
 
-def wait_all(threads):
+# Get process Resident Set Size (RSS) from /proc/[pid]/stat
+def get_rss(pid):
+    try:
+        with open(os.path.join("/proc", str(pid), "stat"), 'r') as pidfile:
+            stat = pidfile.readline()
+            rss = int(stat.split(' ')[23])
+            return rss
+    except IOError:
+        print("error: unable to read from /proc")
+        exit(3)
+    return 0
+
+
+# Watchdog which prevents host system memory saturation
+def watchdog(stop):
+    global sp_pids
+    global sp_fail
+
+    while not stop():
+        total, avail = get_host_mem()
+        if float(avail) / float(total) < 0.1 and any(sp_pids):
+            # Find the child which is using more memory
+            largest_mem = [0, 0]
+            for pid in sp_pids:
+                mem = get_rss(pid)
+                if mem > largest_mem[1]:
+                    largest_mem[0] = pid
+                    largest_mem[1] = mem
+            # Take note and kill it
+            sp_fail.append(largest_mem[0])
+            print("watchdog: killing process " + str(largest_mem[0]))
+            os.kill(largest_mem[0], 9)
+            # Wait a bit more
+            time.sleep(2)
+        # Polling time
+        time.sleep(3)
+    return
+
+
+# Create a thread for each child, to release the semaphore after execution
+# (this is needed because with subprocess it is only possible to wait for
+# a specific child to terminate, but we want to perform the operation when
+# ANY of them terminates, regardless of which one does)
+def run_in_thread(cmd, dir, logpath, sem, keep_tmp):
+    global sp_pids
+    global sp_fail
+
+    logfile = open(logpath, "w")
+    proc = subprocess.Popen(cmd, cwd=dir, stdout=logfile,
+        stderr=subprocess.STDOUT)
+    pid = proc.pid
+    sp_pids.append(pid)
+    proc.wait()
+
+    # Close the log file (after flushing internal buffers)
+    logfile.flush()
+    os.fsync(logfile.fileno())
+    logfile.close()
+
+    # Directories cleanup
+    wd_name = dir.split("/")[-1]
+    if pid in sp_fail:
+        # Purge directory in case of process out of memory
+        dir_to_rm = dir if wd_name != "tmp" else uppath(dir, 1)
+        remove_dir(dir_to_rm)
+    elif not keep_tmp:
+        if wd_name == "tmp":
+            remove_dir(dir)
+
+    # Clear entries in sp_fail and sp_pids
+    if pid in sp_fail:
+        sp_fail.remove(pid)
+    if pid in sp_pids:
+        sp_pids.remove(pid)
+
+    # Release the semaphore (makes space for other processes)
+    sem.release()
+    return
+
+
+# Spawn all the programs in the spawn list and control the execution
+def spawn(spawn_list, sem, keep_tmp):
+    thread_list = []
+
+    # Spawn a watchdog thread
+    stop = False
+    watchdog_thread = threading.Thread(target=watchdog, args=(lambda : stop, ))
+    watchdog_thread.start()
+
+    for s in spawn_list:
+        cmd, dir, logpath = s
+        # Acquire the semaphore (limits the number of active processes)
+        sem.acquire()
+        thread = threading.Thread(target=run_in_thread,
+                                  args=(cmd, dir, logpath, sem, keep_tmp))
+        thread_list.append(thread)
+        thread.start()
+
     # Wait for all threads to terminate
-    for t in threads:
+    for t in thread_list:
         t.join()
+
+    # Terminate the watchdog thread
+    stop = True
+    watchdog_thread.join()
     return
 
 
 def bbv_gen(args, sem):
-    bbv_threads = []
+    spawn_list = []
 
     if not args.use_gem5:
         # Check if valgrind exists in current system
@@ -272,7 +362,7 @@ def bbv_gen(args, sem):
                     b_exe_name + " " + subset[1] + (" < " + subset[2] if
                     subset[2] else ""))
             else:
-                cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
+                cmd = (gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
                     "se.py") + " --cpu-type=NonCachingSimpleCPU" +
                     " --simpoint-profile --simpoint-interval=" +
@@ -280,17 +370,16 @@ def bbv_gen(args, sem):
                     " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
-                    (" --input=" + subset[2] if subset[2] else "") + ")")
-            bbv_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
-                args.keep_tmp))
+                    (" --input=" + subset[2] if subset[2] else "")).split()
+            spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    wait_all(bbv_threads)
+    spawn(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
 
 def sp_gen(args, sem):
-    sp_threads = []
+    spawn_list = []
 
     # Check if simpoint tool exists in specified path
     simpoint_exe = os.path.join(args.sp_dir, "bin", "simpoint")
@@ -344,16 +433,15 @@ def sp_gen(args, sem):
             cmd = (simpoint_exe + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
                 " -saveSimpointWeights " + wgt_filepath)
-            sp_threads.append(spawn(cmd, out_dir, log_filepath, sem,
-                args.keep_tmp))    
+            spawn_list.append((cmd, out_dir, log_filepath))
 
-    wait_all(sp_threads)
+    spawn(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
 
 def cp_gen(args, sem):
-    cp_gen_threads = []
+    spawn_list = []
 
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
@@ -409,7 +497,7 @@ def cp_gen(args, sem):
             out_filepath = os.path.join(out_dir, b_abbr + ".out")
             log_filepath = os.path.join(out_dir, "gem5." + b_abbr + ".out")
 
-            cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir + " " +
+            cmd = (gem5_exe_path + " --outdir=" + out_dir + " " +
                 os.path.join(args.gem5_dir, "configs", "example", "se.py") +
                 " --cpu-type=AtomicSimpleCPU --take-simpoint-checkpoint=" +
                 sp_filepath + "," + wgt_filepath + "," + str(args.int_size) +
@@ -417,17 +505,16 @@ def cp_gen(args, sem):
                 " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
-                else "") + ")")
-            cp_gen_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
-                args.keep_tmp))
+                else "")).split()
+            spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    wait_all(cp_gen_threads)
+    spawn(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
 
 def cp_sim(args, sem):
-    cp_sim_threads = []
+    spawn_list = []
 
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
@@ -513,7 +600,7 @@ def cp_sim(args, sem):
                     b_abbr + ".log")
             
                 cache = simparams.mem_configs[model_name]
-                cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
+                cmd = (gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
                     model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
@@ -550,18 +637,17 @@ def cp_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32") +
-                    ")")
-                cp_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
-                    args.keep_tmp))
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32")
+                    ).split()
+                spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    wait_all(cp_sim_threads)
+    spawn(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
 
 def full_sim(args, sem):
-    full_sim_threads = []
+    spawn_list = []
 
     # Check if gem5 exists in specified path
     gem5_build = "X86" if args.arch == "amd64" else "ARM"
@@ -631,7 +717,7 @@ def full_sim(args, sem):
                     b_abbr + ".log")
             
                 cache = simparams.mem_configs[model_name]
-                cmd = ("(time " + gem5_exe_path + " --outdir=" + out_dir +
+                cmd = (gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
                     model_conf) + " --caches --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
@@ -665,12 +751,11 @@ def full_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32") +
-                    ")")
-                full_sim_threads.append(spawn(cmd, tmp_dir, log_filepath, sem,
-                    args.keep_tmp))
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32")
+                    ).split()
+                spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    wait_all(full_sim_threads)
+    spawn(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
