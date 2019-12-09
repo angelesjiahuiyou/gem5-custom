@@ -446,7 +446,7 @@ def sp_gen(args, sem):
             # Execute the simpoint utility
             cmd = (simpoint_exe + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
-                " -saveSimpointWeights " + wgt_filepath)
+                " -saveSimpointWeights " + wgt_filepath).split()
             spawn_list.append((cmd, out_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
