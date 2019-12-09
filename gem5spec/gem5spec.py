@@ -6,6 +6,7 @@ import argparse
 import os
 import platform
 import subprocess
+import shutil
 import sys
 import time
 import threading
@@ -92,17 +93,6 @@ def get_ss_params(b_name, b_set):
     return arguments
 
 
-# Remove directories prepared with mirror_dir
-def remove_dir(target):
-    for root, dirs, files in os.walk(target, topdown=False):
-        for name in files:
-            os.unlink(os.path.join(root, name))
-        for name in dirs:
-            os.rmdir(os.path.join(root, name))
-    os.rmdir(target)
-    return
-
-
 # Create a clone of the origin folder with symlinks to all the files
 def mirror_dir(orig, dest):
     for root, dirs, files in os.walk(orig):
@@ -124,7 +114,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
 
     # Remove the temporary folder if it already exists
     if os.path.isdir(tmp_dir):
-        remove_dir(tmp_dir)
+        shutil.rmtree(tmp_dir)
 
     # Create the temporary folder and consequently the output folder
     os.makedirs(tmp_dir, mode=0o755)        
@@ -206,10 +196,12 @@ def watchdog():
         # Find the child which is using more memory
         largest_mem = [0, 0]
         for pid in sp_pids:
-            mem = get_rss(pid)
-            if mem > largest_mem[1]:
-                largest_mem[0] = pid
-                largest_mem[1] = mem
+            # Avoid re-targeting a dead child
+            if pid not in sp_fail:
+                mem = get_rss(pid)
+                if mem > largest_mem[1]:
+                    largest_mem[0] = pid
+                    largest_mem[1] = mem
         # Take note and kill it
         sp_fail.append(largest_mem[0])
         print("watchdog: killing process " + str(largest_mem[0]))
@@ -253,10 +245,10 @@ def execute(spawn_list, sem, keep_tmp):
             if pid in sp_fail:
                 # Purge directory in case of process out of memory
                 dir_to_rm = dir if wd_name != "tmp" else uppath(dir, 1)
-                remove_dir(dir_to_rm)
+                shutil.rmtree(dir_to_rm)
             elif not keep_tmp:
                 if wd_name == "tmp":
-                    remove_dir(dir)
+                    shutil.rmtree(dir)
 
             # Clear entries in sp_fail and sp_pids
             if pid in sp_fail:
