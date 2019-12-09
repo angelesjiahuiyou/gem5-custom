@@ -2,15 +2,16 @@
 # (allowed values: spec2006, spec2017)
 benchsuite = "spec2017"
 
-import sys
-import os
-import time
 import argparse
-import subprocess
+import os
 import platform
+import subprocess
+import sys
+import time
 import threading
-import simparams
 
+# Local modules
+import simparams
 dfl_ram = "512MB"
 try:
     if benchsuite == "spec2006":
@@ -813,7 +814,8 @@ def main():
     parser.add_argument("--num-banks", action="store", type=int, metavar="N",
         default=8, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
-        default=32, help="number of processes that can run concurrently " +
+        default=int(os.sysconf('SC_NPROCESSORS_ONLN')),
+        help="number of processes that can run concurrently " +
         "(default: %(default)s)")
     parser.add_argument("--mm-sim", nargs=1, type=str, default="none",
         choices=["none","nvmain","ramulator"], help="main memory simulator " +
