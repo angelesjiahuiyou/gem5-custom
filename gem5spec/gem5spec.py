@@ -32,6 +32,8 @@ bsyear = ''.join(c for c in benchsuite if c.isdigit())
 sp_pids = []
 # List of all the failed subprocesses
 sp_fail = []
+# Shutdown flag
+shutdown = False
 
 def cmd_exists(cmd):
     return any(
@@ -194,97 +196,108 @@ def get_rss(pid):
 
 
 # Watchdog which prevents host system memory saturation
-def watchdog(stop):
+def watchdog():
     global sp_pids
     global sp_fail
 
-    while not stop():
-        total, avail = get_host_mem()
-        if float(avail) / float(total) < 0.1 and any(sp_pids):
-            # Find the child which is using more memory
-            largest_mem = [0, 0]
-            for pid in sp_pids:
-                mem = get_rss(pid)
-                if mem > largest_mem[1]:
-                    largest_mem[0] = pid
-                    largest_mem[1] = mem
-            # Take note and kill it
-            sp_fail.append(largest_mem[0])
-            print("watchdog: killing process " + str(largest_mem[0]))
-            os.kill(largest_mem[0], 9)
-            # Wait a bit more
-            time.sleep(2)
-        # Polling time
-        time.sleep(3)
-    return
-
-
-# Create a thread for each child, to release the semaphore after execution
-# (this is needed because with subprocess it is only possible to wait for
-# a specific child to terminate, but we want to perform the operation when
-# ANY of them terminates, regardless of which one does)
-def run_in_thread(cmd, dir, logpath, sem, keep_tmp):
-    global sp_pids
-    global sp_fail
-
-    logfile = open(logpath, "w")
-    proc = subprocess.Popen(cmd, cwd=dir, stdout=logfile,
-        stderr=subprocess.STDOUT)
-    pid = proc.pid
-    sp_pids.append(pid)
-    proc.wait()
-
-    # Close the log file (after flushing internal buffers)
-    logfile.flush()
-    os.fsync(logfile.fileno())
-    logfile.close()
-
-    # Directories cleanup
-    wd_name = dir.split("/")[-1]
-    if pid in sp_fail:
-        # Purge directory in case of process out of memory
-        dir_to_rm = dir if wd_name != "tmp" else uppath(dir, 1)
-        remove_dir(dir_to_rm)
-    elif not keep_tmp:
-        if wd_name == "tmp":
-            remove_dir(dir)
-
-    # Clear entries in sp_fail and sp_pids
-    if pid in sp_fail:
-        sp_fail.remove(pid)
-    if pid in sp_pids:
-        sp_pids.remove(pid)
-
-    # Release the semaphore (makes space for other processes)
-    sem.release()
+    total, avail = get_host_mem()
+    if float(avail) / float(total) < 0.1 and any(sp_pids):
+        # Find the child which is using more memory
+        largest_mem = [0, 0]
+        for pid in sp_pids:
+            mem = get_rss(pid)
+            if mem > largest_mem[1]:
+                largest_mem[0] = pid
+                largest_mem[1] = mem
+        # Take note and kill it
+        sp_fail.append(largest_mem[0])
+        print("watchdog: killing process " + str(largest_mem[0]))
+        os.kill(largest_mem[0], 9)
+        # Wait some more time
+        time.sleep(4)
     return
 
 
 # Spawn all the programs in the spawn list and control the execution
-def spawn(spawn_list, sem, keep_tmp):
-    thread_list = []
+def execute(spawn_list, sem, keep_tmp):
+    global shutdown
 
-    # Spawn a watchdog thread
-    stop = False
-    watchdog_thread = threading.Thread(target=watchdog, args=(lambda : stop, ))
-    watchdog_thread.start()
+    # Create a thread for each child, to release the semaphore after execution
+    # (this is needed because with subprocess it is only possible to wait for
+    # a specific child to terminate, but we want to perform the operation when
+    # ANY of them terminates, regardless of which one does)
+    def run_in_thread(s):
+        global sp_pids
+        global sp_fail
 
-    for s in spawn_list:
-        cmd, dir, logpath = s
-        # Acquire the semaphore (limits the number of active processes)
-        sem.acquire()
-        thread = threading.Thread(target=run_in_thread,
-                                  args=(cmd, dir, logpath, sem, keep_tmp))
-        thread_list.append(thread)
-        thread.start()
+        if not shutdown:
+            cmd, dir, logpath = s
+            logfile = open(logpath, "w")
+            proc = subprocess.Popen(cmd, cwd=dir, stdout=logfile,
+                stderr=subprocess.STDOUT)
+            pid = proc.pid
+            sp_pids.append(pid)
+            # Necessary: sometimes the thread is idling inside the routine
+            if shutdown and os.path.exists(os.path.join("/proc", str(pid))):
+                os.kill(pid, 9)
+            proc.wait()
 
-    # Wait for all threads to terminate
-    for t in thread_list:
-        t.join()
+            # Close the log file (after flushing internal buffers)
+            logfile.flush()
+            os.fsync(logfile.fileno())
+            logfile.close()
 
-    # Terminate the watchdog thread
-    stop = True
-    watchdog_thread.join()
+            # Directories cleanup
+            wd_name = dir.split("/")[-1]
+            if pid in sp_fail:
+                # Purge directory in case of process out of memory
+                dir_to_rm = dir if wd_name != "tmp" else uppath(dir, 1)
+                remove_dir(dir_to_rm)
+            elif not keep_tmp:
+                if wd_name == "tmp":
+                    remove_dir(dir)
+
+            # Clear entries in sp_fail and sp_pids
+            if pid in sp_fail:
+                sp_fail.remove(pid)
+            if pid in sp_pids:
+                sp_pids.remove(pid)
+
+        # Release the semaphore (makes space for other processes)
+        sem.release()
+        return
+
+    # The spawning procedure runs on a separate thread to avoid blocking
+    # the main one (e.g. when the semaphore is waiting to be released)
+    def spawn_in_thread():
+        thread_list = []
+        for s in spawn_list:
+            # Acquire the semaphore (limits the number of active processes)
+            sem.acquire()
+            thread = threading.Thread(target=run_in_thread, args=(s,))
+            thread_list.append(thread)
+            thread.start()
+        # Wait for all threads to terminate
+        for t in thread_list:
+            t.join()
+        return
+
+    # Main thread
+    # Create and start the spawn thread
+    spawn_thread = threading.Thread(target=spawn_in_thread)
+    spawn_thread.start()
+
+    try:
+        # Periodically check resources utilization
+        while(spawn_thread.isAlive()):
+            watchdog()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        # "Graceful" shutdown
+        shutdown = True
+        for pid in sp_pids:
+            os.kill(pid, 9)
+        exit(4)
     return
 
 
@@ -373,7 +386,7 @@ def bbv_gen(args, sem):
                     (" --input=" + subset[2] if subset[2] else "")).split()
             spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    spawn(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
@@ -435,7 +448,7 @@ def sp_gen(args, sem):
                 " -saveSimpointWeights " + wgt_filepath)
             spawn_list.append((cmd, out_dir, log_filepath))
 
-    spawn(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
@@ -508,7 +521,7 @@ def cp_gen(args, sem):
                 else "")).split()
             spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    spawn(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
@@ -641,7 +654,7 @@ def cp_sim(args, sem):
                     ).split()
                 spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    spawn(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
@@ -755,7 +768,7 @@ def full_sim(args, sem):
                     ).split()
                 spawn_list.append((cmd, tmp_dir, log_filepath))
 
-    spawn(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp)
     print("done")
     return
 
