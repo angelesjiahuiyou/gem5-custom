@@ -5,11 +5,15 @@ benchsuite = "spec2017"
 import argparse
 import os
 import platform
-import subprocess
 import shutil
 import sys
 import time
 import threading
+
+if sys.version_info[0] < 3.2:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 
 # Local modules
 import simparams
