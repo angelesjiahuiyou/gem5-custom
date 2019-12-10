@@ -5,6 +5,7 @@ benchsuite = "spec2017"
 import argparse
 import os
 import platform
+import shlex
 import shutil
 import sys
 import time
@@ -380,8 +381,9 @@ def bbv_gen(args, sem):
                     " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
-                    (" --input=" + subset[2] if subset[2] else "")).split()
-            spawn_list.append((cmd, tmp_dir, log_filepath))
+                    (" --input=" + subset[2] if subset[2] else ""))
+            split_cmd = shlex.split(cmd)
+            spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     print("done")
@@ -442,8 +444,9 @@ def sp_gen(args, sem):
             # Execute the simpoint utility
             cmd = (simpoint_exe + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
-                " -saveSimpointWeights " + wgt_filepath).split()
-            spawn_list.append((cmd, out_dir, log_filepath))
+                " -saveSimpointWeights " + wgt_filepath)
+            split_cmd = shlex.split(cmd)
+            spawn_list.append((split_cmd, out_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     print("done")
@@ -515,8 +518,9 @@ def cp_gen(args, sem):
                 " --mem-size=" + (b_mem_size if b_mem_size else dfl_ram) +
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
-                else "")).split()
-            spawn_list.append((cmd, tmp_dir, log_filepath))
+                else ""))
+            split_cmd = shlex.split(cmd)
+            spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     print("done")
@@ -647,9 +651,9 @@ def cp_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32")
-                    ).split()
-                spawn_list.append((cmd, tmp_dir, log_filepath))
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                split_cmd = shlex.split(cmd)
+                spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     print("done")
@@ -761,9 +765,9 @@ def full_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32")
-                    ).split()
-                spawn_list.append((cmd, tmp_dir, log_filepath))
+                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                split_cmd = shlex.split(cmd)
+                spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     print("done")
