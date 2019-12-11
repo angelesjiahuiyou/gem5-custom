@@ -47,7 +47,6 @@ preprocessing = {
 
 
 mem_size = {
-    "434.zeusmp"        : 2,
     "459.GemsFDTD"      : 4,
     "465.tonto"         : 4,
     "481.wrf"           : 4

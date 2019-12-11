@@ -67,11 +67,8 @@ preprocessing = {
     "628.pop2_s"        : "for i in $(find . -name '*.in'); do mv $i ${i%.in}; done"
 }
 
-# Memory size limit for gem5 (default: 512MB)
-mem_size = {
-    "628.pop2_s"        : "4GB",
-    "654.roms_s"        : "4GB"
-}
+# Memory size limit for gem5 (default: 2GB for SPECrate, 16GB for SPECspeed)
+mem_size = {}
 
 # Define if there are several inputs for any benchmarks
 subset = {
