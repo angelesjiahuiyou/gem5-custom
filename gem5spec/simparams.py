@@ -2,16 +2,16 @@
 # ----------
 
 cpu_models = {
-    "amd64" : {
-        "DerivO3CPU"    : "se.py"
+    "aarch64" : {
+        "HPI"           : "se.py",
+        "CortexA15"     : "se.py"   # TODO: figure out whether this is still ok
     },
-    "arm" : {
+    "armhf" : {
         "CortexA7"      : "se.py",
         "CortexA15"     : "se.py"
     },
-    "arm64" : {
-        "HPI"           : "se.py",
-        "CortexA15"     : "se.py"   # TODO: figure out whether this is still ok
+    "x86-64" : {
+        "DerivO3CPU"    : "se.py"
     }
 }
 
