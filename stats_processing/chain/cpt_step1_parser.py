@@ -87,6 +87,7 @@ for t in technologies:
                 if not (data[key] == ["0" for sf in range(0, len(target_list))] or
                 data[key] == ["inf" for sf in range(0, len(target_list))] or
                 data[key] == ["nan" for sf in range(0, len(target_list))] or
+                "final_tick" in key or
                 "host_" in key or
                 "::total" in key):
                     data_flt[key] = data[key]
