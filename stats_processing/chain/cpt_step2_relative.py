@@ -26,7 +26,6 @@ for f in stats_files:
     # Perform the division w.r.t. baseline
     relative = pd.DataFrame.divide(data, baseline_data)
     # Append rel_slowdown to the new file
-    #relative.rename(index={"sim_ticks": "rel_slowdown"}, inplace=True)
     relative.loc["rel_slowdown"] = relative.loc["sim_ticks"].apply(compute_slowdown)
     relative.sort_index(inplace=True)
     # Append rel_slowdown to the original file
