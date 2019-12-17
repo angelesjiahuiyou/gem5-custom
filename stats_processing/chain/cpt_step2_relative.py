@@ -10,8 +10,8 @@ if len(sys.argv) < 2:
     print("fatal: you need at least two files")
     exit(1)
 baseline = sys.argv[1]
-for f in range(2, len(sys.argv)):
-    stats_files.append(sys.argv[f])
+for i in range(2, len(sys.argv)):
+    stats_files.append(sys.argv[i])
 
 out_dir = "step2"
 if not os.path.isdir(out_dir):
@@ -25,10 +25,10 @@ if "rel_slowdown" not in baseline_data.index:
     baseline_data.sort_index(inplace=True)
 baseline_filename = os.path.basename(baseline)
 baseline_conf = baseline_filename.replace("parsed_stats_", "").replace(".csv", "")
-baseline_data.to_csv(os.path.join(out_dir, "baseline_" + baseline_conf + ".csv"))
+baseline_data.to_csv(os.path.join(out_dir, "baseline_" + baseline_conf + ".csv"), na_rep="nan")
 
 for f in stats_files:
-    data = pd.read_csv(f, index_col=0)
+    data = pd.read_csv(f, index_col=0, keep_default_na=False, na_values="nan")
     # Treat the data as numeric
     data.replace("N/A", 0, inplace=True)
     data = data.apply(pd.to_numeric)
@@ -44,4 +44,4 @@ for f in stats_files:
     data_filename = os.path.basename(f)
     data_conf = data_filename.replace(".csv", "").replace("parsed_stats_", "")
     data.to_csv(os.path.join(out_dir, "slowdown_" + data_conf + ".csv"))
-    relative.to_csv(os.path.join(out_dir, "relative_" + data_conf + ".csv"))
+    relative.to_csv(os.path.join(out_dir, "relative_" + data_conf + ".csv"), na_rep="nan")

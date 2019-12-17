@@ -93,11 +93,13 @@ for t in technologies:
                 data[key] == ["nan" for sf in range(0, len(target_list))] or
                 "final_tick" in key or
                 "host_" in key or
+                "avg" in key or
+                "rate" in key or
                 "::total" in key):
                     data_flt[key] = data[key]
 
             # Create the output file
-            out_file = open(os.path.join(out_dir, "parsed_stats_" + t + "_" + s + ".csv", "w+"))
+            out_file = open(os.path.join(out_dir, "parsed_stats_" + t + "_" + s + ".csv"), "w+")
 
             # Create header
             out_file.write(',')
