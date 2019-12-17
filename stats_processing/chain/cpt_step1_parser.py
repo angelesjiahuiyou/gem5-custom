@@ -16,6 +16,10 @@ file_list = []
 technologies = []
 scenarios = []
 
+out_dir = "step1"
+if not os.path.isdir(out_dir):
+    os.mkdir(out_dir)
+
 # Scan the data folder to collect information about the files to read
 for root, dirs, files in os.walk(base_path):
     for name in files:
@@ -93,7 +97,7 @@ for t in technologies:
                     data_flt[key] = data[key]
 
             # Create the output file
-            out_file = open("parsed_stats_" + t + "_" + s + ".csv", "w+")
+            out_file = open(os.path.join(out_dir, "parsed_stats_" + t + "_" + s + ".csv", "w+"))
 
             # Create header
             out_file.write(',')
