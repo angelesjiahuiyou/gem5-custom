@@ -95,6 +95,7 @@ for t in technologies:
                 "host_" in key or
                 "avg" in key or
                 "rate" in key or
+                "ratio" in key or
                 "::total" in key):
                     data_flt[key] = data[key]
 
