@@ -84,7 +84,7 @@ mem_configs = {
             "typical" : ((1, 1, 1, 1, '32kB', 2), (1, 1, 1, 1, '32kB', 4), (13, 13, 13, 5, '1MB', 16)),
             "worst"   : ((1, 1, 1, 1, '32kB', 2), (1, 1, 1, 1, '32kB', 4), (13, 13, 13, 5, '1MB', 16))
         },
-        "stt-mram" : {  # Latencies copied from A15, as sizes are the same
+        "stt-mram" : {  # Latencies similar to the same config in A15 (sizes are the same)
             "typical" : ((6,  21, 1, 1, '32kB', 2), (6,  21, 1, 1, '32kB', 4), (13, 21, 13, 5, '1MB', 16)),
             "worst"   : ((12, 40, 1, 1, '32kB', 2), (12, 40, 1, 1, '32kB', 4), (21, 40, 13, 5, '1MB', 16))
         }        
