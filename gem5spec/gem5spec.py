@@ -3,6 +3,7 @@
 benchsuite = "spec2017"
 
 import argparse
+from datetime import datetime, timedelta
 import os
 import platform
 import shlex
@@ -11,7 +12,8 @@ import sys
 import time
 import threading
 
-if sys.version_info[0] < 3.2:
+python_version = float(".".join(map(str, sys.version_info[:2])))
+if python_version < 3.2:
     import subprocess32 as subprocess
 else:
     import subprocess
@@ -33,10 +35,16 @@ uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
 home = os.path.expanduser("~")
 bsyear = ''.join(c for c in benchsuite if c.isdigit())
 
-# List of all the spawned subprocesses
+# Process counter lock
+lock = threading.Lock()
+# Total number of spawned processes
+count_pids = 0
+# Total number of failed processes
+count_fail = 0
+# List of all the currently spawned subprocesses
 sp_pids = []
-# List of all the failed subprocesses
-sp_fail = []
+# Dict which contains pending failed subprocesses with failure cause
+sp_fail = {}
 # Shutdown flag
 shutdown = False
 
@@ -197,11 +205,12 @@ def get_rss(pid):
     return 0
 
 
-# Watchdog which prevents host system memory saturation
-def watchdog():
-    global sp_pids
+# Watchdog which prevents host system memory saturation or process stall
+def watchdog(limit_time):
+    global count_fail
     global sp_fail
 
+    # Memory monitoring
     total, avail = get_host_mem()
     if float(avail) / float(total) < 0.1 and any(sp_pids):
         # Find the child which is using more memory
@@ -214,16 +223,32 @@ def watchdog():
                     largest_mem[0] = pid
                     largest_mem[1] = mem
         # Take note and kill it
-        sp_fail.append(largest_mem[0])
-        print("watchdog: killing process " + str(largest_mem[0]))
-        os.kill(largest_mem[0], 9)
+        target = largest_mem[0]
+        count_fail += 1
+        sp_fail[target] = "oom"
+        print("watchdog: killing process " + str(target) + " (out of memory)")
+        os.kill(target, 9)
         # Wait some more time
         time.sleep(4)
+
+    # Time monitoring
+    current_time = datetime.now()
+    if limit_time == True:
+        for pid in sp_pids:
+            limit = timedelta(seconds = 20)
+            ptime = datetime.fromtimestamp(os.path.getmtime(
+                os.path.join("/proc", str(pid))))
+            if current_time - ptime > limit:
+                # Take note and kill it
+                count_fail += 1
+                sp_fail[pid] = "oot"
+                print("watchdog: killing process " + str(pid) + " (timeout)")
+                os.kill(pid, 9)
     return
 
 
 # Spawn all the programs in the spawn list and control the execution
-def execute(spawn_list, sem, keep_tmp):
+def execute(spawn_list, sem, keep_tmp, limit_time=False):
     global shutdown
 
     # Create a thread for each child, to release the semaphore after execution
@@ -231,13 +256,16 @@ def execute(spawn_list, sem, keep_tmp):
     # a specific child to terminate, but we want to perform the operation when
     # ANY of them terminates, regardless of which one does)
     def run_in_thread(s):
+        global count_pids
         global sp_pids
         global sp_fail
 
         if not shutdown:
-            cmd, dir, logpath = s
+            cmd, work_path, logpath = s
             logfile = open(logpath, "w")
-            proc = subprocess.Popen(cmd, cwd=dir, stdout=logfile,
+            with lock:
+                count_pids += 1
+            proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
                 stderr=subprocess.STDOUT)
             pid = proc.pid
             sp_pids.append(pid)
@@ -251,19 +279,21 @@ def execute(spawn_list, sem, keep_tmp):
             os.fsync(logfile.fileno())
             logfile.close()
 
-            # Directories cleanup
-            wd_name = dir.split("/")[-1]
+            # Directories cleanup / renaming
+            work_dir = os.path.basename(work_path)
+            if not keep_tmp and work_dir == "tmp":
+                shutil.rmtree(work_path)
             if pid in sp_fail:
-                # Purge directory in case of process out of memory
-                dir_to_rm = dir if wd_name != "tmp" else uppath(dir, 1)
-                shutil.rmtree(dir_to_rm)
-            elif not keep_tmp:
-                if wd_name == "tmp":
-                    shutil.rmtree(dir)
+                # Rename directory indicating the cause of failure
+                path_to_mv = (work_path if work_dir != "tmp"
+                    else uppath(work_path, 1))
+                head, tail = os.path.split(path_to_mv)
+                dest_path = os.path.join(head, sp_fail[pid] + "_" + tail)
+                os.rename(path_to_mv, dest_path)
 
             # Clear entries in sp_fail and sp_pids
             if pid in sp_fail:
-                sp_fail.remove(pid)
+                del sp_fail[pid]
             if pid in sp_pids:
                 sp_pids.remove(pid)
 
@@ -294,7 +324,7 @@ def execute(spawn_list, sem, keep_tmp):
     try:
         # Periodically check resources utilization
         while(spawn_thread.isAlive()):
-            watchdog()
+            watchdog(limit_time)
             time.sleep(1)
     except KeyboardInterrupt:
         # "Graceful" shutdown
@@ -392,7 +422,6 @@ def bbv_gen(args, sem):
             spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
-    print("done")
     return
 
 
@@ -455,7 +484,6 @@ def sp_gen(args, sem):
             spawn_list.append((split_cmd, out_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
-    print("done")
     return
 
 
@@ -529,7 +557,6 @@ def cp_gen(args, sem):
             spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
-    print("done")
     return
 
 
@@ -661,8 +688,7 @@ def cp_sim(args, sem):
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
-    print("done")
+    execute(spawn_list, sem, args.keep_tmp, True)
     return
 
 
@@ -776,11 +802,13 @@ def full_sim(args, sem):
                 spawn_list.append((split_cmd, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
-    print("done")
     return
 
 
 def main():
+    global count_pids
+    global count_fail
+
     try:
         benchlist.benchmarks
         benchlist.exe_name
@@ -897,6 +925,16 @@ def main():
                 cp_sim(args, sem)
             elif i == 4:
                 full_sim(args, sem)
+
+            # Print some statistics
+            print("OK!\n")
+            print("Number of spawned processes\t= " + str(count_pids))
+            print("Number of failed processes\t= " + str(count_fail))
+            print("Success rate\t\t\t= " +
+                str((1 - float(count_fail) / count_pids) * 100) + "%")
+            # Reset the counters for next phase
+            count_pids = 0
+            count_fail = 0
 
             # Next operation must fetch data from generated output
             args.data_dir = args.out_dir
