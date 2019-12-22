@@ -41,7 +41,7 @@ lock = threading.Lock()
 count_pids = 0
 # Total number of failed processes
 count_fail = 0
-# List of all the currently spawned subprocesses
+# List of all the running subprocesses
 sp_pids = []
 # Dict which contains pending failed subprocesses with failure cause
 sp_fail = {}
@@ -235,7 +235,7 @@ def watchdog(limit_time):
     current_time = datetime.now()
     if limit_time == True:
         for pid in sp_pids:
-            limit = timedelta(seconds = 20)
+            limit = timedelta(hours = 2)
             ptime = datetime.fromtimestamp(os.path.getmtime(
                 os.path.join("/proc", str(pid))))
             if current_time - ptime > limit:
