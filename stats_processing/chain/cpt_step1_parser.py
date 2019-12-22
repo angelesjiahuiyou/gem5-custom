@@ -28,7 +28,8 @@ for root, dirs, files in os.walk(base_path):
             params = stats_path.split("/")
 
             # Safety check
-            if len(params) == 8 and params[1] == "simulation":
+            if (len(params) == 8 and params[1] == "simulation" and
+                not "oom_" in params[6] and not "oot_" in params[6]):
                 file_list.append(stats_path)
 
                 if params[4] not in technologies:
@@ -96,6 +97,11 @@ for t in technologies:
                 "avg" in key or
                 "rate" in key or
                 "ratio" in key or
+                "cycles" in key or
+                "overall_hit" in key or
+                "overall_miss" in key or
+                "overall_mshr" in key or
+                "overall_accesses" in key or
                 "::total" in key):
                     data_flt[key] = data[key]
 
