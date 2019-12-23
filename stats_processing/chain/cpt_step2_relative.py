@@ -17,18 +17,27 @@ out_dir = "step2"
 if not os.path.isdir(out_dir):
     os.mkdir(out_dir)
 
+# Read and format data of the baseline configuration
 baseline_data = pd.read_csv(baseline, index_col=0, keep_default_na=False, na_values="nan")
-baseline_data.replace("N/A", 0, inplace=True)
-baseline_data = baseline_data.apply(pd.to_numeric)
-if "rel_slowdown" not in baseline_data.index:
-    baseline_data.loc["rel_slowdown"] = [0 for i in range(0, baseline_data.shape[1])]
-    baseline_data.sort_index(inplace=True)
-baseline_filename = os.path.basename(baseline)
-baseline_conf = baseline_filename.replace("parsed_stats_", "").replace(".csv", "")
-baseline_data.to_csv(os.path.join(out_dir, "baseline_" + baseline_conf + ".csv"), na_rep="nan")
-
+# Initially, set the common columns (= fields) equal to the baseline ones
+common_cols = baseline_data.columns
+# Scan the fields of the other files and find the common ones
 for f in stats_files:
     data = pd.read_csv(f, index_col=0, keep_default_na=False, na_values="nan")
+    common_cols = list(set(common_cols).intersection(data.columns))
+# Sort common_cols
+common_cols.sort()
+# "Crop" the baseline data array
+baseline_data = baseline_data[common_cols]
+# Preprocess baseline data
+baseline_data.replace("N/A", 0, inplace=True)
+baseline_data = baseline_data.apply(pd.to_numeric)
+
+# Process the other files
+for f in stats_files:
+    data = pd.read_csv(f, index_col=0, keep_default_na=False, na_values="nan")
+    # "Crop" the data array
+    data = data[common_cols]
     # Treat the data as numeric
     data.replace("N/A", 0, inplace=True)
     data = data.apply(pd.to_numeric)
@@ -45,3 +54,12 @@ for f in stats_files:
     data_conf = data_filename.replace(".csv", "").replace("parsed_stats_", "")
     data.to_csv(os.path.join(out_dir, "slowdown_" + data_conf + ".csv"))
     relative.to_csv(os.path.join(out_dir, "relative_" + data_conf + ".csv"), na_rep="nan")
+
+# Add the dummy relative slowdown to the baseline
+if "rel_slowdown" not in baseline_data.index:
+    baseline_data.loc["rel_slowdown"] = [0 for i in range(0, baseline_data.shape[1])]
+    baseline_data.sort_index(inplace=True)
+# Save the baseline .csv file
+baseline_filename = os.path.basename(baseline)
+baseline_conf = baseline_filename.replace("parsed_stats_", "").replace(".csv", "")
+baseline_data.to_csv(os.path.join(out_dir, "baseline_" + baseline_conf + ".csv"), na_rep="nan")
