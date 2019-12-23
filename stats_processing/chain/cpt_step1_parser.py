@@ -37,6 +37,10 @@ for root, dirs, files in os.walk(base_path):
                 if params[5] not in scenarios:
                     scenarios.append(params[5])   
 
+if not any(file_list):
+    print("No files to process. Exiting")
+    sys.exit(1)
+
 for t in technologies:
     for s in scenarios:
 
