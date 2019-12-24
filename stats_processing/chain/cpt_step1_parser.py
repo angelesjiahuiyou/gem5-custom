@@ -29,7 +29,7 @@ for root, dirs, files in os.walk(base_path):
 
             # Safety check
             if (len(params) == 8 and params[1] == "simulation" and
-                not "oom_" in params[6] and not "oot_" in params[6]):
+                not "err_" in params[6]):
                 file_list.append(stats_path)
 
                 if params[4] not in technologies:
@@ -40,6 +40,8 @@ for root, dirs, files in os.walk(base_path):
 if not any(file_list):
     print("No files to process. Exiting")
     sys.exit(1)
+else:
+    print("Processing " + str(len(file_list)) + " files...")
 
 for t in technologies:
     for s in scenarios:
