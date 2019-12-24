@@ -409,7 +409,7 @@ def bbv_gen(args, sem):
         for subset in ss_params:
             # Prepare the execution environment
             out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
-                os.path.join("valgrind", subset[0]))
+                os.path.join("bbv", subset[0]))
 
             bbv_filepath = os.path.join(out_dir, "bb.out." + b_abbr + "." +
                 subset[0])
@@ -467,7 +467,7 @@ def sp_gen(args, sem):
         for subset in ss_params:
             out_dir = os.path.join(args.out_dir, base_subfolder, "simpoint",
                 subset[0])
-            data_dir = os.path.join(args.data_dir, base_subfolder, "valgrind",
+            data_dir = os.path.join(args.data_dir, base_subfolder, "bbv",
                 subset[0])
             bbv_filename = "bb.out." + b_abbr + "." + subset[0]
             bbv_filepath = os.path.join(data_dir, bbv_filename)
