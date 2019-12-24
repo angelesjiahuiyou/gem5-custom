@@ -286,15 +286,16 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                 logfile.flush()
                 os.fsync(logfile.fileno())
 
-            # Check logfile for known strings indicating a bad execution
-            with open(logpath, "r") as logfile:
-                content = logfile.read()
-                if "fatal: Could not mmap" in content:
-                    fail(pid, "alloc")
-                elif "fatal: Can't load checkpoint file" in content:
-                    fail(pid, "parse")
-                elif "gem5 has encountered a segmentation fault!" in content:
-                    fail(pid, "sigsegv")
+            if pid not in sp_fail:
+                # Check logfile for known strings indicating a bad execution
+                with open(logpath, "r") as logfile:
+                    log = logfile.read()
+                    if "fatal: Could not mmap" in log:
+                        fail(pid, "alloc")
+                    elif "fatal: Can't load checkpoint file" in log:
+                        fail(pid, "parse")
+                    elif "gem5 has encountered a segmentation fault!" in log:
+                        fail(pid, "sigsegv")
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
@@ -308,14 +309,13 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                 dest_path = os.path.join(head,
                     "err_" + sp_fail[pid] + "_" + tail)
                 os.rename(path_to_mv, dest_path)
-
-            # Clear entries in sp_fail and sp_pids
-            if pid in sp_fail:
+                # Clear the entry in the fail dict
                 with lock_fail:
                     del sp_fail[pid]
-            if pid in sp_pids:
-                with lock_pids:
-                    sp_pids.remove(pid)
+
+            # Remove the process from the running list
+            with lock_pids:
+                sp_pids.remove(pid)
 
         # Release the semaphore (makes space for other processes)
         sem.release()
