@@ -406,9 +406,7 @@ def bbv_gen(args, sem):
         # Get benchmark subset parameters from benchlist.py
         ss_params = get_ss_params(b_name, b_set) 
 
-        # Execute valgrind exp-bbv tool
         for subset in ss_params:
-
             # Prepare the execution environment
             out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
                 os.path.join("valgrind", subset[0]))
@@ -825,6 +823,68 @@ def full_sim(args, sem):
     return
 
 
+def profile(args, sem):
+    spawn_list = []
+
+    # Check if valgrind exists in current system
+    if not cmd_exists("valgrind"):
+        print("error: valgrind utility not found in env path")
+        exit(2)
+
+    # Check if the CPU architecture matches the execution platform
+    machine = platform.machine()
+    archs_aarch64 = ("aarch64_be", "aarch64", "armv8b", "armv8l", "arm64")
+    archs_arm = ("arm", "armv7b", "armv7l", "armhf")
+    archs_x86_64 = ("x86_64", "x64", "amd64")
+    if ((args.arch == "aarch64" and machine not in archs_aarch64) or
+        (args.arch == "armhf" and machine not in archs_arm) or
+        (args.arch == "x86-64" and machine not in archs_x86_64)):
+        print("error: architecture mismatch")
+        exit(3)
+
+    print("Memory profiling:")
+    for b_name in args.benchmarks:
+        print("- " + b_name)
+
+        b_spl = b_name.split('.')
+        b_abbr = b_spl[0] + b_spl[1]
+        b_set = args.set[0]
+
+        # Get benchmark general parameters from benchlist.py
+        success, b_params = get_params(args, b_name)
+        
+        # Skip this benchmark if some error occurred
+        if not success:
+            continue
+
+        b_exe_name = b_params[0]
+        b_preproc  = b_params[1]
+
+        # Get benchmark subset parameters from benchlist.py
+        ss_params = get_ss_params(b_name, b_set) 
+
+        for subset in ss_params:
+            # Prepare the execution environment
+            out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
+                os.path.join("profile", subset[0]))
+
+            mem_filepath = os.path.join(out_dir, "mem." + b_abbr + "." +
+                subset[0])
+            log_filepath = os.path.join(out_dir, b_abbr + "." + subset[0] +
+                ".log")
+
+            # Execute valgrind with massif tool
+            cmd = ("valgrind --tool=massif --pages-as-heap=yes" +
+                " --massif-out-file=" + mem_filepath + " ./" +
+                b_exe_name + " " + subset[1] + (" < " + subset[2] if
+                subset[2] else ""))
+            split_cmd = shlex.split(cmd)
+            spawn_list.append((split_cmd, tmp_dir, log_filepath))
+
+    execute(spawn_list, sem, args.keep_tmp)
+    return
+
+
 def main():
     global count_pids
     global count_fail
@@ -856,6 +916,8 @@ def main():
         help="simulate target benchmarks from checkpoints")
     parser.add_argument("-f", "--full", action="store_true",
         help="simulate target benchmarks normally")
+    parser.add_argument("-p", "--profile", action="store_true",
+        help="profile benchmarks memory utilization with valgrind and massif")
     parser.add_argument("--arch", action="store", type=str, default="aarch64",
         choices=["aarch64","armhf","x86-64"], help="cpu architecture " +
         "(default: %(default)s)")
@@ -910,6 +972,7 @@ def main():
     ops.append(args.checkpoints)
     ops.append(args.execute)
     ops.append(args.full)
+    ops.append(args.profile)
 
     # Check if any operation has been selected
     if not True in ops:
@@ -945,13 +1008,16 @@ def main():
                 cp_sim(args, sem)
             elif i == 4:
                 full_sim(args, sem)
+            elif i == 5:
+                profile(args, sem)
 
             # Print some statistics
             print("OK!\n")
             print("Number of spawned processes\t= " + str(count_pids))
             print("Number of failed processes\t= " + str(count_fail))
-            print("Success rate\t\t\t= " +
-                str((1 - float(count_fail) / count_pids) * 100) + "%")
+            if count_pids != 0:
+                print("Success rate\t\t\t= " +
+                    str((1 - float(count_fail) / count_pids) * 100) + "%")
             # Reset the counters for next phase
             count_pids = 0
             count_fail = 0
