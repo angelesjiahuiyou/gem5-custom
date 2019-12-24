@@ -35,12 +35,14 @@ uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
 home = os.path.expanduser("~")
 bsyear = ''.join(c for c in benchsuite if c.isdigit())
 
-# Process counter lock
-lock = threading.Lock()
 # Total number of spawned processes
 count_pids = 0
 # Total number of failed processes
 count_fail = 0
+# Lock for processes list/counter update
+lock_pids = threading.Lock()
+# Lock for failed processes dict/counter update
+lock_fail = threading.Lock()
 # List of all the running subprocesses
 sp_pids = []
 # Dict which contains pending failed subprocesses with failure cause
@@ -205,11 +207,19 @@ def get_rss(pid):
     return 0
 
 
-# Watchdog which prevents host system memory saturation or process stall
-def watchdog(limit_time):
+# Add a process to the failed list and update the counter
+def fail(pid, cause):
     global count_fail
     global sp_fail
 
+    with lock_fail:
+        count_fail += 1
+        sp_fail[pid] = cause
+    return
+
+
+# Watchdog which prevents host system memory saturation or process stall
+def watchdog(limit_time):
     # Memory monitoring
     total, avail = get_host_mem()
     if float(avail) / float(total) < 0.1 and any(sp_pids):
@@ -224,8 +234,7 @@ def watchdog(limit_time):
                     largest_mem[1] = mem
         # Take note and kill it
         target = largest_mem[0]
-        count_fail += 1
-        sp_fail[target] = "oom"
+        fail(target, "oom")
         print("watchdog: killing process " + str(target) + " (out of memory)")
         os.kill(target, 9)
         # Wait some more time
@@ -240,8 +249,7 @@ def watchdog(limit_time):
                 os.path.join("/proc", str(pid))))
             if current_time - ptime > limit:
                 # Take note and kill it
-                count_fail += 1
-                sp_fail[pid] = "oot"
+                fail(pid, "timeout")
                 print("watchdog: killing process " + str(pid) + " (timeout)")
                 os.kill(pid, 9)
     return
@@ -262,22 +270,31 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
 
         if not shutdown:
             cmd, work_path, logpath = s
-            logfile = open(logpath, "w")
-            with lock:
-                count_pids += 1
-            proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
-                stderr=subprocess.STDOUT)
-            pid = proc.pid
-            sp_pids.append(pid)
-            # Necessary: sometimes the thread is idling inside the routine
-            if shutdown and os.path.exists(os.path.join("/proc", str(pid))):
-                os.kill(pid, 9)
-            proc.wait()
+            with open(logpath, "w") as logfile:
+                proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
+                    stderr=subprocess.STDOUT)
+                pid = proc.pid
+                with lock_pids:
+                    count_pids += 1
+                    sp_pids.append(pid)
+                # Necessary: sometimes the thread is idling inside the routine
+                if (shutdown and
+                    os.path.exists(os.path.join("/proc", str(pid)))):
+                    os.kill(pid, 9)
+                proc.wait()
+                # Flush internal buffers before closing the logfile
+                logfile.flush()
+                os.fsync(logfile.fileno())
 
-            # Close the log file (after flushing internal buffers)
-            logfile.flush()
-            os.fsync(logfile.fileno())
-            logfile.close()
+            # Check logfile for known strings indicating a bad execution
+            with open(logpath, "r") as logfile:
+                content = logfile.read()
+                if "fatal: Could not mmap" in content:
+                    fail(pid, "alloc")
+                elif "fatal: Can't load checkpoint file" in content:
+                    fail(pid, "parse")
+                elif "gem5 has encountered a segmentation fault!" in content:
+                    fail(pid, "sigsegv")
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
@@ -288,14 +305,17 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                 path_to_mv = (work_path if work_dir != "tmp"
                     else uppath(work_path, 1))
                 head, tail = os.path.split(path_to_mv)
-                dest_path = os.path.join(head, sp_fail[pid] + "_" + tail)
+                dest_path = os.path.join(head,
+                    "err_" + sp_fail[pid] + "_" + tail)
                 os.rename(path_to_mv, dest_path)
 
             # Clear entries in sp_fail and sp_pids
             if pid in sp_fail:
-                del sp_fail[pid]
+                with lock_fail:
+                    del sp_fail[pid]
             if pid in sp_pids:
-                sp_pids.remove(pid)
+                with lock_pids:
+                    sp_pids.remove(pid)
 
         # Release the semaphore (makes space for other processes)
         sem.release()
