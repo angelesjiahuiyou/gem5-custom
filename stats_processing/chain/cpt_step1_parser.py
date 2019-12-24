@@ -98,6 +98,9 @@ for t in technologies:
                 if not (data[key] == ["0" for sf in range(0, len(target_list))] or
                 data[key] == ["inf" for sf in range(0, len(target_list))] or
                 data[key] == ["nan" for sf in range(0, len(target_list))] or
+                set(data[key]) == {'N/A', '0'} or
+                set(data[key]) == {'N/A', 'inf'} or
+                set(data[key]) == {'N/A', 'nan'} or
                 "final_tick" in key or
                 "host_" in key or
                 "avg" in key or
@@ -108,7 +111,10 @@ for t in technologies:
                 "overall_miss" in key or
                 "overall_mshr" in key or
                 "overall_accesses" in key or
-                "::total" in key):
+                "::total" in key or
+                "::gmean" in key or
+                "::mean" in key or
+                "::stdev" in key):
                     data_flt[key] = data[key]
 
             # Create the output file
