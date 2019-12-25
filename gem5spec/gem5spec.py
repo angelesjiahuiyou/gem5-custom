@@ -51,6 +51,7 @@ sp_fail = {}
 shutdown = False
 
 
+# Check if an executable is present in the current PATH
 def cmd_exists(cmd):
     return any(
         os.access(os.path.join(path, cmd), os.X_OK) 
@@ -58,6 +59,7 @@ def cmd_exists(cmd):
     )
 
 
+# Get general benchmark parameters
 def get_params(args, b_name):
     spec_b_folder = os.path.join(args.spec_dir, b_name)
     b_spl = b_name.split('.')
@@ -90,6 +92,7 @@ def get_params(args, b_name):
     return True, arguments
 
 
+# Get benchmark subset parameters
 def get_ss_params(b_name, b_set):
     benchlist_subset = benchlist.subset.get(b_set)
     benchlist_params = benchlist.params.get(b_set)
@@ -269,10 +272,15 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
         global sp_fail
 
         if not shutdown:
-            cmd, work_path, logpath = s
+            cmd, in_name, work_path, logpath = s
             with open(logpath, "w") as logfile:
-                proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
-                    stderr=subprocess.STDOUT)
+                if in_name:
+                    in_file = open(os.path.join(work_path, in_name), "rb", 0)
+                    proc = subprocess.Popen(cmd, cwd=work_path, stdin=in_file,
+                        stdout=logfile, stderr=subprocess.STDOUT)
+                else:
+                    proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
+                        stderr=subprocess.STDOUT)
                 pid = proc.pid
                 with lock_pids:
                     count_pids += 1
@@ -285,6 +293,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                 # Flush internal buffers before closing the logfile
                 logfile.flush()
                 os.fsync(logfile.fileno())
+                if in_name:
+                    in_file.close()
 
             if pid not in sp_fail:
                 # Check logfile for known strings indicating a bad execution
@@ -424,8 +434,8 @@ def bbv_gen(args, sem):
                 # Execute valgrind with exp-bbv tool
                 cmd = ("valgrind --tool=exp-bbv --bb-out-file=" +
                     bbv_filepath + " --pc-out-file=" + pc_filepath + " ./" +
-                    b_exe_name + " " + subset[1] + (" < " + subset[2] if
-                    subset[2] else ""))
+                    b_exe_name + " " + subset[1])
+                in_name = subset[2]
             else:
                 cmd = (gem5_exe_path + " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example", 
@@ -436,8 +446,9 @@ def bbv_gen(args, sem):
                     " --cmd=./" + b_exe_name +
                     (" --options=\"" + subset[1] + "\"" if subset[1] else "") +
                     (" --input=" + subset[2] if subset[2] else ""))
+                in_name = ""
             split_cmd = shlex.split(cmd)
-            spawn_list.append((split_cmd, tmp_dir, log_filepath))
+            spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     return
@@ -498,8 +509,9 @@ def sp_gen(args, sem):
             cmd = (simpoint_exe + " -loadFVFile " + bbv_filepath + " -maxK " +
                 str(args.maxk) + " -saveSimpoints " + sp_filepath +
                 " -saveSimpointWeights " + wgt_filepath)
+            in_name = ""
             split_cmd = shlex.split(cmd)
-            spawn_list.append((split_cmd, out_dir, log_filepath))
+            spawn_list.append((split_cmd, in_name, out_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     return
@@ -571,8 +583,9 @@ def cp_gen(args, sem):
                 " --cmd=./" + b_exe_name + (" --options=\"" + subset[1] + "\""
                 if subset[1] else "") + (" --input=" + subset[2] if subset[2]
                 else ""))
+            in_name = ""
             split_cmd = shlex.split(cmd)
-            spawn_list.append((split_cmd, tmp_dir, log_filepath))
+            spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     return
@@ -703,8 +716,9 @@ def cp_sim(args, sem):
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
                     if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                in_name = ""
                 split_cmd = shlex.split(cmd)
-                spawn_list.append((split_cmd, tmp_dir, log_filepath))
+                spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp, True)
     return
@@ -816,8 +830,9 @@ def full_sim(args, sem):
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
                     if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                in_name = ""
                 split_cmd = shlex.split(cmd)
-                spawn_list.append((split_cmd, tmp_dir, log_filepath))
+                spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     return
@@ -876,10 +891,10 @@ def profile(args, sem):
             # Execute valgrind with massif tool
             cmd = ("valgrind --tool=massif --pages-as-heap=yes" +
                 " --massif-out-file=" + mem_filepath + " ./" +
-                b_exe_name + " " + subset[1] + (" < " + subset[2] if
-                subset[2] else ""))
+                b_exe_name + " " + subset[1])
+            in_name = subset[2]
             split_cmd = shlex.split(cmd)
-            spawn_list.append((split_cmd, tmp_dir, log_filepath))
+            spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
     execute(spawn_list, sem, args.keep_tmp)
     return
