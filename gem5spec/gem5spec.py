@@ -59,6 +59,54 @@ def cmd_exists(cmd):
     )
 
 
+# Check for the presence of specific tools or paths in the system
+def check_prerequisites(args, valgrind, simpoint, gem5, nvmain):
+    exe_path = ""
+
+    if valgrind:
+        # Check if valgrind exists in current system
+        if not cmd_exists("valgrind"):
+            print("error: valgrind utility not found in env path")
+            exit(2)
+
+        # Check if the CPU architecture matches the execution platform
+        machine = platform.machine()
+        archs_aarch64 = ("aarch64_be", "aarch64", "armv8b", "armv8l", "arm64")
+        archs_arm = ("arm", "armv7b", "armv7l", "armhf")
+        archs_x86_64 = ("x86_64", "x64", "amd64")
+        if ((args.arch == "aarch64" and machine not in archs_aarch64) or
+            (args.arch == "armhf" and machine not in archs_arm) or
+            (args.arch == "x86-64" and machine not in archs_x86_64)):
+            print("error: architecture mismatch")
+            exit(3)
+
+    if simpoint:
+        # Check if simpoint tool exists in specified path
+        simpoint_exe = os.path.join(args.sp_dir, "bin", "simpoint")
+        if not os.path.isfile(simpoint_exe):
+            print("error: simpoint executable not found in " + args.sp_dir)
+            exit(2)
+        exe_path = simpoint_exe
+
+    if gem5:
+        # Check if gem5 exists in specified path
+        gem5_build = "X86" if args.arch == "x86-64" else "ARM"
+        gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
+        gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
+        gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
+        if not os.path.isfile(gem5_exe_path):
+            print("error: gem5.fast executable not found in " + gem5_exe_dir)
+            exit(2)
+        exe_path = gem5_exe_path
+
+    if nvmain:
+        # Check if specified NVMAIN configuration file exists
+        if args.mm_sim == "nvmain" and not os.path.isfile(args.nvmain_cfg):
+            print("error: file " + args.nvmain_cfg + " not found")
+            exit(2)
+    return exe_path
+
+
 # Get general benchmark parameters
 def get_params(args, b_name):
     spec_b_folder = os.path.join(args.spec_dir, b_name)
@@ -375,30 +423,9 @@ def bbv_gen(args, sem):
     spawn_list = []
 
     if not args.use_gem5:
-        # Check if valgrind exists in current system
-        if not cmd_exists("valgrind"):
-            print("error: valgrind utility not found in env path")
-            exit(2)
-
-        # Check if the CPU architecture matches the execution platform
-        machine = platform.machine()
-        archs_aarch64 = ("aarch64_be", "aarch64", "armv8b", "armv8l", "arm64")
-        archs_arm = ("arm", "armv7b", "armv7l", "armhf")
-        archs_x86_64 = ("x86_64", "x64", "amd64")
-        if ((args.arch == "aarch64" and machine not in archs_aarch64) or
-            (args.arch == "armhf" and machine not in archs_arm) or
-            (args.arch == "x86-64" and machine not in archs_x86_64)):
-            print("error: architecture mismatch")
-            exit(3)
+        check_prerequisites(args, True, False, False, False)
     else:
-        # Check if gem5 exists in specified path
-        gem5_build = "X86" if args.arch == "x86-64" else "ARM"
-        gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-        gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
-        gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
-        if not os.path.isfile(gem5_exe_path):
-            print("error: gem5.fast executable not found in " + gem5_exe_dir)
-            exit(2)
+        gem5_exe_path = check_prerequisites(args, False, False, True, False)
 
     print("BBV generation:")
     for b_name in args.benchmarks:
@@ -462,12 +489,7 @@ def bbv_gen(args, sem):
 
 def sp_gen(args, sem):
     spawn_list = []
-
-    # Check if simpoint tool exists in specified path
-    simpoint_exe = os.path.join(args.sp_dir, "bin", "simpoint")
-    if not os.path.isfile(simpoint_exe):
-        print("error: simpoint executable not found in " + args.sp_dir)
-        exit(2)
+    simpoint_exe = check_prerequisites(args, False, True, False, False)
 
     print("Simpoints generation:")
     for b_name in args.benchmarks:
@@ -525,15 +547,7 @@ def sp_gen(args, sem):
 
 def cp_gen(args, sem):
     spawn_list = []
-
-    # Check if gem5 exists in specified path
-    gem5_build = "X86" if args.arch == "x86-64" else "ARM"
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
-    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
-    if not os.path.isfile(gem5_exe_path):
-        print("error: gem5.fast executable not found in " + gem5_exe_dir)
-        exit(2)
+    gem5_exe_path = check_prerequisites(args, False, False, True, False)
 
     print("Checkpoints generation:")
     for b_name in args.benchmarks:
@@ -599,20 +613,7 @@ def cp_gen(args, sem):
 
 def cp_sim(args, sem):
     spawn_list = []
-
-    # Check if gem5 exists in specified path
-    gem5_build = "X86" if args.arch == "x86-64" else "ARM"
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
-    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
-    if not os.path.isfile(gem5_exe_path):
-        print("error: gem5.fast executable not found in " + gem5_exe_dir)
-        exit(2)
-
-    # Check if specified NVMAIN configuration file exists
-    if args.mm_sim == "nvmain" and not os.path.isfile(args.nvmain_cfg):
-        print("error: file " + args.nvmain_cfg + " not found")
-        exit(2)
+    gem5_exe_path = check_prerequisites(args, False, False, True, True)
 
     print("Benchmark simulation from checkpoints:")
     for b_name in args.benchmarks:
@@ -732,20 +733,7 @@ def cp_sim(args, sem):
 
 def full_sim(args, sem):
     spawn_list = []
-
-    # Check if gem5 exists in specified path
-    gem5_build = "X86" if args.arch == "x86-64" else "ARM"
-    gem5_exe_dir  = os.path.join(args.gem5_dir, "build", gem5_build)
-    gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
-    gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
-    if not os.path.isfile(gem5_exe_path):
-        print("error: gem5.fast executable not found in " + gem5_exe_dir)
-        exit(2)
-
-    # Check if specified NVMAIN configuration file exists
-    if args.mm_sim == "nvmain" and not os.path.isfile(args.nvmain_cfg):
-        print("error: file " + args.nvmain_cfg + " not found")
-        exit(2)
+    gem5_exe_path = check_prerequisites(args, False, False, True, True)
 
     print("Full benchmark simulation:")
     for b_name in args.benchmarks:
@@ -846,22 +834,7 @@ def full_sim(args, sem):
 
 def profile(args, sem):
     spawn_list = []
-
-    # Check if valgrind exists in current system
-    if not cmd_exists("valgrind"):
-        print("error: valgrind utility not found in env path")
-        exit(2)
-
-    # Check if the CPU architecture matches the execution platform
-    machine = platform.machine()
-    archs_aarch64 = ("aarch64_be", "aarch64", "armv8b", "armv8l", "arm64")
-    archs_arm = ("arm", "armv7b", "armv7l", "armhf")
-    archs_x86_64 = ("x86_64", "x64", "amd64")
-    if ((args.arch == "aarch64" and machine not in archs_aarch64) or
-        (args.arch == "armhf" and machine not in archs_arm) or
-        (args.arch == "x86-64" and machine not in archs_x86_64)):
-        print("error: architecture mismatch")
-        exit(3)
+    check_prerequisites(args, True, False, False, False)
 
     print("Memory profiling:")
     for b_name in args.benchmarks:
