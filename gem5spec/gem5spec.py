@@ -136,7 +136,7 @@ def get_params(args, b_name):
         b_mem_size = "2GB"
         # Increase memory size for larger sets
         if benchsuite == "spec2017" and b_name[0] == '6':
-            if args.set != "test":
+            if args.set[0] != "test":
                 b_mem_size = "16GB"
     arguments = (b_exe_name, b_preproc, b_mem_size)
     return True, arguments
