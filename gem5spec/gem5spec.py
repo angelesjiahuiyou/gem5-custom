@@ -230,31 +230,37 @@ def watchdog(limit_time):
         largest_mem = [0, 0]
         for pid in sp_pids:
             # Avoid re-targeting a dead child
-            if pid not in sp_fail:
+            proc_dir = os.path.join("/proc", str(pid))
+            if pid not in sp_fail and os.path.isdir(proc_dir):
                 mem = get_rss(pid)
                 if mem > largest_mem[1]:
                     largest_mem[0] = pid
                     largest_mem[1] = mem
-        # Take note and kill it
-        target = largest_mem[0]
-        fail(target, "oom")
-        print("watchdog: killing process " + str(target) + " (out of memory)")
-        os.kill(target, 9)
-        # Wait some more time
-        time.sleep(4)
+        if largest_mem[0] != 0:
+            # Take note and kill it
+            target = largest_mem[0]
+            fail(target, "oom")
+            print("watchdog: killing process " + str(target) +
+                  " (out of memory)")
+            os.kill(target, 9)
+            # Wait some more time
+            time.sleep(4)
 
     # Time monitoring
     current_time = datetime.now()
     if limit_time == True:
         for pid in sp_pids:
-            limit = timedelta(hours = 2)
-            ptime = datetime.fromtimestamp(os.path.getmtime(
-                os.path.join("/proc", str(pid))))
-            if current_time - ptime > limit:
-                # Take note and kill it
-                fail(pid, "timeout")
-                print("watchdog: killing process " + str(pid) + " (timeout)")
-                os.kill(pid, 9)
+            # Avoid re-targeting a dead child
+            proc_dir = os.path.join("/proc", str(pid))
+            if pid not in sp_fail and os.path.isdir(proc_dir):
+                limit = timedelta(hours = 2)
+                ptime = datetime.fromtimestamp(os.path.getmtime(proc_dir))
+                if current_time - ptime > limit:
+                    # Take note and kill it
+                    fail(pid, "timeout")
+                    print("watchdog: killing process " + str(pid) +
+                          " (timeout)")
+                    os.kill(pid, 9)
     return
 
 
