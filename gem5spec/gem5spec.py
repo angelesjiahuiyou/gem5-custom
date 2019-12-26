@@ -289,9 +289,9 @@ def watchdog(limit_time):
         if largest_mem[0] != 0:
             # Take note and kill it
             target = largest_mem[0]
-            fail(target, "oom")
+            fail(target, "hostmem")
             print("watchdog: killing process " + str(target) +
-                  " (out of memory)")
+                  " (host memory saturation)")
             os.kill(target, 9)
             # Wait some more time
             time.sleep(4)
@@ -358,6 +358,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                     log = logfile.read()
                     if "fatal: Could not mmap" in log:
                         fail(pid, "alloc")
+                    elif "fatal: Out of memory" in log:
+                        fail(pid, "oom")
                     elif "fatal: Can't load checkpoint file" in log:
                         fail(pid, "parse")
                     elif "gem5 has encountered a segmentation fault!" in log:
