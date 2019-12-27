@@ -324,6 +324,7 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
     # ANY of them terminates, regardless of which one does)
     def run_in_thread(s):
         global count_pids
+        global count_fail
         global sp_pids
         global sp_fail
 
@@ -355,6 +356,7 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
             if pid not in sp_fail:
                 # Check logfile for known strings indicating a bad execution
                 with open(logpath, "r") as logfile:
+                    exec_error = True
                     log = logfile.read()
                     if "fatal: Could not mmap" in log:
                         fail(pid, "alloc")
@@ -364,6 +366,11 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                         fail(pid, "parse")
                     elif "gem5 has encountered a segmentation fault!" in log:
                         fail(pid, "sigsegv")
+                    else:
+                        exec_error = False
+                    if exec_error:
+                        with lock_fail:
+                            count_fail += 1
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
