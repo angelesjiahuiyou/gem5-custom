@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 from sklearn.decomposition import PCA
 stats_files = []
-n_components = 30
+n_components = 100
 log_components = 30
 log_stats = 20
 
