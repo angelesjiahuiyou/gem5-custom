@@ -664,15 +664,17 @@ def cp_sim(args, sem):
                 print("warning: no checkpoints found in " + data_ss_dir)
                 continue
 
-            # Select CPU architecture and corresponding configuration file
+            # Select CPU architecture and corresponding parameters
             cpu = []
             for model in simparams.cpu_models[args.arch]:
                 cpu.append((model, simparams.cpu_models[args.arch][model]))
 
-            # Simulate all possible cases (a lot!)
+            # Simulate all possible cases (can be a lot!)
             instances = [(model, tech, case, cpt) for model in cpu
-                for tech in simparams.mem_technologies
-                for case in simparams.mem_cases
+                for tech in simparams.mem_technologies.get(
+                    model[0], simparams.mem_technologies.get("default"))
+                for case in simparams.mem_cases.get(
+                    tech, simparams.mem_cases.get("default"))
                 for cpt in cpt_folders]
             for i in instances:
                 model = i[0]
@@ -681,8 +683,10 @@ def cp_sim(args, sem):
                 cpt   = i[3]
 
                 model_name = model[0]
-                model_conf = model[1]
-                hier  = simparams.mem_technologies[tech]
+                model_cpu, model_conf, model_volt, model_freq = model[1]
+                dict_mn = (model_name
+                    if model_name in simparams.mem_technologies else "default")
+                hier  = simparams.mem_technologies[dict_mn][tech]
 
                 out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name,
                     b_preproc, os.path.join("simulation", subset[0],
@@ -719,8 +723,20 @@ def cp_sim(args, sem):
                     " --l2-resp-lat=" +   str(cache[hier[2]][case][2][3]) +
                     " --l2_size=" +       str(cache[hier[2]][case][2][4]) +
                     " --l2_assoc=" +      str(cache[hier[2]][case][2][5]) +
+                    (" --l3cache " +
+                    " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
+                    " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
+                    " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
+                    " --l3-resp-lat=" +   str(cache[hier[3]][case][3][3]) +
+                    " --l3_size=" +       str(cache[hier[3]][case][3][4]) +
+                    " --l3_assoc=" +      str(cache[hier[3]][case][3][5])
+                    if hier[3] != "none" else "") +
                     " --num-cpus=1" +
-                    " --cpu-type=" + model_name +
+                    " --cpu-type=" + model_cpu +
+                    " --cpu-clock=" + model_freq +
+                    " --cpu-voltage=" + model_volt +
+                    " --sys-clock=\"1.2GHz\"" +
+                    " --sys-voltage=\"1.2V\"" +
                     " --restore-simpoint-checkpoint"
                     " --checkpoint-dir=" + data_ss_dir +
                     " --checkpoint-restore=" + str(cpt_folders.index(cpt)+1) +
@@ -733,7 +749,7 @@ def cp_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                    if args.mm_sim == "nvmain" else "DDR4_2400_8x8"))
                 in_name = ""
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
@@ -770,23 +786,27 @@ def full_sim(args, sem):
 
         for subset in ss_params:
 
-            # Select CPU architecture and corresponding configuration file
+            # Select CPU architecture and corresponding parameters
             cpu = []
             for model in simparams.cpu_models[args.arch]:
                 cpu.append((model, simparams.cpu_models[args.arch][model]))
 
             # Simulate all possible cases
             instances = [(model, tech, case) for model in cpu
-                for tech in simparams.mem_technologies
-                for case in simparams.mem_cases]
+                for tech in simparams.mem_technologies.get(
+                    model[0], simparams.mem_technologies.get("default"))
+                for case in simparams.mem_cases.get(
+                    tech, simparams.mem_cases.get("default"))]
             for i in instances:
                 model = i[0]
                 tech  = i[1]
                 case  = i[2]
 
                 model_name = model[0]
-                model_conf = model[1]
-                hier  = simparams.mem_technologies[tech]
+                model_cpu, model_conf, model_volt, model_freq = model[1]
+                dict_mn = (model_name
+                    if model_name in simparams.mem_technologies else "default")
+                hier  = simparams.mem_technologies[dict_mn][tech]
 
                 out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name,
                     b_preproc, os.path.join("simulation", subset[0],
@@ -823,8 +843,20 @@ def full_sim(args, sem):
                     " --l2-resp-lat=" +   str(cache[hier[2]][case][2][3]) +
                     " --l2_size=" +       str(cache[hier[2]][case][2][4]) +
                     " --l2_assoc=" +      str(cache[hier[2]][case][2][5]) +
+                    (" --l3cache " +
+                    " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
+                    " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
+                    " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
+                    " --l3-resp-lat=" +   str(cache[hier[3]][case][3][3]) +
+                    " --l3_size=" +       str(cache[hier[3]][case][3][4]) +
+                    " --l3_assoc=" +      str(cache[hier[3]][case][3][5])
+                    if hier[3] != "none" else "") +
                     " --num-cpus=1" +
-                    " --cpu-type=" + model_name +
+                    " --cpu-type=" + model_cpu +
+                    " --cpu-clock=" + model_freq +
+                    " --cpu-voltage=" + model_volt +
+                    " --sys-clock=\"1.2GHz\"" +
+                    " --sys-voltage=\"1.2V\"" +
                     " --output=" + out_filepath +
                     " --mem-size=" + b_mem_size +
                     " --cmd=./" + b_exe_name +
@@ -834,7 +866,7 @@ def full_sim(args, sem):
                     " --nvmain-config=" + args.nvmain_cfg +
                     " --nvmain-StatsFile=" + nstats_filepath +
                     " --nvmain-ConfigLog=" + nconf_filepath
-                    if args.mm_sim == "nvmain" else "LPDDR3_1600_1x32"))
+                    if args.mm_sim == "nvmain" else "DDR4_2400_8x8"))
                 in_name = ""
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
@@ -933,7 +965,7 @@ def main():
     parser.add_argument("--warmup", action="store", type=int, metavar="N",
         default=0, help="number of warmup instructions (default: %(default)s)")
     parser.add_argument("--num-banks", action="store", type=int, metavar="N",
-        default=8, help="number of banks in L2 cache (default: %(default)s)")
+        default=0, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
         default=int(os.sysconf('SC_NPROCESSORS_ONLN')),
         help="number of processes that can run concurrently " +
