@@ -268,6 +268,7 @@ def fail(pid, cause):
     with lock_fail:
         count_fail += 1
         sp_fail[pid] = cause
+    print("PID " + str(pid) + " failed (code: " + cause + ")")
     return
 
 
@@ -290,8 +291,6 @@ def watchdog(limit_time):
             # Take note and kill it
             target = largest_mem[0]
             fail(target, "hostmem")
-            print("watchdog: killing process " + str(target) +
-                  " (host memory saturation)")
             os.kill(target, 9)
             # Wait some more time
             time.sleep(4)
@@ -308,8 +307,6 @@ def watchdog(limit_time):
                 if current_time - ptime > limit:
                     # Take note and kill it
                     fail(pid, "timeout")
-                    print("watchdog: killing process " + str(pid) +
-                          " (timeout)")
                     os.kill(pid, 9)
     return
 
@@ -356,7 +353,6 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
             if pid not in sp_fail:
                 # Check logfile for known strings indicating a bad execution
                 with open(logpath, "r") as logfile:
-                    exec_error = True
                     log = logfile.read()
                     if "fatal: Could not mmap" in log:
                         fail(pid, "alloc")
@@ -366,11 +362,10 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                         fail(pid, "parse")
                     elif "gem5 has encountered a segmentation fault!" in log:
                         fail(pid, "sigsegv")
-                    else:
-                        exec_error = False
-                    if exec_error:
-                        with lock_fail:
-                            count_fail += 1
+                    elif "fatal: syscall" in log:
+                        fail(pid, "syscall")
+                    elif "panic: Unrecognized/invalid instruction" in log:
+                        fail(pid, "instr")
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
@@ -383,6 +378,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                 head, tail = os.path.split(path_to_mv)
                 dest_path = os.path.join(head,
                     "err_" + sp_fail[pid] + "_" + tail)
+                if os.path.exists(dest_path):
+                    shutil.rmtree(dest_path)
                 os.rename(path_to_mv, dest_path)
                 # Clear the entry in the fail dict
                 with lock_fail:
