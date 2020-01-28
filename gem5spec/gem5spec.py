@@ -366,6 +366,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                         fail(pid, "syscall")
                     elif "panic: Unrecognized/invalid instruction" in log:
                         fail(pid, "instr")
+                    elif "panic: Tried to write unmapped address" in log:
+                        fail(pid, "unmapad")
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
