@@ -101,6 +101,12 @@ for t in technologies:
                 set(data[key]) == {'N/A', '0'} or
                 set(data[key]) == {'N/A', 'inf'} or
                 set(data[key]) == {'N/A', 'nan'} or
+                ("rdPerTurnAround" in key and "::samples" not in key) or
+                ("wrPerTurnAround" in key and "::samples" not in key) or
+                "rdQLenPdf" in key or
+                "wrQLenPdf" in key or
+                "perBankRdBursts" in key or
+                "perBankWrBursts" in key or
                 "final_tick" in key or
                 "host_" in key or
                 "avg" in key or
@@ -118,15 +124,20 @@ for t in technologies:
                     data_flt[key] = data[key]
 
             # Create the output file
+            raw_file = open(os.path.join(out_dir, "raw_stats_" + t + "_" + s + ".csv"), "w+")
             out_file = open(os.path.join(out_dir, "parsed_stats_" + t + "_" + s + ".csv"), "w+")
 
             # Create header
+            raw_file.write(',')
             out_file.write(',')
             for i, n in enumerate(names):
+                raw_file.write(n)
                 out_file.write(n)
                 if i == len(names) - 1:
+                    raw_file.write('\n')
                     out_file.write('\n')
                 else:
+                    raw_file.write(',')
                     out_file.write(',')
 
             # Print simpoint weights
@@ -139,6 +150,14 @@ for t in technologies:
                     out_file.write(',') """
 
             # Print data from stats.txt files
+            for key in sorted(data.keys()):
+                raw_file.write(key + ',')
+                for i, value in enumerate(data[key]):
+                    raw_file.write(value)
+                    if i == len(data[key]) - 1:
+                        raw_file.write('\n')
+                    else:
+                        raw_file.write(',')
             for key in sorted(data_flt.keys()):
                 out_file.write(key + ',')
                 for i, value in enumerate(data_flt[key]):
