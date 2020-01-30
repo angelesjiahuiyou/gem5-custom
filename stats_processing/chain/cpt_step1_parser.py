@@ -117,6 +117,7 @@ for t in technologies:
                 "overall_miss" in key or
                 "overall_mshr" in key or
                 "overall_accesses" in key or
+                "::UNDEFINED" in key or
                 "::total" in key or
                 "::gmean" in key or
                 "::mean" in key or
