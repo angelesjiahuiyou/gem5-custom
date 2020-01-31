@@ -107,6 +107,7 @@ for t in technologies:
                 "wrQLenPdf" in key or
                 "perBankRdBursts" in key or
                 "perBankWrBursts" in key or
+                "Energy" in key or
                 "final_tick" in key or
                 "host_" in key or
                 "avg" in key or
