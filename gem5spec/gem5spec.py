@@ -26,7 +26,7 @@ try:
     elif benchsuite == "spec2017":
         import benchsuites.spec2017 as benchlist
     else:
-        raise ImportError("Invalid benchmark suite") 
+        raise ImportError("Invalid benchmark suite")
 except ImportError as error:
     print(error)
     exit(1)
@@ -54,7 +54,7 @@ shutdown = False
 # Check if an executable is present in the current PATH
 def cmd_exists(cmd):
     return any(
-        os.access(os.path.join(path, cmd), os.X_OK) 
+        os.access(os.path.join(path, cmd), os.X_OK)
         for path in os.environ["PATH"].split(os.pathsep)
     )
 
@@ -190,7 +190,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
         shutil.rmtree(tmp_dir)
 
     # Create the temporary folder and consequently the output folder
-    os.makedirs(tmp_dir, mode=0o755)        
+    os.makedirs(tmp_dir, mode=0o755)
 
     # Make a symlink to the executable in the temporary directory
     b_exe_path = os.path.join(spec_b_folder, "exe", b_exe_name)
@@ -211,7 +211,7 @@ def prepare_env(args, b_name, b_exe_name, b_preproc, target_dir):
             else:
                 b_set = "refrate"
 
-    input_folders = [os.path.join(spec_b_folder, "data", b_set, "input"), 
+    input_folders = [os.path.join(spec_b_folder, "data", b_set, "input"),
         os.path.join(spec_b_folder, "data", "all", "input")]
     for d in input_folders:
         # Any invalid path will be ignored
@@ -447,7 +447,7 @@ def bbv_gen(args, sem):
 
         # Get benchmark general parameters from benchlist.py
         success, b_params = get_params(args, b_name)
-        
+
         # Skip this benchmark if some error occurred
         if not success:
             continue
@@ -457,7 +457,7 @@ def bbv_gen(args, sem):
         b_mem_size = b_params[2]
 
         # Get benchmark subset parameters from benchlist.py
-        ss_params = get_ss_params(b_name, b_set) 
+        ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
             # Prepare the execution environment
@@ -481,7 +481,7 @@ def bbv_gen(args, sem):
                 in_name = subset[2]
             else:
                 cmd = (gem5_exe_path + " --outdir=" + out_dir +
-                    " " + os.path.join(args.gem5_dir, "configs", "example", 
+                    " " + os.path.join(args.gem5_dir, "configs", "example",
                     "se.py") + " --cpu-type=NonCachingSimpleCPU" +
                     " --simpoint-profile --simpoint-interval=" +
                     str(args.int_size) + " --output=" + out_filepath +
@@ -570,7 +570,7 @@ def cp_gen(args, sem):
 
         # Get benchmark general parameters from benchlist.py
         success, b_params = get_params(args, b_name)
-        
+
         # Skip this benchmark if some error occurred
         if not success:
             continue
@@ -580,7 +580,7 @@ def cp_gen(args, sem):
         b_mem_size = b_params[2]
 
         # Get benchmark subset parameters from benchlist.py
-        ss_params = get_ss_params(b_name, b_set) 
+        ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
             data_dir = os.path.join(args.data_dir, base_subfolder, "simpoint",
@@ -637,7 +637,7 @@ def cp_sim(args, sem):
 
         # Get benchmark general parameters from benchlist.py
         success, b_params = get_params(args, b_name)
-        
+
         # Skip this benchmark if some error occurred
         if not success:
             continue
@@ -647,7 +647,7 @@ def cp_sim(args, sem):
         b_mem_size = b_params[2]
 
         # Get benchmark subset parameters from benchlist.py
-        ss_params = get_ss_params(b_name, b_set) 
+        ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
             data_ss_dir = data_dir + "/" + subset[0]
@@ -656,7 +656,7 @@ def cp_sim(args, sem):
             # Check if checkpoints are present in the specified data directory
             if (not os.path.isdir(data_ss_dir)):
                 print("warning: directory " + data_ss_dir + " not found")
-                continue        
+                continue
             cpt_folders = [d for d in sorted(os.listdir(data_ss_dir))
                 if cpt_prefix in d]
             if (not any(cpt_folders)):
@@ -697,13 +697,12 @@ def cp_sim(args, sem):
                     b_abbr + ".log")
                 nconf_filepath = os.path.join(out_dir, "nvmain_config." +
                     b_abbr + ".log")
-            
+
                 cache = simparams.mem_configs[model_name]
                 cmd = (gem5_exe_path + " --outdir=" + out_dir +
-                    " " + os.path.join(args.gem5_dir, "configs", "example", 
-                    model_conf) + " --caches --l2cache" +
-                    (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
-                        if args.num_banks else "") +
+                    " " + os.path.join(args.gem5_dir, "configs", "example",
+                    model_conf) +
+                    " --caches" +
                     " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
                     " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
@@ -716,6 +715,9 @@ def cp_sim(args, sem):
                     " --l1i-resp-lat=" +  str(cache[hier[1]][case][1][3]) +
                     " --l1i_size=" +      str(cache[hier[1]][case][1][4]) +
                     " --l1i_assoc=" +     str(cache[hier[1]][case][1][5]) +
+                    " --l2cache" +
+                    (" --l2-enable-banks --l2-num-banks=" + str(args.l2_banks)
+                        if args.l2_banks else "") +
                     " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
                     " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
                     " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
@@ -723,6 +725,8 @@ def cp_sim(args, sem):
                     " --l2_size=" +       str(cache[hier[2]][case][2][4]) +
                     " --l2_assoc=" +      str(cache[hier[2]][case][2][5]) +
                     (" --l3cache " +
+                    (" --l3-enable-banks --l3-num-banks=" + str(args.l3_banks)
+                        if args.l3_banks else "") +
                     " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
                     " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
                     " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
@@ -771,7 +775,7 @@ def full_sim(args, sem):
 
         # Get benchmark general parameters from benchlist.py
         success, b_params = get_params(args, b_name)
-        
+
         # Skip this benchmark if some error occurred
         if not success:
             continue
@@ -781,7 +785,7 @@ def full_sim(args, sem):
         b_mem_size = b_params[2]
 
         # Get benchmark subset parameters from benchlist.py
-        ss_params = get_ss_params(b_name, b_set) 
+        ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
 
@@ -817,13 +821,12 @@ def full_sim(args, sem):
                     b_abbr + ".log")
                 nconf_filepath = os.path.join(out_dir, "nvmain_config." +
                     b_abbr + ".log")
-            
+
                 cache = simparams.mem_configs[model_name]
                 cmd = (gem5_exe_path + " --outdir=" + out_dir +
-                    " " + os.path.join(args.gem5_dir, "configs", "example", 
-                    model_conf) + " --caches --l2cache" +
-                    (" --l2-enable-banks --l2-num-banks=" + str(args.num_banks)
-                        if args.num_banks else "") +
+                    " " + os.path.join(args.gem5_dir, "configs", "example",
+                    model_conf) +
+                    " --caches" +
                     " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
                     " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
@@ -836,6 +839,9 @@ def full_sim(args, sem):
                     " --l1i-resp-lat=" +  str(cache[hier[1]][case][1][3]) +
                     " --l1i_size=" +      str(cache[hier[1]][case][1][4]) +
                     " --l1i_assoc=" +     str(cache[hier[1]][case][1][5]) +
+                    " --l2cache" +
+                    (" --l2-enable-banks --l2-num-banks=" + str(args.l2_banks)
+                        if args.l2_banks else "") +
                     " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
                     " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
                     " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
@@ -843,6 +849,8 @@ def full_sim(args, sem):
                     " --l2_size=" +       str(cache[hier[2]][case][2][4]) +
                     " --l2_assoc=" +      str(cache[hier[2]][case][2][5]) +
                     (" --l3cache " +
+                    (" --l3-enable-banks --l3-num-banks=" + str(args.l3_banks)
+                        if args.l3_banks else "") +
                     " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
                     " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
                     " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
@@ -888,7 +896,7 @@ def profile(args, sem):
 
         # Get benchmark general parameters from benchlist.py
         success, b_params = get_params(args, b_name)
-        
+
         # Skip this benchmark if some error occurred
         if not success:
             continue
@@ -897,7 +905,7 @@ def profile(args, sem):
         b_preproc  = b_params[1]
 
         # Get benchmark subset parameters from benchlist.py
-        ss_params = get_ss_params(b_name, b_set) 
+        ss_params = get_ss_params(b_name, b_set)
 
         for subset in ss_params:
             # Prepare the execution environment
@@ -963,8 +971,10 @@ def main():
         default=100000000, help="bbv interval size (default: %(default)s)")
     parser.add_argument("--warmup", action="store", type=int, metavar="N",
         default=0, help="number of warmup instructions (default: %(default)s)")
-    parser.add_argument("--num-banks", action="store", type=int, metavar="N",
+    parser.add_argument("--l2-banks", action="store", type=int, metavar="N",
         default=0, help="number of banks in L2 cache (default: %(default)s)")
+    parser.add_argument("--l3-banks", action="store", type=int, metavar="N",
+        default=0, help="number of banks in L3 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
         default=int(os.sysconf('SC_NPROCESSORS_ONLN')),
         help="number of processes that can run concurrently " +
