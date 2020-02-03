@@ -360,14 +360,17 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                         fail(pid, "oom")
                     elif "fatal: Can't load checkpoint file" in log:
                         fail(pid, "parse")
-                    elif "gem5 has encountered a segmentation fault!" in log:
-                        fail(pid, "sigsegv")
                     elif "fatal: syscall" in log:
                         fail(pid, "syscall")
                     elif "panic: Unrecognized/invalid instruction" in log:
                         fail(pid, "instr")
                     elif "panic: Tried to write unmapped address" in log:
                         fail(pid, "unmapad")
+                    elif "gem5 has encountered a segmentation fault!" in log:
+                        fail(pid, "sigsegv")
+                    elif ("Resuming from SimPoint" in log and
+                          "Done running SimPoint!" not in log):
+                        fail(pid, "unknown")
 
             # Directories cleanup / renaming
             work_dir = os.path.basename(work_path)
