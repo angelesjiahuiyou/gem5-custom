@@ -325,74 +325,82 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
         global sp_pids
         global sp_fail
 
-        if not shutdown:
-            cmd, in_name, work_path, logpath = s
-            with open(logpath, "w") as logfile:
-                if in_name:
-                    in_file = open(os.path.join(work_path, in_name), "rb", 0)
-                    proc = subprocess.Popen(cmd, cwd=work_path, stdin=in_file,
-                        stdout=logfile, stderr=subprocess.STDOUT)
-                else:
-                    proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
-                        stderr=subprocess.STDOUT)
-                pid = proc.pid
-                with lock_pids:
-                    count_pids += 1
-                    sp_pids.append(pid)
-                # Necessary: sometimes the thread is idling inside the routine
-                if (shutdown and
-                    os.path.exists(os.path.join("/proc", str(pid)))):
-                    os.kill(pid, 9)
-                proc.wait()
-                # Flush internal buffers before closing the logfile
-                logfile.flush()
-                os.fsync(logfile.fileno())
-                if in_name:
-                    in_file.close()
+        # Do not even execute if the program is turning off
+        if shutdown:
+            # Release the semaphore (allows dummy processing of other entries)
+            sem.release()
+            return
 
-            if pid not in sp_fail:
-                # Check logfile for known strings indicating a bad execution
-                with open(logpath, "r") as logfile:
-                    log = logfile.read()
-                    if "fatal: Could not mmap" in log:
-                        fail(pid, "alloc")
-                    elif "fatal: Out of memory" in log:
-                        fail(pid, "oom")
-                    elif "fatal: Can't load checkpoint file" in log:
-                        fail(pid, "parse")
-                    elif "fatal: syscall" in log:
-                        fail(pid, "syscall")
-                    elif "panic: Unrecognized/invalid instruction" in log:
-                        fail(pid, "instr")
-                    elif "panic: Tried to write unmapped address" in log:
-                        fail(pid, "unmapad")
-                    elif "gem5 has encountered a segmentation fault!" in log:
-                        fail(pid, "sigsegv")
-                    elif ("Resuming from SimPoint" in log and
-                          "Done running SimPoint!" not in log):
-                        fail(pid, "unknown")
+        cmd, in_name, work_path, logpath = s
+        with open(logpath, "w") as logfile:
+            if in_name:
+                in_file = open(os.path.join(work_path, in_name), "rb", 0)
+                proc = subprocess.Popen(cmd, cwd=work_path, stdin=in_file,
+                    stdout=logfile, stderr=subprocess.STDOUT)
+            else:
+                proc = subprocess.Popen(cmd, cwd=work_path, stdout=logfile,
+                    stderr=subprocess.STDOUT)
+            pid = proc.pid
+            with lock_pids:
+                count_pids += 1
+                sp_pids.append(pid)
+            # Necessary: sometimes the thread is idling inside the routine
+            if (shutdown and
+                os.path.exists(os.path.join("/proc", str(pid)))):
+                os.kill(pid, 9)
+            proc.wait()
+            # Flush internal buffers before closing the logfile
+            logfile.flush()
+            os.fsync(logfile.fileno())
+            if in_name:
+                in_file.close()
 
-            # Directories cleanup / renaming
-            work_dir = os.path.basename(work_path)
+        if pid not in sp_fail and not shutdown:
+            # Check logfile for known strings indicating a bad execution
+            with open(logpath, "r") as logfile:
+                log = logfile.read()
+                if "fatal: Could not mmap" in log:
+                    fail(pid, "alloc")
+                elif "fatal: Out of memory" in log:
+                    fail(pid, "oom")
+                elif "fatal: Can't load checkpoint file" in log:
+                    fail(pid, "parse")
+                elif "fatal: syscall" in log:
+                    fail(pid, "syscall")
+                elif "panic: Unrecognized/invalid instruction" in log:
+                    fail(pid, "instr")
+                elif "panic: Tried to write unmapped address" in log:
+                    fail(pid, "unmapad")
+                elif "gem5 has encountered a segmentation fault!" in log:
+                    fail(pid, "sigsegv")
+                elif ("Resuming from SimPoint" in log and
+                        "Done running SimPoint!" not in log):
+                    fail(pid, "unknown")
+
+        # Directories cleanup / renaming
+        work_dir = os.path.basename(work_path)
+        out_path = (work_path if work_dir != "tmp" else uppath(work_path, 1))
+        if shutdown:
+            # It is useless to keep the output folder in case of brutal exit
+            shutil.rmtree(out_path)
+        else:
             if not keep_tmp and work_dir == "tmp":
                 shutil.rmtree(work_path)
             if pid in sp_fail:
                 # Rename directory indicating the cause of failure
-                path_to_mv = (work_path if work_dir != "tmp"
-                    else uppath(work_path, 1))
-                head, tail = os.path.split(path_to_mv)
+                head, tail = os.path.split(out_path)
                 dest_path = os.path.join(head,
                     "err_" + sp_fail[pid] + "_" + tail)
                 if os.path.exists(dest_path):
                     shutil.rmtree(dest_path)
-                os.rename(path_to_mv, dest_path)
+                os.rename(out_path, dest_path)
                 # Clear the entry in the fail dict
                 with lock_fail:
                     del sp_fail[pid]
 
-            # Remove the process from the running list
-            with lock_pids:
-                sp_pids.remove(pid)
+        # Remove the process from the running list
+        with lock_pids:
+            sp_pids.remove(pid)
 
         # Release the semaphore (makes space for other processes)
         sem.release()
