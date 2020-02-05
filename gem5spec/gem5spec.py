@@ -381,7 +381,7 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
         # Directories cleanup / renaming
         work_dir = os.path.basename(work_path)
         out_path = (work_path if work_dir != "tmp" else uppath(work_path, 1))
-        if shutdown:
+        if not keep_tmp and shutdown:
             # It is useless to keep the output folder in case of brutal exit
             shutil.rmtree(out_path)
         else:
