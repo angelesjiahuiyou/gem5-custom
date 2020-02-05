@@ -95,7 +95,8 @@ def check_prerequisites(args, valgrind, simpoint, gem5, nvmain):
         gem5_exe_name = "gem5.opt" if args.debug else "gem5.fast"
         gem5_exe_path = os.path.join(gem5_exe_dir, gem5_exe_name)
         if not os.path.isfile(gem5_exe_path):
-            print("error: gem5.fast executable not found in " + gem5_exe_dir)
+            print("error: " + gem5_exe_name + " executable not found in " +
+                  gem5_exe_dir)
             exit(2)
         exe_path = gem5_exe_path
 
