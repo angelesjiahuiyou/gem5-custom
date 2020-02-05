@@ -984,9 +984,9 @@ def main():
     parser.add_argument("--warmup", action="store", type=int, metavar="N",
         default=0, help="number of warmup instructions (default: %(default)s)")
     parser.add_argument("--l2-banks", action="store", type=int, metavar="N",
-        default=0, help="number of banks in L2 cache (default: %(default)s)")
+        default=4, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--l3-banks", action="store", type=int, metavar="N",
-        default=0, help="number of banks in L3 cache (default: %(default)s)")
+        default=4, help="number of banks in L3 cache (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
         default=int(os.sysconf('SC_NPROCESSORS_ONLN')),
         help="number of processes that can run concurrently " +
