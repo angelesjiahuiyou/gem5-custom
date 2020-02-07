@@ -4,6 +4,8 @@ import sys
 stats_files = []
 
 def compute_slowdown(x):
+    if (x - 1) < 0:
+        return 0
     return (x - 1)
 
 if len(sys.argv) < 2:

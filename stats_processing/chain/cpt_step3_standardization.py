@@ -16,6 +16,8 @@ if not os.path.isdir(out_dir):
 
 for f in stats_files:
     data = pd.read_csv(f, index_col=0, na_values="inf")
+    rel_slowdown = data.loc["rel_slowdown"]
+    data = data.drop("rel_slowdown")
     # --- WAY WITHOUT TRANSPOSITION ---
     #std_data = data.sub(data.mean(1), axis=0).div(data.std(1), axis=0)
     #std_data = std_data.dropna()
@@ -31,6 +33,9 @@ for f in stats_files:
     std_data = std_td.transpose()
     # Remove "empty" rows
     std_data = std_data.loc[(std_data!=0).any(axis=1)]
+    # Re-add relative slowdown
+    std_data.loc["rel_slowdown"] = rel_slowdown
+    std_data.sort_index(inplace=True)
     # Save to output file
     out_filename = os.path.basename(f).replace(".csv", "_std.csv")
     std_data.to_csv(os.path.join(out_dir, out_filename))
