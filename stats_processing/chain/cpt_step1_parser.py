@@ -32,13 +32,13 @@ for root, dirs, files in os.walk(base_path):
             if (len(params) == 9 and params[2] == "simulation" and
                 not "err_" in params[7]):
                 file_list.append(stats_path)
-                
+
                 if params[4] not in cpumodels:
                     cpumodels.append(params[4])
                 if params[5] not in technologies:
                     technologies.append(params[5])
                 if params[6] not in scenarios:
-                    scenarios.append(params[6])   
+                    scenarios.append(params[6])
 
 if not any(file_list):
     print("No files to process. Exiting")
@@ -49,39 +49,39 @@ else:
 for cm in cpumodels:
     for t in technologies:
         for s in scenarios:
-    
+
             # Create empty support structures
             data     = {}
             data_flt = {}
             weights  = []
             names    = []
-    
+
             target_list = [x for x in sorted(file_list) if cm in x and t in x and s in x]
             if target_list:
                 for i, stats_path in enumerate(target_list):
                     params = stats_path.split("/")
-                    b  = params[0]
-                    ss = params[2]
-                    c  = params[3]
-                    n  = params[6]
-    
+                    b  = params[1]
+                    ss = params[3]
+                    c  = params[4]
+                    n  = params[7]
+
                     if n == "full":
                         weights.append("1.000000")
                     else:
                         weights.append(n.split("weight_")[1].split("_interval")[0])
                     names.append(b + "." + ss + "." + c + "." + n.split("_inst")[0])
-    
+
                     in_file = open(os.path.join(base_path, stats_path), "r")
-    
+
                     sections = 0
                     count_begins = 0
-    
+
                     # Count how many "begins" there are in the file
                     for line in in_file.readlines():
                         parsed = re.sub('\s+',',',line).split(',')
                         if parsed[1].find("Begin") != -1:
                             sections += 1
-    
+
                     in_file.seek(0)
                     for line in in_file.readlines():
                         parsed = re.sub('\s+',',',line).split(',')
@@ -94,9 +94,8 @@ for cm in cpumodels:
                                 if m not in data:
                                     data[m] = ["N/A" for sf in range(0, len(target_list))]
                                 data[m][i] = parsed[1]
-    
                     in_file.close()
-    
+
                 # Filtering
                 for key in data:
                     if not (data[key] == ["0" for sf in range(0, len(target_list))] or
@@ -128,11 +127,11 @@ for cm in cpumodels:
                     "::mean" in key or
                     "::stdev" in key):
                         data_flt[key] = data[key]
-    
+
                 # Create the output file
                 raw_file = open(os.path.join(out_dir, "raw_stats_" + cm + "_" + t + "_" + s + ".csv"), "w+")
                 out_file = open(os.path.join(out_dir, "parsed_stats_" + cm + "_" + t + "_" + s + ".csv"), "w+")
-    
+
                 # Create header
                 raw_file.write(',')
                 out_file.write(',')
@@ -145,7 +144,7 @@ for cm in cpumodels:
                     else:
                         raw_file.write(',')
                         out_file.write(',')
-    
+
                 # Print simpoint weights
                 """ out_file.write('sp_weight,')
                 for i, w in enumerate(weights):
@@ -154,7 +153,7 @@ for cm in cpumodels:
                         out_file.write('\n')
                     else:
                         out_file.write(',') """
-    
+
                 # Print data from stats.txt files
                 for key in sorted(data.keys()):
                     raw_file.write(key + ',')
@@ -172,5 +171,5 @@ for cm in cpumodels:
                             out_file.write('\n')
                         else:
                             out_file.write(',')
-    
+
                 out_file.close()
