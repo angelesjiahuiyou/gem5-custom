@@ -55,6 +55,7 @@ exe_name = {
     "507.cactuBSSN_r"   : "cactusBSSN_r",
     "523.xalancbmk_r"   : "cpuxalan_r",
     "602.gcc_s"         : "sgcc",
+    "603.bwaves_s"      : "speed_bwaves",
     "628.pop2_s"        : "speed_pop2",
     "654.roms_s"        : "sroms"
 }
