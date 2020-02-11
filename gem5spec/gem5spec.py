@@ -376,6 +376,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                     fail(pid, "sigsegv")
                 elif "--- BEGIN LIBC BACKTRACE ---" in log:
                     fail(pid, "unknown")
+                elif "Fortran runtime error" in log:
+                    fail(pid, "fortran")
                 elif ("Resuming from SimPoint" in log and
                         "Done running SimPoint!" not in log):
                     fail(pid, "incompl")
