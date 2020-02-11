@@ -374,9 +374,11 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                     fail(pid, "unmapad")
                 elif "gem5 has encountered a segmentation fault!" in log:
                     fail(pid, "sigsegv")
+                elif "Program aborted at tick" in log:
+                    fail(pid, "unknown")
                 elif ("Resuming from SimPoint" in log and
                         "Done running SimPoint!" not in log):
-                    fail(pid, "unknown")
+                    fail(pid, "incompl")
 
         # Directories cleanup / renaming
         work_dir = os.path.basename(work_path)
