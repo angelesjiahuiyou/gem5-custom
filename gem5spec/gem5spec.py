@@ -374,6 +374,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
                     fail(pid, "unmapad")
                 elif "gem5 has encountered a segmentation fault!" in log:
                     fail(pid, "sigsegv")
+                elif "Attempt to free invalid pointer" in log:
+                    fail(pid, "invptr")
                 elif "--- BEGIN LIBC BACKTRACE ---" in log:
                     fail(pid, "unknown")
                 elif "Fortran runtime error" in log:
