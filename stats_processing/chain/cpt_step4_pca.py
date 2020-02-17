@@ -37,7 +37,7 @@ for f in sorted(stats_files):
         pca_final.insert(0, "rel_slowdown", data.loc["rel_slowdown"])
     else:
         pca_final.insert(0, "rel_slowdown", [0 for i in data.columns])
-    pca_final.to_csv(os.path.join(out_dir, final_filename))
+    pca_final.to_csv(os.path.join(out_dir, final_filename), index=False, sep=';')
     # Print statistical information in a separate file
     logname = os.path.basename(f).replace(".csv", "_pca_log.txt")
     logpath = os.path.join(out_dir, logname)
