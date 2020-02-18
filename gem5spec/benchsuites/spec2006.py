@@ -47,9 +47,11 @@ preprocessing = {
 
 
 mem_size = {
-    "459.GemsFDTD"      : 4,
-    "465.tonto"         : 4,
-    "481.wrf"           : 4
+    "train" : {
+        "459.GemsFDTD"      : "4GB",
+        "465.tonto"         : "4GB",
+        "481.wrf"           : "4GB"
+    }
 }
 
 

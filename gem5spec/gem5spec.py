@@ -130,15 +130,11 @@ def get_params(args, b_name):
         return False, (None, None, None)
 
     b_preproc  = benchlist.preprocessing.get(b_name, "")
-    b_mem_size = benchlist.mem_size.get(b_name, "")
-    if not b_mem_size:
-        # TODO: improve granularity in memory size selection
-        # Use 2GB for most configurations
-        b_mem_size = "2GB"
-        # Increase memory size for larger sets
-        if benchsuite == "spec2017" and b_name[0] == '6':
-            if args.set[0] == "ref":
-                b_mem_size = "16GB"
+    # Use 2GB by default
+    b_mem_size = "2GB"
+    set_mem_size = benchlist.mem_size.get(args.set[0], "")
+    if set_mem_size and set_mem_size.get(b_name, ""):
+        b_mem_size = set_mem_size[b_name]
     arguments = (b_exe_name, b_preproc, b_mem_size)
     return True, arguments
 
