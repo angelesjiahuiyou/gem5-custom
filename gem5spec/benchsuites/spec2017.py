@@ -69,14 +69,30 @@ preprocessing = {
 }
 
 # Memory size limit for gem5 (default: 2GB)
+# Based for x86-64. Under aarch64 no need to increase under test dataset
+#TODO update with the new profiling values as they are ready
 mem_size = {
+    "test" : {
+        "619.lbm_s"         : "4GB",
+        "631.deepsjeng_s"   : "8GB"
+    }
+
+     "train" : {
+        "619.lbm_s"         : "4GB",
+        "631.deepsjeng_s"   : "8GB"
+    },
+
     "ref" : {
         "602.gcc_s"         : "8GB",
+        "603.bwaves_s"      : "12GB",
         "605.mcf_s"         : "6GB",
         "607.cactuBSSN_s"   : "8GB",
+        "619.lbm_s"         : "4GB",
+        "631.deepsjeng_s"   : "8GB",
         "638.imagick_s"     : "4GB",
         "649.fotonik3d_s"   : "10GB",
-        "654.roms_s"        : "12GB"
+        "654.roms_s"        : "12GB",
+        "657.xx_s"          : "16GB"
     }
 }
 
