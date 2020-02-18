@@ -21,7 +21,7 @@ for f in sorted(stats_files):
     data = pd.read_csv(f, index_col=0)
     td = data.transpose()
     # Drop unnecessary stats
-    td_clean = td.drop(["rel_slowdown", "sim_insts", "sim_ops", "sim_seconds", "sim_ticks"], errors='ignore', axis=1)
+    td_clean = td.drop(["cpt_weight", "rel_slowdown", "sim_insts", "sim_ops", "sim_seconds", "sim_ticks"], errors='ignore', axis=1)
     # Create a copy of the dataset and apply the PCA (first n_components)
     pca = PCA(n_components)
     pca_data = pd.DataFrame(pca.fit_transform(td_clean.to_numpy()), index=td_clean.index, columns=["PC" + str(i) for i in range (0, n_components)])

@@ -110,13 +110,13 @@ def process(file_list, cm, t, s):
                 out_file.write(',')
 
         # Print simpoint weights
-        """ out_file.write('sp_weight,')
+        out_file.write('cpt_weight,')
         for i, w in enumerate(weights):
             out_file.write(w)
             if i == len(weights) - 1:
                 out_file.write('\n')
             else:
-                out_file.write(',') """
+                out_file.write(',')
 
         # Print data from stats.txt files
         for key in sorted(data.keys()):
