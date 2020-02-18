@@ -75,9 +75,9 @@ mem_size = {
     "test" : {
         "619.lbm_s"         : "4GB",
         "631.deepsjeng_s"   : "8GB"
-    }
+    },
 
-     "train" : {
+    "train" : {
         "619.lbm_s"         : "4GB",
         "631.deepsjeng_s"   : "8GB"
     },
