@@ -12,6 +12,12 @@ cpt_weight_test = []
 cpt_weight_train = []
 data_test = []
 data_train = []
+misses_l1_test = []
+misses_l1_train = []
+misses_l2_test = []
+misses_l2_train = []
+misses_l3_test = []
+misses_l3_train = []
 op_memrd_test = []
 op_memwr_test = []
 op_other_test = []
@@ -32,60 +38,26 @@ for i in range(1, len(sys.argv)):
 for f in sorted(stats_files):
     data = pd.read_csv(f, index_col=0)
     if "rel_slowdown" in data.index:
-        #names.append(os.path.basename(f).replace("slowdown", "").replace(".csv", "").replace("_", " "))
-        names.append(os.path.basename(f).split('_')[-1].replace(".csv", ""))
+        names.append(os.path.basename(f).replace("slowdown", "").replace(".csv", "").replace("_", " "))
         data_test = data.filter(like='test.', axis=1)
         data_train = data.filter(like='train.', axis=1)
         slowdown_test.append(data_test.loc['rel_slowdown'])
         slowdown_train.append(data_train.loc['rel_slowdown'])
         cpt_weight_test.append(data_test.loc['cpt_weight'])
         cpt_weight_train.append(data_train.loc['cpt_weight'])
-        op_memrd_test.append(data_test.loc['system.cpu.op_class_0::MemRead'])
-        op_memwr_test.append(data_test.loc['system.cpu.op_class_0::MemWrite'])
-        op_other_test.append(
-            data_test.loc['system.cpu.op_class_0::FloatAdd'] +
-            data_test.loc['system.cpu.op_class_0::FloatCmp'] +
-            data_test.loc['system.cpu.op_class_0::FloatCvt'] +
-            data_test.loc['system.cpu.op_class_0::FloatDiv'] +
-            data_test.loc['system.cpu.op_class_0::FloatMisc'] +
-            data_test.loc['system.cpu.op_class_0::FloatMult'] +
-            data_test.loc['system.cpu.op_class_0::FloatMultAcc'] +
-            data_test.loc['system.cpu.op_class_0::FloatSqrt'] +
-            data_test.loc['system.cpu.op_class_0::IntAlu'] +
-            data_test.loc['system.cpu.op_class_0::IntDiv'] +
-            data_test.loc['system.cpu.op_class_0::IntMult'] +
-            data_test.loc['system.cpu.op_class_0::No_OpClass'] +
-            data_test.loc['system.cpu.op_class_0::SimdAdd'] +
-            data_test.loc['system.cpu.op_class_0::SimdAlu'] +
-            data_test.loc['system.cpu.op_class_0::SimdCmp'] +
-            data_test.loc['system.cpu.op_class_0::SimdCvt'] +
-            data_test.loc['system.cpu.op_class_0::SimdFloatAdd'] +
-            data_test.loc['system.cpu.op_class_0::SimdMisc'] +
-            data_test.loc['system.cpu.op_class_0::SimdShift']
-        )
-        op_memrd_train.append(data_train.loc['system.cpu.op_class_0::MemRead'])
-        op_memwr_train.append(data_train.loc['system.cpu.op_class_0::MemWrite'])
-        op_other_train.append(
-            data_train.loc['system.cpu.op_class_0::FloatAdd'] +
-            data_train.loc['system.cpu.op_class_0::FloatCmp'] +
-            data_train.loc['system.cpu.op_class_0::FloatCvt'] +
-            data_train.loc['system.cpu.op_class_0::FloatDiv'] +
-            data_train.loc['system.cpu.op_class_0::FloatMisc'] +
-            data_train.loc['system.cpu.op_class_0::FloatMult'] +
-            data_train.loc['system.cpu.op_class_0::FloatMultAcc'] +
-            data_train.loc['system.cpu.op_class_0::FloatSqrt'] +
-            data_train.loc['system.cpu.op_class_0::IntAlu'] +
-            data_train.loc['system.cpu.op_class_0::IntDiv'] +
-            data_train.loc['system.cpu.op_class_0::IntMult'] +
-            data_train.loc['system.cpu.op_class_0::No_OpClass'] +
-            data_train.loc['system.cpu.op_class_0::SimdAdd'] +
-            data_train.loc['system.cpu.op_class_0::SimdAlu'] +
-            data_train.loc['system.cpu.op_class_0::SimdCmp'] +
-            data_train.loc['system.cpu.op_class_0::SimdCvt'] +
-            data_train.loc['system.cpu.op_class_0::SimdFloatAdd'] +
-            data_train.loc['system.cpu.op_class_0::SimdMisc'] +
-            data_train.loc['system.cpu.op_class_0::SimdShift']
-        )
+        misses_l1_test.append(data_test.filter(regex='system.cpu.*cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+        misses_l1_train.append(data_train.filter(regex='system.cpu.*cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+        misses_l2_test.append(data_test.filter(like='system.l2.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+        misses_l2_train.append(data_train.filter(like='system.l2.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+        if "i7-6700" in os.path.basename(f):
+            misses_l3_test.append(data_test.filter(like='system.l3.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+            misses_l3_train.append(data_train.filter(like='system.l3.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+        op_memrd_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemRead', axis=0).sum())
+        op_memwr_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemWrite', axis=0).sum())
+        op_other_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
+        op_memrd_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemRead', axis=0).sum())
+        op_memwr_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemWrite', axis=0).sum())
+        op_other_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
         if not vlines_count_test:
             for f in benchmark_set[:-1]:
                 num_cpts = len(data_test.filter(like=f, axis=1).loc['rel_slowdown'])
@@ -98,6 +70,7 @@ for f in sorted(stats_files):
                 if num_cpts:
                     vlines_count_train += num_cpts
                     vlines_train.append((f.split('.')[0], vlines_count_train))
+legend = [n.split()[-1] for n in names]
 
 # Average slowdown - Test
 plt.figure(figsize=(9,7))
@@ -112,10 +85,12 @@ for i, n in enumerate(names):
         avg_slowdown[index] = 0
         for cpt in data_test.filter(like=b, axis=1):
             avg_slowdown[index] = avg_slowdown[index] + (slowdown_test[i][cpt] * cpt_weight_test[i][cpt])
+        if not avg_slowdown[index]:
+            del(avg_slowdown[index])
     ind_num = np.arange(len(avg_slowdown))
     plt.bar(ind_num + i*width, avg_slowdown.values(), width=width)
 plt.xticks(ind_num + (len(names)-1)*width/2, avg_slowdown.keys())
-plt.legend(names, loc="upper right")
+plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 
 # Average slowdown - Train
@@ -130,13 +105,93 @@ for i, n in enumerate(names):
         avg_slowdown[index] = 0
         for cpt in data_train.filter(like=b, axis=1):
             avg_slowdown[index] = avg_slowdown[index] + (slowdown_train[i][cpt] * cpt_weight_train[i][cpt])
+        if not avg_slowdown[index]:
+            del(avg_slowdown[index])
     ind_num = np.arange(len(avg_slowdown))
     plt.bar(ind_num + i*width, avg_slowdown.values(), width=width)
 plt.xticks(ind_num + (len(names)-1)*width/2, avg_slowdown.keys())
-plt.legend(names, loc="upper right")
+plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.tight_layout(pad=4)
-plt.show()
+
+
+# MPKI - Test
+num_plots = 2 if "i7-6700" not in names[0] else 3
+plt.figure(figsize=(9,7))
+plt.subplot(num_plots, 1, 1)
+plt.xlabel('Simulation point - Test')
+plt.ylabel('MPKI L1')
+plt.plot(range(0, len(misses_l1_test[0])), misses_l1_test[0]/100000)
+old_value = 0
+for v in vlines_test:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.margins(x=0)
+plt.subplot(num_plots, 1, 2)
+plt.xlabel('Simulation point - Test')
+plt.ylabel('MPKI L2')
+plt.plot(range(0, len(misses_l2_test[0])), misses_l2_test[0]/100000)
+old_value = 0
+for v in vlines_test:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.margins(x=0)
+if num_plots == 3:
+    plt.subplot(3, 1, 3)
+    plt.xlabel('Simulation point - Test')
+    plt.ylabel('MPKI L3')
+    plt.plot(range(0, len(misses_l3_test[0])), misses_l3_test[0]/100000)
+    old_value = 0
+    for v in vlines_test:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        old_value = v[1]
+    plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.margins(x=0)
+plt.tight_layout(pad=4/(num_plots-1))
+
+# MPKI - Train
+num_plots = 2 if "i7-6700" not in names[0] else 3
+plt.figure(figsize=(9,7))
+plt.subplot(num_plots, 1, 1)
+plt.xlabel('Simulation point - Train')
+plt.ylabel('MPKI L1')
+plt.plot(range(0, len(misses_l1_train[0])), misses_l1_train[0]/100000)
+old_value = 0
+for v in vlines_train:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.margins(x=0)
+plt.subplot(num_plots, 1, 2)
+plt.xlabel('Simulation point - Train')
+plt.ylabel('MPKI L2')
+plt.plot(range(0, len(misses_l2_train[0])), misses_l2_train[0]/100000)
+old_value = 0
+for v in vlines_train:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.margins(x=0)
+if num_plots == 3:
+    plt.subplot(3, 1, 3)
+    plt.xlabel('Simulation point - Train')
+    plt.ylabel('MPKI L3')
+    plt.plot(range(0, len(misses_l3_train[0])), misses_l3_train[0]/100000)
+    old_value = 0
+    for v in vlines_train:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        old_value = v[1]
+    plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.margins(x=0)
+plt.tight_layout(pad=4/(num_plots-1))
 
 # Slowdown - Test
 plt.figure(figsize=(9,7))
@@ -151,7 +206,7 @@ for v in vlines_test:
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
 plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
-plt.legend(names, loc="upper right")
+plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 
 # Slowdown - Train
@@ -166,10 +221,10 @@ for v in vlines_train:
     plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
 plt.text((len(slowdown_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
-plt.legend(names, loc="upper right")
+plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.tight_layout(pad=4)
-plt.show()
+
 
 # Instruction type - Test
 plt.figure(figsize=(9,7))
