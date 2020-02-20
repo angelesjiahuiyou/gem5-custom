@@ -291,7 +291,7 @@ for i, n in enumerate(names):
             avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
                 plot_avg_slowdown.append(avg_slowdown[index])
-    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.2)
+    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -325,7 +325,7 @@ for i, n in enumerate(names):
             avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
                 plot_avg_slowdown.append(avg_slowdown[index])
-    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.2)
+    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
