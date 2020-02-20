@@ -72,48 +72,6 @@ for f in sorted(stats_files):
                     vlines_train.append((f.split('.')[0], vlines_count_train))
 legend = [n.split()[-1] for n in names]
 
-# Average slowdown - Test
-plt.figure(figsize=(9,7))
-plt.subplot(2, 1, 1)
-plt.xlabel('Benchmark - Test')
-plt.ylabel('Average relative slowdown')
-width = 0.65/len(names)
-for i, n in enumerate(names):
-    avg_slowdown = {}
-    for b in benchmark_set:
-        index = b.split('.')[0]
-        avg_slowdown[index] = 0
-        for cpt in data_test.filter(like=b, axis=1):
-            avg_slowdown[index] = avg_slowdown[index] + (slowdown_test[i][cpt] * cpt_weight_test[i][cpt])
-        if not avg_slowdown[index]:
-            del(avg_slowdown[index])
-    ind_num = np.arange(len(avg_slowdown))
-    plt.bar(ind_num + i*width, avg_slowdown.values(), width=width)
-plt.xticks(ind_num + (len(names)-1)*width/2, avg_slowdown.keys())
-plt.legend(legend, loc="upper right")
-plt.margins(x=0)
-
-# Average slowdown - Train
-plt.subplot(2, 1, 2)
-plt.xlabel('Benchmark - Train')
-plt.ylabel('Average relative slowdown')
-width = 0.65/len(names)
-for i, n in enumerate(names):
-    avg_slowdown = {}
-    for b in benchmark_set:
-        index = b.split('.')[0]
-        avg_slowdown[index] = 0
-        for cpt in data_train.filter(like=b, axis=1):
-            avg_slowdown[index] = avg_slowdown[index] + (slowdown_train[i][cpt] * cpt_weight_train[i][cpt])
-        if not avg_slowdown[index]:
-            del(avg_slowdown[index])
-    ind_num = np.arange(len(avg_slowdown))
-    plt.bar(ind_num + i*width, avg_slowdown.values(), width=width)
-plt.xticks(ind_num + (len(names)-1)*width/2, avg_slowdown.keys())
-plt.legend(legend, loc="upper right")
-plt.margins(x=0)
-plt.tight_layout(pad=4)
-
 
 # MPKI - Test
 num_plots = 2 if "i7-6700" not in names[0] else 3
@@ -121,7 +79,26 @@ plt.figure(figsize=(9,7))
 plt.subplot(num_plots, 1, 1)
 plt.xlabel('Simulation point - Test')
 plt.ylabel('MPKI L1')
-plt.plot(range(0, len(misses_l1_test[0])), misses_l1_test[0]/100000)
+ax = plt.gca()
+color=next(ax._get_lines.prop_cycler)['color']
+plt.plot(range(0, len(misses_l1_test[0])), misses_l1_test[0]/100000, color=color)
+overall = {}
+plot_overall = []
+for b in benchmark_set:
+    index = b.split('.')[0]
+    overall[index] = 0
+    sum_weights = 0
+    sum_values = 0
+    flt_data = data_test.filter(like=b, axis=1)
+    if len(flt_data.columns):
+        for cpt in flt_data:
+            overall[index] = overall[index] + (misses_l1_test[0][cpt]/100000 * cpt_weight_test[0][cpt])
+            sum_weights = sum_weights + cpt_weight_test[0][cpt]
+            sum_values = sum_values + misses_l1_test[0][cpt]/100000
+        overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+        for cpt in flt_data:
+            plot_overall.append(overall[index])
+plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -132,7 +109,26 @@ plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Test')
 plt.ylabel('MPKI L2')
-plt.plot(range(0, len(misses_l2_test[0])), misses_l2_test[0]/100000)
+ax = plt.gca()
+color=next(ax._get_lines.prop_cycler)['color']
+plt.plot(range(0, len(misses_l2_test[0])), misses_l2_test[0]/100000, color=color)
+overall = {}
+plot_overall = []
+for b in benchmark_set:
+    index = b.split('.')[0]
+    overall[index] = 0
+    sum_weights = 0
+    sum_values = 0
+    flt_data = data_test.filter(like=b, axis=1)
+    if len(flt_data.columns):
+        for cpt in flt_data:
+            overall[index] = overall[index] + (misses_l2_test[0][cpt]/100000 * cpt_weight_test[0][cpt])
+            sum_weights = sum_weights + cpt_weight_test[0][cpt]
+            sum_values = sum_values + misses_l2_test[0][cpt]/100000
+        overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+        for cpt in flt_data:
+            plot_overall.append(overall[index])
+plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -144,7 +140,26 @@ if num_plots == 3:
     plt.subplot(3, 1, 3)
     plt.xlabel('Simulation point - Test')
     plt.ylabel('MPKI L3')
-    plt.plot(range(0, len(misses_l3_test[0])), misses_l3_test[0]/100000)
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(misses_l3_test[0])), misses_l3_test[0]/100000, color=color)
+    overall = {}
+    plot_overall = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        overall[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_test.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                overall[index] = overall[index] + (misses_l3_test[0][cpt]/100000 * cpt_weight_test[0][cpt])
+                sum_weights = sum_weights + cpt_weight_test[0][cpt]
+                sum_values = sum_values + misses_l3_test[0][cpt]/100000
+            overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_overall.append(overall[index])
+    plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
     old_value = 0
     for v in vlines_test:
         plt.axvline(x=v[1], color='k', linestyle='--')
@@ -160,7 +175,26 @@ plt.figure(figsize=(9,7))
 plt.subplot(num_plots, 1, 1)
 plt.xlabel('Simulation point - Train')
 plt.ylabel('MPKI L1')
-plt.plot(range(0, len(misses_l1_train[0])), misses_l1_train[0]/100000)
+ax = plt.gca()
+color=next(ax._get_lines.prop_cycler)['color']
+plt.plot(range(0, len(misses_l1_train[0])), misses_l1_train[0]/100000, color=color)
+overall = {}
+plot_overall = []
+for b in benchmark_set:
+    index = b.split('.')[0]
+    overall[index] = 0
+    sum_weights = 0
+    sum_values = 0
+    flt_data = data_train.filter(like=b, axis=1)
+    if len(flt_data.columns):
+        for cpt in flt_data:
+            overall[index] = overall[index] + (misses_l1_train[0][cpt]/100000 * cpt_weight_train[0][cpt])
+            sum_weights = sum_weights + cpt_weight_train[0][cpt]
+            sum_values = sum_values + misses_l1_train[0][cpt]/100000
+        overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+        for cpt in flt_data:
+            plot_overall.append(overall[index])
+plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -171,7 +205,26 @@ plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Train')
 plt.ylabel('MPKI L2')
-plt.plot(range(0, len(misses_l2_train[0])), misses_l2_train[0]/100000)
+ax = plt.gca()
+color=next(ax._get_lines.prop_cycler)['color']
+plt.plot(range(0, len(misses_l2_train[0])), misses_l2_train[0]/100000, color=color)
+overall = {}
+plot_overall = []
+for b in benchmark_set:
+    index = b.split('.')[0]
+    overall[index] = 0
+    sum_weights = 0
+    sum_values = 0
+    flt_data = data_train.filter(like=b, axis=1)
+    if len(flt_data.columns):
+        for cpt in flt_data:
+            overall[index] = overall[index] + (misses_l2_train[0][cpt]/100000 * cpt_weight_train[0][cpt])
+            sum_weights = sum_weights + cpt_weight_train[0][cpt]
+            sum_values = sum_values + misses_l2_train[0][cpt]/100000
+        overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+        for cpt in flt_data:
+            plot_overall.append(overall[index])
+plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -183,7 +236,26 @@ if num_plots == 3:
     plt.subplot(3, 1, 3)
     plt.xlabel('Simulation point - Train')
     plt.ylabel('MPKI L3')
-    plt.plot(range(0, len(misses_l3_train[0])), misses_l3_train[0]/100000)
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(misses_l3_train[0])), misses_l3_train[0]/100000, color=color)
+    overall = {}
+    plot_overall = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        overall[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_train.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                overall[index] = overall[index] + (misses_l3_train[0][cpt]/100000 * cpt_weight_train[0][cpt])
+                sum_weights = sum_weights + cpt_weight_train[0][cpt]
+                sum_values = sum_values + misses_l3_train[0][cpt]/100000
+            overall[index] = overall[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_overall.append(overall[index])
+    plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alpha=0.3)
     old_value = 0
     for v in vlines_train:
         plt.axvline(x=v[1], color='k', linestyle='--')
@@ -193,13 +265,33 @@ if num_plots == 3:
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 
+
 # Slowdown - Test
 plt.figure(figsize=(9,7))
 plt.subplot(2, 1, 1)
 plt.xlabel('Simulation point - Test')
 plt.ylabel('Relative slowdown')
 for i, n in enumerate(names):
-    plt.plot(range(0, len(slowdown_test[i])), slowdown_test[i])
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(slowdown_test[i])), slowdown_test[i], color=color)
+    avg_slowdown = {}
+    plot_avg_slowdown = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        avg_slowdown[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_test.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                avg_slowdown[index] = avg_slowdown[index] + (slowdown_test[i][cpt] * cpt_weight_test[i][cpt])
+                sum_weights = sum_weights + cpt_weight_test[i][cpt]
+                sum_values = sum_values + slowdown_test[i][cpt]
+            avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_avg_slowdown.append(avg_slowdown[index])
+    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.2)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -214,7 +306,26 @@ plt.subplot(2, 1, 2)
 plt.xlabel('Simulation point - Train')
 plt.ylabel('Relative slowdown')
 for i, n in enumerate(names):
-    plt.plot(range(0, len(slowdown_train[i])), slowdown_train[i])
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(slowdown_train[i])), slowdown_train[i], color=color)
+    avg_slowdown = {}
+    plot_avg_slowdown = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        avg_slowdown[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_train.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                avg_slowdown[index] = avg_slowdown[index] + (slowdown_train[i][cpt] * cpt_weight_train[i][cpt])
+                sum_weights = sum_weights + cpt_weight_train[i][cpt]
+                sum_values = sum_values + slowdown_train[i][cpt]
+            avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_avg_slowdown.append(avg_slowdown[index])
+    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.2)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
