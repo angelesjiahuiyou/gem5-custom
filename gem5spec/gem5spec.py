@@ -299,7 +299,7 @@ def watchdog(limit_time):
             # Avoid re-targeting a dead child
             proc_dir = os.path.join("/proc", str(pid))
             if pid not in sp_fail and os.path.isdir(proc_dir):
-                limit = timedelta(hours = 3)
+                limit = timedelta(hours = 4)
                 ptime = datetime.fromtimestamp(os.path.getmtime(proc_dir))
                 if current_time - ptime > limit:
                     # Take note and kill it
