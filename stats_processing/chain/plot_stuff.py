@@ -24,6 +24,12 @@ op_other_test = []
 op_memrd_train = []
 op_memwr_train = []
 op_other_train = []
+llc_blk_cpuspwr_test = []
+llc_blk_cpusprd_test = []
+llc_blk_mshrwb_test = []
+llc_blk_cpuspwr_train = []
+llc_blk_cpusprd_train = []
+llc_blk_mshrwb_train = []
 vlines_test = []
 vlines_train = []
 vlines_count_test = 0
@@ -52,6 +58,19 @@ for f in sorted(stats_files):
         if "i7-6700" in os.path.basename(f):
             misses_l3_test.append(data_test.filter(like='system.l3.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
             misses_l3_train.append(data_train.filter(like='system.l3.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
+            llc_blk_cpusprd_test.append(data_test.filter(like='system.l3.bank_blocked_reqs_cpusp_read_', axis=0).sum())
+            llc_blk_cpuspwr_test.append(data_test.filter(like='system.l3.bank_blocked_reqs_cpusp_write_', axis=0).sum())
+            llc_blk_mshrwb_test.append(data_test.filter(like='system.l3.bank_blocked_reqs_memsp_mshr_', axis=0).sum())
+            llc_blk_cpusprd_train.append(data_train.filter(like='system.l3.bank_blocked_reqs_cpusp_read_', axis=0).sum())
+            llc_blk_cpuspwr_train.append(data_train.filter(like='system.l3.bank_blocked_reqs_cpusp_write_', axis=0).sum())
+            llc_blk_mshrwb_train.append(data_train.filter(like='system.l3.bank_blocked_reqs_memsp_mshr_', axis=0).sum())
+        else:
+            llc_blk_cpusprd_test.append(data_test.filter(like='system.l2.bank_blocked_reqs_cpusp_read_', axis=0).sum())
+            llc_blk_cpuspwr_test.append(data_test.filter(like='system.l2.bank_blocked_reqs_cpusp_write_', axis=0).sum())
+            llc_blk_mshrwb_test.append(data_test.filter(like='system.l2.bank_blocked_reqs_memsp_mshr_', axis=0).sum())
+            llc_blk_cpusprd_train.append(data_train.filter(like='system.l2.bank_blocked_reqs_cpusp_read_', axis=0).sum())
+            llc_blk_cpuspwr_train.append(data_train.filter(like='system.l2.bank_blocked_reqs_cpusp_write_', axis=0).sum())
+            llc_blk_mshrwb_train.append(data_train.filter(like='system.l2.bank_blocked_reqs_memsp_mshr_', axis=0).sum())
         op_memrd_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemRead', axis=0).sum())
         op_memwr_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemWrite', axis=0).sum())
         op_other_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
@@ -386,4 +405,47 @@ plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
 plt.tight_layout(pad=4)
+
+
+# Bank conflicts - Test
+for i, n in enumerate(names):
+    plt.figure(figsize=(9,7))
+    plt.subplot(2, 1, 1)
+    plt.xlabel('Simulation point - Test [' + legend[i] + ']')
+    plt.ylabel('Number of bank conflicts')
+    cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_test[i]), 1), llc_blk_cpusprd_test[i], 1)
+    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1, bottom=llc_blk_cpusprd_test[i])
+    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=(llc_blk_cpusprd_test[i] + llc_blk_cpuspwr_test[i]))
+    cpusprd.set_label('Read request')
+    cpuspwr.set_label('WB Writebacks')
+    mshrwb.set_label('MSHR writeback')
+    old_value = 0
+    for v in vlines_test:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        old_value = v[1]
+    plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.legend(loc='upper right')
+    plt.margins(x=0)
+
+    # Bank conflicts - Train
+    plt.subplot(2, 1, 2)
+    plt.xlabel('Simulation point - Train [' + legend[i] + ']')
+    plt.ylabel('Number of bank conflicts')
+    cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_train[i]), 1), llc_blk_cpusprd_train[i], 1)
+    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1, bottom=llc_blk_cpusprd_train[i])
+    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=(llc_blk_cpusprd_train[i] + llc_blk_cpuspwr_train[i]))
+    cpusprd.set_label('Read request')
+    cpuspwr.set_label('WB Writebacks')
+    mshrwb.set_label('MSHR Writeback')
+    old_value = 0
+    for v in vlines_train:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        old_value = v[1]
+    plt.text((len(slowdown_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.legend(loc='upper right')
+    plt.margins(x=0)
+    plt.tight_layout(pad=4)
+
 plt.show()
