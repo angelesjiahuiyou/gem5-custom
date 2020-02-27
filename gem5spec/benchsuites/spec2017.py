@@ -228,7 +228,7 @@ params = {
         "557.xz_r"        : ("input.combined.xz 40 a841f68f38572a49d86226b7ff5baeb31bd19dc637a922a972b2e6d1257a890f6a544ecab967c313e370478c74f760eb229d4eef8a8d2836d233d3e9dd1430bf 6356684 -1 8",
                              "IMG_2560.cr2.xz 40 ec03e53b02deae89b6650f1de4bed76a012366fb3d4bdc791e8633d1a5964e03004523752ab008eff0d9e693689c53056533a05fc4b277f0086544c6c3cbbbf6 40822692 40824404 4",
                             ),
-        "600.perlbench_s" : ("-I./lib diffmail.pl 2 550 15 24 23 100", "-I./lib perfect.pl b 3", "-I. -I./lib scrabbl.pl", "-I./lib splitmail.pl 535 13 25 24 1091 1", "-I. -I./lib suns.pl"),
+        "600.perlbench_s" : ("-I./lib diffmail.pl 2 550 15 24 23 100", "-I./lib perfect.pl b 3", "-I. -I./lib scrabbl.pl scrabbl.in", "-I./lib splitmail.pl 535 13 25 24 1091 1", "-I. -I./lib suns.pl"),
         "602.gcc_s"       : ("200.c -O3 -finline-limit=50000 -o 200.opts-O3_-finline-limit_50000.s",
                              "scilab.c -O3 -finline-limit=50000 -o scilab.opts-O3_-finline-limit_50000.s",
                              "train01.c -O3 -finline-limit=50000 -o train01.opts-O3_-finline-limit_50000.s"
@@ -326,9 +326,10 @@ input = {
         "654.roms_s"      : ("ocean_benchmark0.in.x")
     },
     "train" : {
-        "500.perlbench_r" : ("", "", "scrabbl.in", "", ""),
+#        "500.perlbench_r" : ("", "", "scrabbl.in", "", ""),
         "503.bwaves_r"    : ("bwaves_1.in", "bwaves_2.in"),
         "554.roms_r"      : ("ocean_benchmark1.in.x"),
+#        "600.perlbench_s" : ("", "", "scrabbl.in", "", ""),
         "603.bwaves_s"    : ("bwaves_1.in", "bwaves_2.in"),
         "654.roms_s"      : ("ocean_benchmark1.in.x")
     },
