@@ -203,7 +203,7 @@ params = {
 
     # Train runs
     "train" : {
-        "500.perlbench_r" : ("-I./lib diffmail.pl 2 550 15 24 23 100", "-I./lib perfect.pl b 3", "-I. -I./lib scrabbl.pl", "-I./lib splitmail.pl 535 13 25 24 1091 1", "-I. -I./lib suns.pl"),
+        "500.perlbench_r" : ("-I./lib diffmail.pl 2 550 15 24 23 100", "-I./lib perfect.pl b 3", "-I. -I./lib scrabbl.pl scrabbl.in", "-I./lib splitmail.pl 535 13 25 24 1091 1", "-I. -I./lib suns.pl"),
         "502.gcc_r"       : ("200.c -O3 -finline-limit=50000 -o 200.opts-O3_-finline-limit_50000.s",
                              "scilab.c -O3 -finline-limit=50000 -o scilab.opts-O3_-finline-limit_50000.s",
                              "train01.c -O3 -finline-limit=50000 -o train01.opts-O3_-finline-limit_50000.s"
