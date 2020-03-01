@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 benchmark_set = ('602.gcc_s', '605.mcf_s', '607.cactuBSSN_s', '623.xalancbmk_s', '625.x264_s', '628.pop2_s', '638.imagick_s', '641.leela_s', '649.fotonik3d_s', '654.roms_s')
 stats_files = []
 names = []
-slowdown_test = []
-slowdown_train = []
+rel_ticks_test = []
+rel_ticks_train = []
 cpt_weight_test = []
 cpt_weight_train = []
 data_test = []
@@ -43,12 +43,12 @@ for i in range(1, len(sys.argv)):
  
 for f in sorted(stats_files):
     data = pd.read_csv(f, index_col=0)
-    if "rel_slowdown" in data.index:
-        names.append(os.path.basename(f).replace("slowdown", "").replace(".csv", "").replace("_", " "))
+    if "rel_ticks" in data.index:
+        names.append(os.path.basename(f).replace("rel_ticks", "").replace(".csv", "").replace("_", " "))
         data_test = data.filter(like='test.', axis=1)
         data_train = data.filter(like='train.', axis=1)
-        slowdown_test.append(data_test.loc['rel_slowdown'])
-        slowdown_train.append(data_train.loc['rel_slowdown'])
+        rel_ticks_test.append(data_test.loc['rel_ticks'])
+        rel_ticks_train.append(data_train.loc['rel_ticks'])
         cpt_weight_test.append(data_test.loc['cpt_weight'])
         cpt_weight_train.append(data_train.loc['cpt_weight'])
         misses_l1_test.append(data_test.filter(regex='system.cpu.*cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
@@ -79,13 +79,13 @@ for f in sorted(stats_files):
         op_other_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
         if not vlines_count_test:
             for f in benchmark_set[:-1]:
-                num_cpts = len(data_test.filter(like=f, axis=1).loc['rel_slowdown'])
+                num_cpts = len(data_test.filter(like=f, axis=1).loc['rel_ticks'])
                 if num_cpts:
                     vlines_count_test += num_cpts
                     vlines_test.append((f.split('.')[0], vlines_count_test))
         if not vlines_count_train:
             for f in benchmark_set[:-1]:
-                num_cpts = len(data_train.filter(like=f, axis=1).loc['rel_slowdown'])
+                num_cpts = len(data_train.filter(like=f, axis=1).loc['rel_ticks'])
                 if num_cpts:
                     vlines_count_train += num_cpts
                     vlines_train.append((f.split('.')[0], vlines_count_train))
@@ -123,7 +123,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Test')
@@ -153,7 +153,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -184,7 +184,7 @@ if num_plots == 3:
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 
@@ -219,7 +219,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Train')
@@ -249,7 +249,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -280,79 +280,81 @@ if num_plots == 3:
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(slowdown_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 
 
-# Slowdown - Test
+# Execution time - Test
 plt.figure(figsize=(9,7))
 plt.subplot(2, 1, 1)
 plt.xlabel('Simulation point - Test')
-plt.ylabel('Relative slowdown')
+plt.ylabel('Relative execution time')
 for i, n in enumerate(names):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
-    plt.plot(range(0, len(slowdown_test[i])), slowdown_test[i], color=color)
-    avg_slowdown = {}
-    plot_avg_slowdown = []
+    plt.plot(range(0, len(rel_ticks_test[i])), rel_ticks_test[i], color=color)
+    avg_rel_ticks = {}
+    plot_avg_rel_ticks = []
     for b in benchmark_set:
         index = b.split('.')[0]
-        avg_slowdown[index] = 0
+        avg_rel_ticks[index] = 0
         sum_weights = 0
         sum_values = 0
         flt_data = data_test.filter(like=b, axis=1)
         if len(flt_data.columns):
             for cpt in flt_data:
-                avg_slowdown[index] = avg_slowdown[index] + (slowdown_test[i][cpt] * cpt_weight_test[i][cpt])
+                avg_rel_ticks[index] = avg_rel_ticks[index] + (rel_ticks_test[i][cpt] * cpt_weight_test[i][cpt])
                 sum_weights = sum_weights + cpt_weight_test[i][cpt]
-                sum_values = sum_values + slowdown_test[i][cpt]
-            avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+                sum_values = sum_values + rel_ticks_test[i][cpt]
+            avg_rel_ticks[index] = avg_rel_ticks[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
-                plot_avg_slowdown.append(avg_slowdown[index])
-    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.3)
+                plot_avg_rel_ticks.append(avg_rel_ticks[index])
+    plt.bar(np.arange(0.5, len(plot_avg_rel_ticks)-1, 1), plot_avg_rel_ticks[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
+plt.ylim(ymin=1)
 
-# Slowdown - Train
+# Execution time - Train
 plt.subplot(2, 1, 2)
 plt.xlabel('Simulation point - Train')
-plt.ylabel('Relative slowdown')
+plt.ylabel('Relative execution time')
 for i, n in enumerate(names):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
-    plt.plot(range(0, len(slowdown_train[i])), slowdown_train[i], color=color)
-    avg_slowdown = {}
-    plot_avg_slowdown = []
+    plt.plot(range(0, len(rel_ticks_train[i])), rel_ticks_train[i], color=color)
+    avg_rel_ticks = {}
+    plot_avg_rel_ticks = []
     for b in benchmark_set:
         index = b.split('.')[0]
-        avg_slowdown[index] = 0
+        avg_rel_ticks[index] = 0
         sum_weights = 0
         sum_values = 0
         flt_data = data_train.filter(like=b, axis=1)
         if len(flt_data.columns):
             for cpt in flt_data:
-                avg_slowdown[index] = avg_slowdown[index] + (slowdown_train[i][cpt] * cpt_weight_train[i][cpt])
+                avg_rel_ticks[index] = avg_rel_ticks[index] + (rel_ticks_train[i][cpt] * cpt_weight_train[i][cpt])
                 sum_weights = sum_weights + cpt_weight_train[i][cpt]
-                sum_values = sum_values + slowdown_train[i][cpt]
-            avg_slowdown[index] = avg_slowdown[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+                sum_values = sum_values + rel_ticks_train[i][cpt]
+            avg_rel_ticks[index] = avg_rel_ticks[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
-                plot_avg_slowdown.append(avg_slowdown[index])
-    plt.bar(np.arange(0.5, len(plot_avg_slowdown)-1, 1), plot_avg_slowdown[:-1], width=1, alpha=0.3)
+                plot_avg_rel_ticks.append(avg_rel_ticks[index])
+    plt.bar(np.arange(0.5, len(plot_avg_rel_ticks)-1, 1), plot_avg_rel_ticks[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
+plt.ylim(ymin=1)
 plt.tight_layout(pad=4)
 
 
@@ -376,7 +378,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,1.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_test[0])+old_value)/2-2,1.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,1.02,'654')
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
@@ -400,7 +402,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,1.02,v[0])
     old_value = v[1]
-plt.text((len(slowdown_train[0])+old_value)/2-4.4,1.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,1.02,'654')
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
@@ -424,7 +426,7 @@ for i, n in enumerate(names):
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(slowdown_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
     plt.legend(loc='upper right')
     plt.margins(x=0)
 
@@ -443,7 +445,7 @@ for i, n in enumerate(names):
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(slowdown_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
     plt.legend(loc='upper right')
     plt.margins(x=0)
     plt.tight_layout(pad=4)

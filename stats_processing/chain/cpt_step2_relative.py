@@ -3,10 +3,10 @@ import pandas as pd
 import sys
 stats_files = []
 
-def compute_slowdown(x):
-    if (x - 1) < 0:
-        return 0
-    return (x - 1)
+def compute_rel_ticks(x):
+    if x < 1:
+        return 1
+    return x
 
 if len(sys.argv) < 2:
     print("fatal: you need at least two files")
@@ -45,11 +45,11 @@ for f in stats_files:
     data = data.apply(pd.to_numeric)
     # Perform the division w.r.t. baseline
     relative = pd.DataFrame.divide(data, baseline_data)
-    # Append rel_slowdown to the new file
-    relative.loc["rel_slowdown"] = relative.loc["sim_ticks"].apply(compute_slowdown)
+    # Append rel_ticks to the new file
+    relative.loc["rel_ticks"] = relative.loc["sim_ticks"].apply(compute_rel_ticks)
     relative.sort_index(inplace=True)
-    # Append rel_slowdown to the original file
-    data.loc["rel_slowdown"] = relative.loc["rel_slowdown"]
+    # Append rel_ticks to the original file
+    data.loc["rel_ticks"] = relative.loc["rel_ticks"]
     data.sort_index(inplace=True)
     # Save both files
     data_filename = os.path.basename(f)
@@ -58,8 +58,8 @@ for f in stats_files:
     relative.to_csv(os.path.join(out_dir, "relative_" + data_conf + ".csv"), na_rep="nan")
 
 # Add the dummy relative slowdown to the baseline
-if "rel_slowdown" not in baseline_data.index:
-    baseline_data.loc["rel_slowdown"] = [0 for i in range(0, baseline_data.shape[1])]
+if "rel_ticks" not in baseline_data.index:
+    baseline_data.loc["rel_ticks"] = [0 for i in range(0, baseline_data.shape[1])]
     baseline_data.sort_index(inplace=True)
 # Save the baseline .csv file
 baseline_filename = os.path.basename(baseline)

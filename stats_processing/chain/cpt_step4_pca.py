@@ -21,7 +21,7 @@ for f in sorted(stats_files):
     data = pd.read_csv(f, index_col=0)
     td = data.transpose()
     # Drop unnecessary stats
-    td_clean = td.drop(["cpt_weight", "rel_slowdown", "sim_insts", "sim_ops", "sim_seconds", "sim_ticks"], errors='ignore', axis=1)
+    td_clean = td.drop(["cpt_weight", "rel_ticks", "sim_insts", "sim_ops", "sim_seconds", "sim_ticks"], errors='ignore', axis=1)
     # Create a copy of the dataset and apply the PCA (first n_components)
     pca = PCA(n_components)
     pca_data = pd.DataFrame(pca.fit_transform(td_clean.to_numpy()), index=td_clean.index, columns=["PC" + str(i) for i in range (0, n_components)])
@@ -33,10 +33,10 @@ for f in sorted(stats_files):
     pca_data.to_csv(os.path.join(out_dir, out_filename))
     pca_components.to_csv(os.path.join(out_dir, comp_filename))
     pca_final = pca_data
-    if "rel_slowdown" in data.index:
-        pca_final.insert(0, "rel_slowdown", data.loc["rel_slowdown"])
+    if "rel_ticks" in data.index:
+        pca_final.insert(0, "rel_ticks", data.loc["rel_ticks"])
     else:
-        pca_final.insert(0, "rel_slowdown", [0 for i in data.columns])
+        pca_final.insert(0, "rel_ticks", [0 for i in data.columns])
     pca_final.to_csv(os.path.join(out_dir, final_filename), index=False, sep=';')
     # Print statistical information in a separate file
     logname = os.path.basename(f).replace(".csv", "_pca_log.txt")
