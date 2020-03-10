@@ -75,7 +75,7 @@ subset = {
         "416.gamess"        : ("cytosine_2", "h2ocu2+_gradient", "triazolium"),
         "445.gobmk"         : ("13x13", "nngs", "score2", "trevorc", "trevord"),
         "450.soplex"        : ("pds-50", "ref"),
-        "456.hmmer"         : ("nph3", "retro", "swiss41"),
+        "456.hmmer"         : ("nph3", "retro"),
         "464.h264ref"       : ("foreman_ref_encoder_baseline", "foreman_ref_encoder_main", "sss_encoder_main"),
         "473.astar"         : ("BigLakes2048", "rivers")
         # Yet to fill
@@ -184,7 +184,7 @@ input = {
         "416.gamess"        : ("cytosine.2.config", " h2ocu2+.gradient.config", "triazolium.config"),
         "433.milc"          : ("su3imp.in"),
         "437.leslie3d"      : ("leslie3d.in"),
-        "445.gobmk"         : ("13x13.tst", "nngs.tst", "score2.tst",  "trevorc.tst", "trevord.tst")
+        "445.gobmk"         : ("13x13.tst", "nngs.tst", "score2.tst",  "trevorc.tst", "trevord.tst"),
         "465.tonto"         : ("stdin")
     }
 }
