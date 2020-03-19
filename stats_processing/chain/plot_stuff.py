@@ -12,6 +12,8 @@ cpt_weight_test = []
 cpt_weight_train = []
 data_test = []
 data_train = []
+cpi_test = []
+cpi_train = []
 misses_l1_test = []
 misses_l1_train = []
 misses_l2_test = []
@@ -51,6 +53,8 @@ for f in sorted(stats_files):
         rel_ticks_train.append(data_train.loc['rel_ticks'])
         cpt_weight_test.append(data_test.loc['cpt_weight'])
         cpt_weight_train.append(data_train.loc['cpt_weight'])
+        cpi_test.append(data_test.loc['system.cpu.cpi'])
+        cpi_train.append(data_train.loc['system.cpu.cpi'])
         misses_l1_test.append(data_test.filter(regex='system.cpu.*cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
         misses_l1_train.append(data_train.filter(regex='system.cpu.*cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
         misses_l2_test.append(data_test.filter(like='system.l2.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
@@ -294,23 +298,23 @@ for i, n in enumerate(names):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(rel_ticks_test[i])), rel_ticks_test[i], color=color)
-    avg_rel_ticks = {}
-    plot_avg_rel_ticks = []
+    average = {}
+    plot_average = []
     for b in benchmark_set:
         index = b.split('.')[0]
-        avg_rel_ticks[index] = 0
+        average[index] = 0
         sum_weights = 0
         sum_values = 0
         flt_data = data_test.filter(like=b, axis=1)
         if len(flt_data.columns):
             for cpt in flt_data:
-                avg_rel_ticks[index] = avg_rel_ticks[index] + (rel_ticks_test[i][cpt] * cpt_weight_test[i][cpt])
+                average[index] = average[index] + (rel_ticks_test[i][cpt] * cpt_weight_test[i][cpt])
                 sum_weights = sum_weights + cpt_weight_test[i][cpt]
                 sum_values = sum_values + rel_ticks_test[i][cpt]
-            avg_rel_ticks[index] = avg_rel_ticks[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            average[index] = average[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
-                plot_avg_rel_ticks.append(avg_rel_ticks[index])
-    plt.bar(np.arange(0.5, len(plot_avg_rel_ticks)-1, 1), plot_avg_rel_ticks[:-1], width=1, alpha=0.3)
+                plot_average.append(average[index])
+    plt.bar(np.arange(0.5, len(plot_average)-1, 1), plot_average[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
@@ -329,29 +333,102 @@ for i, n in enumerate(names):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(rel_ticks_train[i])), rel_ticks_train[i], color=color)
-    avg_rel_ticks = {}
-    plot_avg_rel_ticks = []
+    average = {}
+    plot_average = []
     for b in benchmark_set:
         index = b.split('.')[0]
-        avg_rel_ticks[index] = 0
+        average[index] = 0
         sum_weights = 0
         sum_values = 0
         flt_data = data_train.filter(like=b, axis=1)
         if len(flt_data.columns):
             for cpt in flt_data:
-                avg_rel_ticks[index] = avg_rel_ticks[index] + (rel_ticks_train[i][cpt] * cpt_weight_train[i][cpt])
+                average[index] = average[index] + (rel_ticks_train[i][cpt] * cpt_weight_train[i][cpt])
                 sum_weights = sum_weights + cpt_weight_train[i][cpt]
                 sum_values = sum_values + rel_ticks_train[i][cpt]
-            avg_rel_ticks[index] = avg_rel_ticks[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            average[index] = average[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
             for cpt in flt_data:
-                plot_avg_rel_ticks.append(avg_rel_ticks[index])
-    plt.bar(np.arange(0.5, len(plot_avg_rel_ticks)-1, 1), plot_avg_rel_ticks[:-1], width=1, alpha=0.3)
+                plot_average.append(average[index])
+    plt.bar(np.arange(0.5, len(plot_average)-1, 1), plot_average[:-1], width=1, alpha=0.3)
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
 plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.legend(legend, loc="upper right")
+plt.margins(x=0)
+plt.ylim(ymin=1)
+plt.tight_layout(pad=4)
+
+
+# CPI - Test
+plt.figure(figsize=(9,7))
+plt.subplot(2, 1, 1)
+plt.xlabel('Simulation point - Test')
+plt.ylabel('Cycles per instruction')
+for i, n in enumerate(names):
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(cpi_test[i])), cpi_test[i], color=color)
+    average = {}
+    plot_average = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        average[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_test.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                average[index] = average[index] + (cpi_test[i][cpt] * cpt_weight_test[i][cpt])
+                sum_weights = sum_weights + cpt_weight_test[i][cpt]
+                sum_values = sum_values + cpi_test[i][cpt]
+            average[index] = average[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_average.append(average[index])
+    plt.bar(np.arange(0.5, len(plot_average)-1, 1), plot_average[:-1], width=1, alpha=0.3)
+old_value = 0
+for v in vlines_test:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(cpi_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.legend(legend, loc="upper right")
+plt.margins(x=0)
+plt.ylim(ymin=1)
+
+# CPI - Train
+plt.subplot(2, 1, 2)
+plt.xlabel('Simulation point - Train')
+plt.ylabel('Cycles per instruction')
+for i, n in enumerate(names):
+    ax = plt.gca()
+    color=next(ax._get_lines.prop_cycler)['color']
+    plt.plot(range(0, len(cpi_train[i])), cpi_train[i], color=color)
+    average = {}
+    plot_average = []
+    for b in benchmark_set:
+        index = b.split('.')[0]
+        average[index] = 0
+        sum_weights = 0
+        sum_values = 0
+        flt_data = data_train.filter(like=b, axis=1)
+        if len(flt_data.columns):
+            for cpt in flt_data:
+                average[index] = average[index] + (cpi_train[i][cpt] * cpt_weight_train[i][cpt])
+                sum_weights = sum_weights + cpt_weight_train[i][cpt]
+                sum_values = sum_values + cpi_train[i][cpt]
+            average[index] = average[index] + sum_values / len(flt_data.columns) * (1 - sum_weights)
+            for cpt in flt_data:
+                plot_average.append(average[index])
+    plt.bar(np.arange(0.5, len(plot_average)-1, 1), plot_average[:-1], width=1, alpha=0.3)
+old_value = 0
+for v in vlines_train:
+    plt.axvline(x=v[1], color='k', linestyle='--')
+    plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    old_value = v[1]
+plt.text((len(cpi_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
