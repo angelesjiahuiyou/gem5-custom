@@ -11,16 +11,21 @@ try:
 except ImportError:
     from scandir import scandir, walk
 
+cpu2017 = {
+    "int":  ('602.gcc_s', '605.mcf_s', '623.xalancbmk_s', '625.x264_s', '641.leela_s'),
+    "fp":   ('607.cactuBSSN_s', '628.pop2_s', '638.imagick_s', '649.fotonik3d_s', '654.roms_s')
+}
 
 # Parsing function
-def process(file_list, cm, t, s):
+def process(file_list, cm, t, s, it):
     # Create empty support structures
     data     = {}
     data_flt = {}
     weights  = []
     names    = []
 
-    target_list = [x for x in sorted(file_list) if cm in x and t in x and s in x]
+    benchlist = cpu2017.get(it)
+    target_list = [x for x in sorted(file_list) if cm in x and t in x and s in x and any(elm in x for elm in benchlist)]
     if target_list:
         for i, stats_path in enumerate(target_list):
             params = stats_path.split("/")
@@ -93,8 +98,8 @@ def process(file_list, cm, t, s):
                 data_flt[key] = data[key]
 
         # Create the output file
-        raw_file = open(os.path.join(out_dir, "raw_stats_" + cm + "_" + t + "_" + s + ".csv"), "w+")
-        out_file = open(os.path.join(out_dir, "parsed_stats_" + cm + "_" + t + "_" + s + ".csv"), "w+")
+        raw_file = open(os.path.join(out_dir, "raw_stats_" + it + "_" + cm + "_" + t + "_" + s + ".csv"), "w+")
+        out_file = open(os.path.join(out_dir, "parsed_stats_" + it + "_" + cm + "_" + t + "_" + s + ".csv"), "w+")
 
         # Create header
         raw_file.write(',')
@@ -160,8 +165,10 @@ for root, dirs, files in os.walk(base_path):
             params = stats_path.split("/")
 
             # Safety check
-            if (len(params) == 9 and params[2] == "simulation" and
-                not "err_" in params[7]):
+            if (len(params) == 9 and
+                params[2] == "simulation" and
+                not "err_" in params[7] and
+                (any(params[1] in cpu2017.get(key) for key in cpu2017.keys()))):
                 file_list.append(stats_path)
 
                 if params[4] not in cpumodels:
@@ -178,4 +185,4 @@ else:
     print("Processing " + str(len(file_list)) + " files...")
 
 with parallel_backend('multiprocessing', n_jobs=multiprocessing.cpu_count()):
-    Parallel()(delayed(process)(file_list, cm, t, s) for cm in cpumodels for t in technologies for s in scenarios)
+    Parallel()(delayed(process)(file_list, cm, t, s, it) for cm in cpumodels for t in technologies for s in scenarios for it in cpu2017.keys())
