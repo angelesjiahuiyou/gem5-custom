@@ -49,34 +49,40 @@ for f in sorted(stats_files):
     y = data.rel_ticks
     
     # Divide in train and test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=5)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
 
     # Compute linear model coefficients
-    lm = linear_model.Ridge()
+    lm = linear_model.RidgeCV()
     lm.fit(X_train, y_train)
-
-    # Print linear model details
-    print("File: ", f)
-    print("Intercept: ", lm.intercept_)
-    print("Number of coefficients: ", len(lm.coef_))
-    print("Score (R squared): ", lm.score(X_train, y_train))
 
     # Apply predictive model to test
     y_pred = lm.predict(X_test)
-    print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))  
-    print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))  
-    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-    print("")
     
     # Plot real and predicted relative slowdown
     plt.figure(figsize=(9,7))
-    plt.plot(range(len(y[X_test.index])), y[X_test.index], color='r')
+    plt.plot(range(len(y_test)), y_test, color='r')
     plt.plot(range(len(y_pred)), y_pred, color='b')
-    plt.show()
+    plt.savefig(os.path.join(out_dir, os.path.basename(f).replace(".csv", ".png")), bbox_inches='tight', pad_inches=0.2)
+    plt.close()
     
-    # Show coefficients
-    cmat = pd.DataFrame(zip(X_train.columns, lm.coef_), columns = ['Features', 'Coefficients'])
-    cmat = cmat.reindex(cmat['Coefficients'].abs().sort_values(ascending=False).index)  
-    for c in cmat.values[:30]:
-        print(str(round(c[1], 5)) + " -> " + c[0])
-    print("-----------------")
+    # Create log
+    logname = os.path.basename(f).replace(".csv", ".log")
+    with open(os.path.join(out_dir, logname), 'w') as log:
+        log.write("LINEAR MODEL DETAILS\n")
+        log.write("-----------------" + "\n")
+        log.write("Intercept: " + str(lm.intercept_) + "\n")
+        log.write("Number of coefficients: " + str(len(lm.coef_)) + "\n")
+        log.write("Score (R squared): " + str(lm.score(X_train, y_train)) + "\n")
+        log.write("Train size: " + str(len(X_train.index)) + "\n\n")
+        log.write("PREDICTION ACCURACY VS. TEST\n")
+        log.write("-----------------" + "\n")
+        log.write('Mean Absolute Error: ' + str(metrics.mean_absolute_error(y_test, y_pred)) + "\n")  
+        log.write('Mean Squared Error: ' + str(metrics.mean_squared_error(y_test, y_pred)) + "\n")  
+        log.write('Root Mean Squared Error: ' + str(np.sqrt(metrics.mean_squared_error(y_test, y_pred))) + "\n")
+        log.write("Test size: " + str(len(X_test.index)) + "\n\n")
+        cmat = pd.DataFrame(zip(X_train.columns, lm.coef_), columns = ['Features', 'Coefficients'])
+        cmat = cmat.reindex(cmat['Coefficients'].abs().sort_values(ascending=False).index)
+        log.write("LINEAR MODEL COEFFICIENTS\n")
+        log.write("-----------------" + "\n")
+        for c in cmat.values[:30]:
+            log.write(str(round(c[1], 5)) + " -> " + c[0] + "\n")
