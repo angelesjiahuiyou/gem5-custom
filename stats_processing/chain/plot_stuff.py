@@ -3,7 +3,8 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-benchmark_set = ('602.gcc_s', '605.mcf_s', '607.cactuBSSN_s', '623.xalancbmk_s', '625.x264_s', '628.pop2_s', '638.imagick_s', '641.leela_s', '649.fotonik3d_s', '654.roms_s')
+from collections import OrderedDict
+benchmark_set = []
 stats_files = []
 names = []
 rel_ticks_test = []
@@ -81,18 +82,20 @@ for f in sorted(stats_files):
         op_memrd_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemRead', axis=0).sum())
         op_memwr_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemWrite', axis=0).sum())
         op_other_train.append(data_train.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
+        if not benchmark_set:
+            benchmark_set = list(OrderedDict.fromkeys((v.split('.')[0] for v in data.columns.values)))
         if not vlines_count_test:
             for f in benchmark_set[:-1]:
                 num_cpts = len(data_test.filter(like=f, axis=1).loc['rel_ticks'])
                 if num_cpts:
                     vlines_count_test += num_cpts
-                    vlines_test.append((f.split('.')[0], vlines_count_test))
+                    vlines_test.append((f, vlines_count_test))
         if not vlines_count_train:
             for f in benchmark_set[:-1]:
                 num_cpts = len(data_train.filter(like=f, axis=1).loc['rel_ticks'])
                 if num_cpts:
                     vlines_count_train += num_cpts
-                    vlines_train.append((f.split('.')[0], vlines_count_train))
+                    vlines_train.append((f, vlines_count_train))
 legend = [n.split()[-1] for n in names]
 
 
@@ -127,7 +130,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Test')
@@ -157,7 +160,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -188,7 +191,7 @@ if num_plots == 3:
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 
@@ -223,7 +226,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Train')
@@ -253,7 +256,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -284,7 +287,7 @@ if num_plots == 3:
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 
@@ -320,7 +323,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
@@ -355,7 +358,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
@@ -393,7 +396,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(cpi_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(cpi_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
@@ -428,7 +431,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
     old_value = v[1]
-plt.text((len(cpi_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+plt.text((len(cpi_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
@@ -455,7 +458,7 @@ for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-1.8,1.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,1.02,'654')
+plt.text((len(rel_ticks_test[0])+old_value)/2-2,1.02, benchmark_set[-1])
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
@@ -479,7 +482,7 @@ for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
     plt.text((v[1]+old_value)/2-4,1.02,v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,1.02,'654')
+plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,1.02, benchmark_set[-1])
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
@@ -503,7 +506,7 @@ for i, n in enumerate(names):
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.legend(loc='upper right')
     plt.margins(x=0)
 
@@ -522,7 +525,7 @@ for i, n in enumerate(names):
         plt.axvline(x=v[1], color='k', linestyle='--')
         plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02,'654')
+    plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.legend(loc='upper right')
     plt.margins(x=0)
     plt.tight_layout(pad=4)
