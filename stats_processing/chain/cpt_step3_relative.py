@@ -15,7 +15,7 @@ baseline = sys.argv[1]
 for i in range(2, len(sys.argv)):
     stats_files.append(sys.argv[i])
 
-out_dir = "step2"
+out_dir = "step3"
 if not os.path.isdir(out_dir):
     os.mkdir(out_dir)
 

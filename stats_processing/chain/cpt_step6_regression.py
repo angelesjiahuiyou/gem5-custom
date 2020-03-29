@@ -15,7 +15,7 @@ if len(sys.argv) < 1:
 for i in range(1, len(sys.argv)):
     stats_files.append(sys.argv[i])
 
-out_dir = "step5"
+out_dir = "step6"
 if not os.path.isdir(out_dir):
     os.mkdir(out_dir)
 

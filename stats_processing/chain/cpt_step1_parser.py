@@ -20,7 +20,6 @@ cpu2017 = {
 def process(file_list, cm, t, s, it):
     # Create empty support structures
     data     = {}
-    data_flt = {}
     weights  = []
     names    = []
 
@@ -65,63 +64,26 @@ def process(file_list, cm, t, s, it):
                         data[m][i] = parsed[1]
             in_file.close()
 
-        # Filtering
-        for key in data:
-            if not (data[key] == ["0" for sf in range(0, len(target_list))] or
-            data[key] == ["inf" for sf in range(0, len(target_list))] or
-            data[key] == ["nan" for sf in range(0, len(target_list))] or
-            set(data[key]) == {'N/A', '0'} or
-            set(data[key]) == {'N/A', 'inf'} or
-            set(data[key]) == {'N/A', 'nan'} or
-            ("rdPerTurnAround" in key and "::samples" not in key) or
-            ("wrPerTurnAround" in key and "::samples" not in key) or
-            "rdQLenPdf" in key or
-            "wrQLenPdf" in key or
-            "perBankRdBursts" in key or
-            "perBankWrBursts" in key or
-            "Energy" in key or
-            "final_tick" in key or
-            "host_" in key or
-            "avg" in key or
-            "rate" in key or
-            "ratio" in key or
-            "cycles" in key or
-            "overall_hit" in key or
-            "overall_miss" in key or
-            "overall_mshr" in key or
-            "overall_accesses" in key or
-            "::UNDEFINED" in key or
-            "::total" in key or
-            "::gmean" in key or
-            "::mean" in key or
-            "::stdev" in key):
-                data_flt[key] = data[key]
-
         # Create the output file
         raw_file = open(os.path.join(out_dir, "raw_stats_" + it + "_" + cm + "_" + t + "_" + s + ".csv"), "w+")
-        out_file = open(os.path.join(out_dir, "parsed_stats_" + it + "_" + cm + "_" + t + "_" + s + ".csv"), "w+")
 
         # Create header
         raw_file.write(',')
-        out_file.write(',')
         for i, n in enumerate(names):
             raw_file.write(n)
-            out_file.write(n)
             if i == len(names) - 1:
                 raw_file.write('\n')
-                out_file.write('\n')
             else:
                 raw_file.write(',')
-                out_file.write(',')
 
         # Print simpoint weights
-        out_file.write('cpt_weight,')
+        raw_file.write('cpt_weight,')
         for i, w in enumerate(weights):
-            out_file.write(w)
+            raw_file.write(w)
             if i == len(weights) - 1:
-                out_file.write('\n')
+                raw_file.write('\n')
             else:
-                out_file.write(',')
+                raw_file.write(',')
 
         # Print data from stats.txt files
         for key in sorted(data.keys()):
@@ -132,16 +94,9 @@ def process(file_list, cm, t, s, it):
                     raw_file.write('\n')
                 else:
                     raw_file.write(',')
-        for key in sorted(data_flt.keys()):
-            out_file.write(key + ',')
-            for i, value in enumerate(data_flt[key]):
-                out_file.write(value)
-                if i == len(data_flt[key]) - 1:
-                    out_file.write('\n')
-                else:
-                    out_file.write(',')
 
-        out_file.close()
+        # Close the output file
+        raw_file.close()
 
 
 # Main program
