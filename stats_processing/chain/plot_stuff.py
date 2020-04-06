@@ -4,9 +4,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+from matplotlib.ticker import ScalarFormatter
+class ForceFormat(ScalarFormatter):
+    def _set_format(self, vmin, vmax):
+        self.format = "%1.1f"
+
 benchmark_set = []
 stats_files = []
-names = []
+legend = []
 rel_ticks_test = []
 rel_ticks_train = []
 cpt_weight_test = []
@@ -43,11 +48,31 @@ if len(sys.argv) < 1:
     exit(1)
 for i in range(1, len(sys.argv)):
     stats_files.append(sys.argv[i])
- 
+
+out_dir = "plots"
+if not os.path.isdir(out_dir):
+    os.mkdir(out_dir)
+
+SMALL_SIZE = 10
+MEDIUM_SIZE = 11
+BIGGER_SIZE = 14
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=MEDIUM_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=BIGGER_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+# Plz don't ask
+magic_number_test = 1
+magic_number_train = 2
+
+base_outpath = os.path.join(out_dir, os.path.basename(stats_files[0]).replace("slowdown_", "").replace(stats_files[0].split('_')[-1], ""))
 for f in sorted(stats_files):
     data = pd.read_csv(f, index_col=0)
     if "rel_ticks" in data.index:
-        names.append(os.path.basename(f).replace("rel_ticks", "").replace(".csv", "").replace("_", " "))
+        legend.append(os.path.basename(f).split('_')[-1].split('.')[0])
         data_test = data.filter(like='test.', axis=1)
         data_train = data.filter(like='train.', axis=1)
         rel_ticks_test.append(data_test.loc['rel_ticks'])
@@ -96,12 +121,11 @@ for f in sorted(stats_files):
                 if num_cpts:
                     vlines_count_train += num_cpts
                     vlines_train.append((f, vlines_count_train))
-legend = [n.split()[-1] for n in names]
 
 
 # MPKI - Test
-num_plots = 2 if "i7-6700" not in names[0] else 3
-plt.figure(figsize=(9,7))
+num_plots = 2 if "i7-6700" not in base_outpath else 3
+plt.figure(figsize=(7,8))
 plt.subplot(num_plots, 1, 1)
 plt.xlabel('Simulation point - Test')
 plt.ylabel('MPKI L1')
@@ -128,9 +152,9 @@ plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alph
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Test')
@@ -158,9 +182,9 @@ plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alph
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -189,15 +213,16 @@ if num_plots == 3:
     old_value = 0
     for v in vlines_test:
         plt.axvline(x=v[1], color='k', linestyle='--')
-        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
+plt.savefig(base_outpath + "mpki_test.png", bbox_inches = 'tight', pad_inches = 0.2)
 
 # MPKI - Train
-num_plots = 2 if "i7-6700" not in names[0] else 3
-plt.figure(figsize=(9,7))
+num_plots = 2 if "i7-6700" not in base_outpath else 3
+plt.figure(figsize=(7,8))
 plt.subplot(num_plots, 1, 1)
 plt.xlabel('Simulation point - Train')
 plt.ylabel('MPKI L1')
@@ -224,9 +249,9 @@ plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alph
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 plt.subplot(num_plots, 1, 2)
 plt.xlabel('Simulation point - Train')
@@ -254,9 +279,9 @@ plt.bar(np.arange(0.5, len(plot_overall)-1, 1), plot_overall[:-1], width=1, alph
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.margins(x=0)
 if num_plots == 3:
     plt.subplot(3, 1, 3)
@@ -285,19 +310,19 @@ if num_plots == 3:
     old_value = 0
     for v in vlines_train:
         plt.axvline(x=v[1], color='k', linestyle='--')
-        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_train[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
+plt.savefig(base_outpath + "mpki_train.png", bbox_inches = 'tight', pad_inches = 0.2)
 
-
-# Execution time - Test
-plt.figure(figsize=(9,7))
+# Slowdown - Test
+plt.figure(figsize=(7,8))
 plt.subplot(2, 1, 1)
 plt.xlabel('Simulation point - Test')
-plt.ylabel('Relative execution time')
-for i, n in enumerate(names):
+plt.ylabel('Relative slowdown')
+for i, n in enumerate(legend):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(rel_ticks_test[i])), rel_ticks_test[i], color=color)
@@ -321,18 +346,18 @@ for i, n in enumerate(names):
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.003, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.003, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
 
-# Execution time - Train
+# Slowdown - Train
 plt.subplot(2, 1, 2)
 plt.xlabel('Simulation point - Train')
-plt.ylabel('Relative execution time')
-for i, n in enumerate(names):
+plt.ylabel('Relative slowdown')
+for i, n in enumerate(legend):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(rel_ticks_train[i])), rel_ticks_train[i], color=color)
@@ -356,21 +381,22 @@ for i, n in enumerate(names):
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.003, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.003, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
 plt.tight_layout(pad=4)
+plt.savefig(base_outpath + "slowdown.png", bbox_inches = 'tight', pad_inches = 0.2)
 
 
 # CPI - Test
-plt.figure(figsize=(9,7))
+plt.figure(figsize=(7,8))
 plt.subplot(2, 1, 1)
 plt.xlabel('Simulation point - Test')
 plt.ylabel('Cycles per instruction')
-for i, n in enumerate(names):
+for i, n in enumerate(legend):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(cpi_test[i])), cpi_test[i], color=color)
@@ -394,9 +420,9 @@ for i, n in enumerate(names):
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(cpi_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(cpi_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
@@ -405,7 +431,7 @@ plt.ylim(ymin=1)
 plt.subplot(2, 1, 2)
 plt.xlabel('Simulation point - Train')
 plt.ylabel('Cycles per instruction')
-for i, n in enumerate(names):
+for i, n in enumerate(legend):
     ax = plt.gca()
     color=next(ax._get_lines.prop_cycler)['color']
     plt.plot(range(0, len(cpi_train[i])), cpi_train[i], color=color)
@@ -429,20 +455,21 @@ for i, n in enumerate(names):
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_train ,plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
     old_value = v[1]
-plt.text((len(cpi_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+plt.text((len(cpi_train[0])+old_value)/2-magic_number_train,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
 plt.legend(legend, loc="upper right")
 plt.margins(x=0)
 plt.ylim(ymin=1)
 plt.tight_layout(pad=4)
+plt.savefig(base_outpath + "cpi.png", bbox_inches = 'tight', pad_inches = 0.2)
 
 
 # Instruction type - Test
-plt.figure(figsize=(9,7))
+plt.figure(figsize=(7,8))
 plt.subplot(2, 1, 1)
 plt.xlabel('Simulation point - Test')
-plt.ylabel('Instruction mix')
+plt.ylabel('Operation mix (%)')
 tot_insts = op_other_test[0] + op_memrd_test[0] + op_memwr_test[0]
 op_other_norm = op_other_test[0] / tot_insts
 op_reads_norm = op_memrd_test[0] / tot_insts
@@ -456,9 +483,9 @@ writes.set_label('MemWrite')
 old_value = 0
 for v in vlines_test:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-1.8,1.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_test, 1.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_test[0])+old_value)/2-2,1.02, benchmark_set[-1])
+plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, 1.02, benchmark_set[-1])
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
@@ -466,7 +493,7 @@ plt.ylim(0, 1)
 # Instruction type - Train
 plt.subplot(2, 1, 2)
 plt.xlabel('Simulation point - Train')
-plt.ylabel('Instruction mix')
+plt.ylabel('Operation mix (%)')
 tot_insts = op_other_train[0] + op_memrd_train[0] + op_memwr_train[0]
 op_other_norm = op_other_train[0] / tot_insts
 op_reads_norm = op_memrd_train[0] / tot_insts
@@ -480,54 +507,60 @@ writes.set_label('MemWrite')
 old_value = 0
 for v in vlines_train:
     plt.axvline(x=v[1], color='k', linestyle='--')
-    plt.text((v[1]+old_value)/2-4,1.02,v[0])
+    plt.text((v[1]+old_value)/2-magic_number_train, 1.02, v[0])
     old_value = v[1]
-plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,1.02, benchmark_set[-1])
+plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, 1.02, benchmark_set[-1])
 plt.legend(loc='lower right')
 plt.margins(x=0)
 plt.ylim(0, 1)
 plt.tight_layout(pad=4)
+plt.savefig(base_outpath + "opmix.png", bbox_inches = 'tight', pad_inches = 0.2)
 
 
 # Bank conflicts - Test
-for i, n in enumerate(names):
-    plt.figure(figsize=(9,7))
+yfmt = ForceFormat()
+yfmt.set_powerlimits((0,0))
+for i, n in enumerate(legend):
+    plt.figure(figsize=(7,8))
     plt.subplot(2, 1, 1)
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Test [' + legend[i] + ']')
-    plt.ylabel('Number of bank conflicts')
+    plt.ylabel('Bank conflicts')
     cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_test[i]), 1), llc_blk_cpusprd_test[i], 1)
     cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1, bottom=llc_blk_cpusprd_test[i])
     mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=(llc_blk_cpusprd_test[i] + llc_blk_cpuspwr_test[i]))
     cpusprd.set_label('Read request')
-    cpuspwr.set_label('WB Writebacks')
-    mshrwb.set_label('MSHR writeback')
+    cpuspwr.set_label('Writeback')
+    mshrwb.set_label('Write fill')
     old_value = 0
     for v in vlines_test:
         plt.axvline(x=v[1], color='k', linestyle='--')
-        plt.text((v[1]+old_value)/2-1.8,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_test[0])+old_value)/2-2,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.legend(loc='upper right')
     plt.margins(x=0)
 
     # Bank conflicts - Train
     plt.subplot(2, 1, 2)
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Train [' + legend[i] + ']')
-    plt.ylabel('Number of bank conflicts')
+    plt.ylabel('Bank conflicts')
     cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_train[i]), 1), llc_blk_cpusprd_train[i], 1)
     cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1, bottom=llc_blk_cpusprd_train[i])
     mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=(llc_blk_cpusprd_train[i] + llc_blk_cpuspwr_train[i]))
     cpusprd.set_label('Read request')
-    cpuspwr.set_label('WB Writebacks')
-    mshrwb.set_label('MSHR Writeback')
+    cpuspwr.set_label('Writeback')
+    mshrwb.set_label('Write fill')
     old_value = 0
     for v in vlines_train:
         plt.axvline(x=v[1], color='k', linestyle='--')
-        plt.text((v[1]+old_value)/2-4,plt.ylim()[1]+plt.ylim()[1]*0.02,v[0])
+        plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
         old_value = v[1]
-    plt.text((len(rel_ticks_train[0])+old_value)/2-4.4,plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
     plt.legend(loc='upper right')
     plt.margins(x=0)
     plt.tight_layout(pad=4)
-
-plt.show()
+    plt.savefig(base_outpath + legend[i] + "_conflicts.png", bbox_inches = 'tight', pad_inches = 0.2)

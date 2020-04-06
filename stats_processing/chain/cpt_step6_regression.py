@@ -59,9 +59,12 @@ for f in sorted(stats_files):
     y_pred = lm.predict(X_test)
     
     # Plot real and predicted relative slowdown
-    plt.figure(figsize=(9,7))
-    plt.plot(range(len(y_test)), y_test, color='r')
-    plt.plot(range(len(y_pred)), y_pred, color='b')
+    plt.figure(figsize=(7,4))
+    plt.plot(range(len(y_test)), y_test, color='r', label='real')
+    plt.plot(range(len(y_pred)), y_pred, color='b', label='predicted')
+    plt.xlabel('Simulation point (subset)')
+    plt.ylabel('Relative slowdown')
+    plt.legend()
     plt.savefig(os.path.join(out_dir, os.path.basename(f).replace(".csv", ".png")), bbox_inches='tight', pad_inches=0.2)
     plt.close()
     
