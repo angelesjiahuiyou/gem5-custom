@@ -35,7 +35,8 @@ blacklist = (
 
 whitelist = (
     "trans_dist",
-    "op_class"
+    "op_class",
+    "concurrent_banks_ticks"
 )
 
 def filter(f):
