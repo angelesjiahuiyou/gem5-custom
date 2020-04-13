@@ -474,9 +474,9 @@ tot_insts = op_other_test[0] + op_memrd_test[0] + op_memwr_test[0]
 op_other_norm = op_other_test[0] / tot_insts
 op_reads_norm = op_memrd_test[0] / tot_insts
 op_writes_norm = op_memwr_test[0] / tot_insts
-other = plt.bar(range(0, len(op_other_norm)), op_other_norm, 1)
-reads = plt.bar(range(0, len(op_reads_norm)), op_reads_norm, 1, bottom=op_other_norm)
-writes = plt.bar(range(0, len(op_writes_norm)), op_writes_norm, 1, bottom=(op_reads_norm + op_other_norm))
+other = plt.bar(np.arange(0.5, len(op_other_norm), 1), op_other_norm, 1)
+reads = plt.bar(np.arange(0.5, len(op_reads_norm), 1), op_reads_norm, 1, bottom=op_other_norm)
+writes = plt.bar(np.arange(0.5, len(op_writes_norm), 1), op_writes_norm, 1, bottom=(op_reads_norm + op_other_norm))
 other.set_label('Other')
 reads.set_label('MemRead')
 writes.set_label('MemWrite')
@@ -498,9 +498,9 @@ tot_insts = op_other_train[0] + op_memrd_train[0] + op_memwr_train[0]
 op_other_norm = op_other_train[0] / tot_insts
 op_reads_norm = op_memrd_train[0] / tot_insts
 op_writes_norm = op_memwr_train[0] / tot_insts
-other = plt.bar(range(0, len(op_other_norm)), op_other_norm, 1)
-reads = plt.bar(range(0, len(op_reads_norm)), op_reads_norm, 1, bottom=op_other_norm)
-writes = plt.bar(range(0, len(op_writes_norm)), op_writes_norm, 1, bottom=(op_reads_norm + op_other_norm))
+other = plt.bar(np.arange(0.5, len(op_other_norm), 1), op_other_norm, 1)
+reads = plt.bar(np.arange(0.5, len(op_reads_norm), 1), op_reads_norm, 1, bottom=op_other_norm)
+writes = plt.bar(np.arange(0.5, len(op_writes_norm), 1), op_writes_norm, 1, bottom=(op_reads_norm + op_other_norm))
 other.set_label('Other')
 reads.set_label('MemRead')
 writes.set_label('MemWrite')
@@ -527,10 +527,13 @@ for i, n in enumerate(legend):
     ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Test [' + legend[i] + ']')
     plt.ylabel('Bank conflicts')
-    cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_test[i]), 1), llc_blk_cpusprd_test[i], 1)
-    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1, bottom=llc_blk_cpusprd_test[i])
-    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=(llc_blk_cpusprd_test[i] + llc_blk_cpuspwr_test[i]))
-    cpusprd.set_label('Read request')
+    plt.gca().set_color_cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    #cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_test[i]), 1), llc_blk_cpusprd_test[i], 1)
+    #cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1, bottom=llc_blk_cpusprd_test[i])
+    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1)
+    #mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=(llc_blk_cpusprd_test[i] + llc_blk_cpuspwr_test[i]))
+    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=llc_blk_cpuspwr_test[i])
+    #cpusprd.set_label('Read request')
     cpuspwr.set_label('Writeback')
     mshrwb.set_label('Write fill')
     old_value = 0
@@ -548,10 +551,13 @@ for i, n in enumerate(legend):
     ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Train [' + legend[i] + ']')
     plt.ylabel('Bank conflicts')
-    cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_train[i]), 1), llc_blk_cpusprd_train[i], 1)
-    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1, bottom=llc_blk_cpusprd_train[i])
-    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=(llc_blk_cpusprd_train[i] + llc_blk_cpuspwr_train[i]))
-    cpusprd.set_label('Read request')
+    plt.gca().set_color_cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    #cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_train[i]), 1), llc_blk_cpusprd_train[i], 1)
+    #cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1, bottom=llc_blk_cpusprd_train[i])
+    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1)
+    #mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=(llc_blk_cpusprd_train[i] + llc_blk_cpuspwr_train[i]))
+    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=llc_blk_cpuspwr_train[i])
+    #cpusprd.set_label('Read request')
     cpuspwr.set_label('Writeback')
     mshrwb.set_label('Write fill')
     old_value = 0
