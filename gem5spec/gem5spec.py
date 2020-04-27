@@ -309,7 +309,7 @@ def watchdog(limit_time):
 
 
 # Spawn all the programs in the spawn list and control the execution
-def execute(spawn_list, sem, keep_tmp, limit_time=False):
+def execute(spawn_list, sem, keep_tmp, no_wd, limit_time=False):
     global shutdown
 
     # Create a thread for each child, to release the semaphore after execution
@@ -432,7 +432,8 @@ def execute(spawn_list, sem, keep_tmp, limit_time=False):
     try:
         # Periodically check resources utilization
         while(spawn_thread.isAlive()):
-            watchdog(limit_time)
+            if (not no_wd):
+                watchdog(limit_time)
             time.sleep(1)
     except KeyboardInterrupt:
         # "Graceful" shutdown
@@ -507,7 +508,7 @@ def bbv_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
     return
 
 
@@ -565,7 +566,7 @@ def sp_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, out_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
     return
 
 
@@ -631,7 +632,7 @@ def cp_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
     return
 
 
@@ -771,7 +772,7 @@ def cp_sim(args, sem):
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, True)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd, True)
     return
 
 
@@ -892,7 +893,7 @@ def full_sim(args, sem):
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
     return
 
 
@@ -939,7 +940,7 @@ def profile(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp)
+    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
     return
 
 
@@ -1022,6 +1023,8 @@ def main():
         help="use gem5 for bbv generation")
     parser.add_argument("--debug", action="store_true",
         help="use gem5.opt instead of gem5.fast")
+    parser.add_argument("--no-wd", action="store_true",
+        help="disable watchdog")
     args = parser.parse_args()
     sem  = threading.Semaphore(args.max_proc)
 
