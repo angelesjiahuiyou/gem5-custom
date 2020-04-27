@@ -368,6 +368,8 @@ def execute(spawn_list, sem, keep_tmp, no_wd, limit_time=False):
                     fail(pid, "instr")
                 elif "panic: Tried to write unmapped address" in log:
                     fail(pid, "unmapad")
+                elif "panic: Page table fault" in log:
+                    fail(pid, "ptfault")
                 elif "gem5 has encountered a segmentation fault!" in log:
                     fail(pid, "sigsegv")
                 elif "Attempt to free invalid pointer" in log:
