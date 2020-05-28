@@ -1,4 +1,7 @@
 *.pyc 
 *.csv
+.vscode
 step?
 plots
+#!conflicts/*.*
+conflicts/*/
