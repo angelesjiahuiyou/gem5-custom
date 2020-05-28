@@ -3,5 +3,4 @@
 .vscode
 step?
 plots
-#!conflicts/*.*
 conflicts/*/
