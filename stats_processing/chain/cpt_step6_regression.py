@@ -2,10 +2,9 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-from sklearn import linear_model
-from sklearn import metrics
+from scipy.cluster.hierarchy import dendrogram
+from sklearn import linear_model, metrics, cluster, svm
 from sklearn.model_selection import train_test_split
-from sklearn import svm
 import matplotlib.pyplot as plt
 stats_files = []
 
@@ -47,7 +46,7 @@ for f in sorted(stats_files):
     data = data.dropna()
     X = data.drop("rel_ticks", axis = 1)
     y = data.rel_ticks
-    
+
     # Divide in train and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
 
@@ -89,3 +88,11 @@ for f in sorted(stats_files):
         log.write("-----------------" + "\n")
         for c in cmat.values[:30]:
             log.write(str(round(c[1], 5)) + " -> " + c[0] + "\n")
+
+    featname = os.path.basename(f).replace(".csv", "_features.log")
+    agglo = cluster.FeatureAgglomeration(n_clusters=30)
+    agglo.fit(X)
+    with open(os.path.join(out_dir, featname), 'w') as feat:
+        for i, label in enumerate(set(agglo.labels_)):
+            features_with_label = [X.columns.values[j] for j, lab in enumerate(agglo.labels_) if lab == label]
+            feat.write('Cluster {}:\n{}\n'.format(i, features_with_label))
