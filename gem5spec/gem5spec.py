@@ -309,7 +309,7 @@ def watchdog(limit_time):
 
 
 # Spawn all the programs in the spawn list and control the execution
-def execute(spawn_list, sem, keep_tmp, no_wd, limit_time=False):
+def execute(spawn_list, args, sem, limit_time=False):
     global shutdown
 
     # Create a thread for each child, to release the semaphore after execution
@@ -385,12 +385,18 @@ def execute(spawn_list, sem, keep_tmp, no_wd, limit_time=False):
         # Directories cleanup / renaming
         work_dir = os.path.basename(work_path)
         out_path = (work_path if work_dir != "tmp" else uppath(work_path, 1))
-        if not keep_tmp and shutdown:
+        if not args.keep_tmp and shutdown:
             # It is useless to keep the output folder in case of brutal exit
             shutil.rmtree(out_path)
         else:
-            if not keep_tmp and work_dir == "tmp":
-                shutil.rmtree(work_path)
+            if work_dir == "tmp":
+                ctrace_name = "conflict_trace.csv"
+                if (args.ctrace and os.path.isfile(os.path.join(work_path,
+                                                                ctrace_name))):
+                    shutil.move(os.path.join(work_path, ctrace_name),
+                                os.path.join(out_path, ctrace_name))
+                if not args.keep_tmp:
+                    shutil.rmtree(work_path)
             if pid in sp_fail:
                 # Rename directory indicating the cause of failure
                 head, tail = os.path.split(out_path)
@@ -434,7 +440,7 @@ def execute(spawn_list, sem, keep_tmp, no_wd, limit_time=False):
     try:
         # Periodically check resources utilization
         while(spawn_thread.isAlive()):
-            if (not no_wd):
+            if (not args.no_wd):
                 watchdog(limit_time)
             time.sleep(1)
     except KeyboardInterrupt:
@@ -568,7 +574,7 @@ def sp_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, out_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
+    execute(spawn_list, args, sem)
     return
 
 
@@ -634,7 +640,7 @@ def cp_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
+    execute(spawn_list, args, sem)
     return
 
 
@@ -716,7 +722,9 @@ def cp_sim(args, sem):
                     b_abbr + ".log")
 
                 cache = simparams.mem_configs[model_name]
-                cmd = (gem5_exe_path + " --outdir=" + out_dir +
+                cmd = (gem5_exe_path +
+                    (" --debug-flags=ConflictTrace" if args.ctrace else "") +
+                    " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
                     model_conf) +
                     " --caches" +
@@ -774,7 +782,7 @@ def cp_sim(args, sem):
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd, True)
+    execute(spawn_list, args, sem, True)
     return
 
 
@@ -840,7 +848,9 @@ def full_sim(args, sem):
                     b_abbr + ".log")
 
                 cache = simparams.mem_configs[model_name]
-                cmd = (gem5_exe_path + " --outdir=" + out_dir +
+                cmd = (gem5_exe_path +
+                    (" --debug-flags=ConflictTrace" if args.ctrace else "") +
+                    " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
                     model_conf) +
                     " --caches" +
@@ -895,7 +905,7 @@ def full_sim(args, sem):
                 split_cmd = shlex.split(cmd)
                 spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
+    execute(spawn_list, args, sem)
     return
 
 
@@ -942,7 +952,7 @@ def profile(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
+    execute(spawn_list, args, sem)
     return
 
 
@@ -1027,7 +1037,11 @@ def main():
         help="use gem5.opt instead of gem5.fast")
     parser.add_argument("--no-wd", action="store_true",
         help="disable watchdog")
+    parser.add_argument("--ctrace", action="store_true",
+        help="dump conflict trace (implies --debug)")
     args = parser.parse_args()
+    if args.ctrace:
+        args.debug = True
     sem  = threading.Semaphore(args.max_proc)
 
     # Create the operation list
