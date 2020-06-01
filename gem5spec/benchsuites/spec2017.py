@@ -49,6 +49,10 @@ benchmarks = (
     "999.specrand_ir"
 )
 
+bench_groups = {
+    "exp17"             : ("602", "605", "607", "623", "625", "628", "638", "641", "649", "654")
+}
+
 # If the executable binary name differs from the benchmark, note it here
 exe_name = {
     "502.gcc_r"         : "cpugcc_r",

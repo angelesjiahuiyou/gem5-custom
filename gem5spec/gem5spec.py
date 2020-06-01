@@ -1049,7 +1049,10 @@ def main():
     args = parser.parse_args()
     if args.ctrace:
         args.debug = True
-    sem  = threading.Semaphore(args.max_proc)
+    if (len(args.benchmarks) == 1 and
+        args.benchmarks[0] in benchlist.bench_groups):
+        args.benchmarks = list(benchlist.bench_groups[args.benchmarks[0]])
+    sem = threading.Semaphore(args.max_proc)
 
     # Create the operation list
     ops = []
