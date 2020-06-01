@@ -680,11 +680,15 @@ def cp_sim(args, sem):
             if (not os.path.isdir(data_ss_dir)):
                 print("warning: directory " + data_ss_dir + " not found")
                 continue
-            cpt_folders = [d for d in sorted(os.listdir(data_ss_dir))
-                if cpt_prefix in d]
+            cpt_folders = (
+                sorted([d for d in os.listdir(data_ss_dir) if cpt_prefix in d],
+                key=lambda x: float(x.split('_')[5]), reverse=True)
+            )
             if (not any(cpt_folders)):
                 print("warning: no checkpoints found in " + data_ss_dir)
                 continue
+            if args.cpts and args.cpts < len(cpt_folders):
+                cpt_folders = cpt_folders[:args.cpts]
 
             # Select CPU architecture and corresponding parameters
             cpu = []
@@ -1029,6 +1033,9 @@ def main():
     parser.add_argument("--out-dir", action="store", type=str, metavar="DIR",
         default=(home + "/out_" + benchsuite), help="output directory " +
         "(default: %(default)s)")
+    parser.add_argument("--cpts", action="store", type=int, metavar="N",
+        default=0, help="execute N checkpoints only, in order of weight " +
+        "(default: 0 = all)")
     parser.add_argument("--keep-tmp", action="store_true",
         help="do not remove temporary folders after the execution")
     parser.add_argument("--use-gem5", action="store_true",
