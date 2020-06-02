@@ -391,10 +391,18 @@ def execute(spawn_list, args, sem, limit_time=False):
         else:
             if work_dir == "tmp":
                 ctrace_name = "conflict_trace.csv"
+                details = out_path.split('/')[-8:]
+                ctrace_name_new = (details[1].split('.')[0] + "_" +
+                                   details[0] + "_" +
+                                   details[3].replace("_", "") + "_" +
+                                   details[4].replace("-", "") + "_" +
+                                   details[5].replace("-", "") + "_" +
+                                   details[6].replace("-", "") + "_" +
+                                   "cpt" + details[7].split('_')[1] + ".csv")
                 if (args.ctrace and os.path.isfile(os.path.join(work_path,
                                                                 ctrace_name))):
                     shutil.move(os.path.join(work_path, ctrace_name),
-                                os.path.join(out_path, ctrace_name))
+                                os.path.join(out_path, ctrace_name_new))
                 if not args.keep_tmp:
                     shutil.rmtree(work_path)
             if pid in sp_fail:
