@@ -389,22 +389,39 @@ def execute(spawn_list, args, sem, limit_time=False):
             # It is useless to keep the output folder in case of brutal exit
             shutil.rmtree(out_path)
         else:
-            if work_dir == "tmp":
-                ctrace_name = "conflict_trace.csv"
-                details = out_path.split('/')[-8:]
-                ctrace_name_new = (details[1].split('.')[0] + "_" +
-                                   details[0] + "_" +
-                                   details[3].replace("_", "") + "_" +
-                                   details[4].replace("-", "") + "_" +
-                                   details[5].replace("-", "") + "_" +
-                                   details[6].replace("-", "") + "_" +
-                                   "cpt" + details[7].split('_')[1] + ".csv")
-                if (args.ctrace and os.path.isfile(os.path.join(work_path,
-                                                                ctrace_name))):
-                    shutil.move(os.path.join(work_path, ctrace_name),
-                                os.path.join(out_path, ctrace_name_new))
-                if not args.keep_tmp:
-                    shutil.rmtree(work_path)
+            # Move or rename relevant output files
+            details = out_path.split('/')[-8:]
+            sim_conf_id = (details[1].split('.')[0] + "_" +
+                            details[0] + "_" +
+                            details[3].replace("_", "") + "_" +
+                            details[4].replace("-", "") + "_" +
+                            details[5].replace("-", "") + "_" +
+                            details[6].replace("-", "") + "_" +
+                            "cpt" + details[7].split('_')[1])
+
+            if out_path != work_path:
+                wp_files = []
+                if args.atrace:
+                    wp_files.append(("access_trace.csv",
+                                      sim_conf_id + "_accesses.csv"))
+                if args.ctrace:
+                    wp_files.append(("conflict_trace.csv",
+                                      sim_conf_id + "_conflicts.csv"))
+                    wp_files.append(("delayed_trace.csv",
+                                      sim_conf_id + "_delayed.csv"))
+                for f in wp_files:
+                    if os.path.isfile(os.path.join(work_path, f[0])):
+                        f_dest = f[1] if args.rename else f[0]
+                        shutil.move(os.path.join(work_path, f[0]),
+                                    os.path.join(out_path, f_dest))
+            if (args.rename and
+                os.path.isfile(os.path.join(out_path, "stats.txt"))):
+                shutil.move(os.path.join(out_path, "stats.txt"),
+                            os.path.join(out_path, sim_conf_id + "_stats.txt"))
+
+            # Delete the temporary directory
+            if work_dir == "tmp" and not args.keep_tmp:
+                shutil.rmtree(work_path)
             if pid in sp_fail:
                 # Rename directory indicating the cause of failure
                 head, tail = os.path.split(out_path)
@@ -735,6 +752,7 @@ def cp_sim(args, sem):
 
                 cache = simparams.mem_configs[model_name]
                 cmd = (gem5_exe_path +
+                    (" --debug-flags=AccessTrace" if args.atrace else "") +
                     (" --debug-flags=ConflictTrace" if args.ctrace else "") +
                     " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
@@ -861,6 +879,7 @@ def full_sim(args, sem):
 
                 cache = simparams.mem_configs[model_name]
                 cmd = (gem5_exe_path +
+                    (" --debug-flags=AccessTrace" if args.atrace else "") +
                     (" --debug-flags=ConflictTrace" if args.ctrace else "") +
                     " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
@@ -1050,12 +1069,16 @@ def main():
         help="use gem5 for bbv generation")
     parser.add_argument("--debug", action="store_true",
         help="use gem5.opt instead of gem5.fast")
-    parser.add_argument("--no-wd", action="store_true",
-        help="disable watchdog")
     parser.add_argument("--ctrace", action="store_true",
         help="dump conflict trace (implies --debug)")
+    parser.add_argument("--atrace", action="store_true",
+        help="dump access trace (implies --debug)")
+    parser.add_argument("--rename", action="store_true",
+        help="rename output files with an unique configuration id")
+    parser.add_argument("--no-wd", action="store_true",
+        help="disable watchdog")
     args = parser.parse_args()
-    if args.ctrace:
+    if args.ctrace or args.atrace:
         args.debug = True
     if (len(args.benchmarks) == 1 and
         args.benchmarks[0] in benchlist.bench_groups):
