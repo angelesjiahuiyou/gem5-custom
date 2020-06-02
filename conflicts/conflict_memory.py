@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
+console = sys.stdout
 conflict_traces = []
 
 if sys.version_info[0] < 3:
@@ -21,6 +22,7 @@ if not os.path.isdir("memory"):
     os.makedirs("memory")
 
 for trace in sorted(conflict_traces):
+    sys.stdout = console
     print("- Processing", trace, "...")
     code = os.path.basename(trace).split('.')[0]
     benchnum = code[:3]
