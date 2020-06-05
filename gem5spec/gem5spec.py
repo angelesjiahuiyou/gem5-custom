@@ -407,8 +407,8 @@ def execute(spawn_list, args, sem, limit_time=False):
                 if args.ctrace:
                     wp_files.append(("conflict_trace.csv",
                                       sim_conf_id + "_conflicts.csv"))
-                    wp_files.append(("delayed_trace.csv",
-                                      sim_conf_id + "_delayed.csv"))
+                    wp_files.append(("avoided_trace.csv",
+                                      sim_conf_id + "_avoided.csv"))
                 for f in wp_files:
                     if os.path.isfile(os.path.join(work_path, f[0])):
                         f_dest = f[1] if args.rename else f[0]
