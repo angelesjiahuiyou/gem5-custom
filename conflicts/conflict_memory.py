@@ -27,7 +27,7 @@ for trace in sorted(conflict_traces):
     code = os.path.basename(trace).split('.')[0]
     benchnum = code[:3]
     data = pd.read_csv(trace, sep=';')
-    data.columns = ['tick', 'bkid', 'tgtblk', 'busyblk', 'perbank', 'glob', 'pc', 'tgtinstack', 'updinstack', 'type']
+    data.columns = ['tick', 'bkid', 'tgtblk', 'busyblk', 'perbank', 'glob', 'pc', 'tgtmemreg', 'updmemreg', 'type']
     sys.stdout = open(os.path.join("memory", code + ".log"), "w")
 
     # Set time window
@@ -40,11 +40,11 @@ for trace in sorted(conflict_traces):
     for i in Counter(data['type']).most_common(3):
         print(str(i[0]))
         print("Total:\t\t\t\t", i[1]),
-        print("Target block in stack:\t\t", len(data[(data['type'] == i[0]) & (data['tgtinstack'] == 1)]))
-        print("Target block out of stack:\t", len(data[(data['type'] == i[0]) & (data['tgtinstack'] == 0)]))
-        print("Update block in stack:\t\t", len(data[(data['type'] == i[0]) & (data['updinstack'] == 1)]))
-        print("Update block out of stack:\t", len(data[(data['type'] == i[0]) & (data['updinstack'] == 0)]))
-        print("Either block in stack:\t\t", len(data[(data['type'] == i[0]) & ((data['tgtinstack'] == 1) | (data['updinstack'] == 1))]))
+        print("Target block in stack:\t\t", len(data[(data['type'] == i[0]) & (data['tgtmemreg'] == 1)]))
+        print("Target block out of stack:\t", len(data[(data['type'] == i[0]) & (data['tgtmemreg'] == 0)]))
+        print("Update block in stack:\t\t", len(data[(data['type'] == i[0]) & (data['updmemreg'] == 1)]))
+        print("Update block out of stack:\t", len(data[(data['type'] == i[0]) & (data['updmemreg'] == 0)]))
+        print("Either block in stack:\t\t", len(data[(data['type'] == i[0]) & ((data['tgtmemreg'] == 1) | (data['updmemreg'] == 1))]))
         print("")
 
     f_dict = {}
@@ -86,8 +86,13 @@ for trace in sorted(conflict_traces):
         section = "(unknown)"
         for r in ranges:
             tgtblk = int(row['tgtblk'], 16)
-            if row['tgtinstack'] == 1:
+            tgtmemreg = int(row['tgtmemreg'])
+            if tgtmemreg == 1:
                 section = "stack"
+            elif tgtmemreg == 2:
+                section = "mmap"
+            elif tgtmemreg == 3:
+                section = "heap"
             elif tgtblk >= ranges[r][0] and tgtblk < ranges[r][1]:
                 section = r
                 break
