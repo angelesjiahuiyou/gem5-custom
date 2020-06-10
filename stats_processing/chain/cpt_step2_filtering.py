@@ -40,7 +40,7 @@ whitelist = (
 )
 
 def filter(f):
-    data = pd.read_csv(f, index_col=0, na_values="inf")
+    data = pd.read_csv(f, index_col=0, na_values="inf").fillna(0)
     data_flt = pd.DataFrame
     field_list = []
     for field in data.index.values:
