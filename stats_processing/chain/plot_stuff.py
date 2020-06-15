@@ -32,12 +32,18 @@ op_other_test = []
 op_memrd_train = []
 op_memwr_train = []
 op_other_train = []
-llc_blk_cpuspwr_test = []
-llc_blk_cpusprd_test = []
-llc_blk_mshrwb_test = []
-llc_blk_cpuspwr_train = []
-llc_blk_cpusprd_train = []
-llc_blk_mshrwb_train = []
+busyblk_cpuspwr_test = []
+busyblk_cpusprd_test = []
+busyblk_mshrfill_test = []
+busyblk_cpuspwr_train = []
+busyblk_cpusprd_train = []
+busyblk_mshrfill_train = []
+targetblk_cpuspwr_test = []
+targetblk_cpusprd_test = []
+targetblk_mshrfill_test = []
+targetblk_cpuspwr_train = []
+targetblk_cpusprd_train = []
+targetblk_mshrfill_train = []
 vlines_test = []
 vlines_train = []
 vlines_count_test = 0
@@ -88,19 +94,31 @@ for f in sorted(stats_files):
         if "i7-6700" in os.path.basename(f):
             misses_l3_test.append(data_test.filter(like='system.l3cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
             misses_l3_train.append(data_train.filter(like='system.l3cache.', axis=0).filter(like='_misses::', axis=0).filter(regex='^((?!mshr|demand).)*$', axis=0).sum())
-            llc_blk_cpusprd_test.append(data_test.filter(like='system.l3cache.bank_blocked_reqs_cpusp_read_', axis=0).sum())
-            llc_blk_cpuspwr_test.append(data_test.filter(like='system.l3cache.bank_blocked_reqs_cpusp_write_', axis=0).sum())
-            llc_blk_mshrwb_test.append(data_test.filter(like='system.l3cache.bank_blocked_reqs_memsp_fill_', axis=0).sum())
-            llc_blk_cpusprd_train.append(data_train.filter(like='system.l3cache.bank_blocked_reqs_cpusp_read_', axis=0).sum())
-            llc_blk_cpuspwr_train.append(data_train.filter(like='system.l3cache.bank_blocked_reqs_cpusp_write_', axis=0).sum())
-            llc_blk_mshrwb_train.append(data_train.filter(like='system.l3cache.bank_blocked_reqs_memsp_fill_', axis=0).sum())
+            busyblk_cpusprd_test.append(data_test.filter(like='system.l3cache.bank_cfl_busyblk_cpusp_read_', axis=0).sum())
+            busyblk_cpuspwr_test.append(data_test.filter(like='system.l3cache.bank_cfl_busyblk_cpusp_write_', axis=0).sum())
+            busyblk_mshrfill_test.append(data_test.filter(like='system.l3cache.bank_cfl_busyblk_memsp_fill_', axis=0).sum())
+            busyblk_cpusprd_train.append(data_train.filter(like='system.l3cache.bank_cfl_busyblk_cpusp_read_', axis=0).sum())
+            busyblk_cpuspwr_train.append(data_train.filter(like='system.l3cache.bank_cfl_busyblk_cpusp_write_', axis=0).sum())
+            busyblk_mshrfill_train.append(data_train.filter(like='system.l3cache.bank_cfl_busyblk_memsp_fill_', axis=0).sum())
+            targetblk_cpusprd_test.append(data_test.filter(like='system.l3cache.bank_cfl_targetblk_cpusp_read_', axis=0).sum())
+            targetblk_cpuspwr_test.append(data_test.filter(like='system.l3cache.bank_cfl_targetblk_cpusp_write_', axis=0).sum())
+            targetblk_mshrfill_test.append(data_test.filter(like='system.l3cache.bank_cfl_targetblk_memsp_fill_', axis=0).sum())
+            targetblk_cpusprd_train.append(data_train.filter(like='system.l3cache.bank_cfl_targetblk_cpusp_read_', axis=0).sum())
+            targetblk_cpuspwr_train.append(data_train.filter(like='system.l3cache.bank_cfl_targetblk_cpusp_write_', axis=0).sum())
+            targetblk_mshrfill_train.append(data_train.filter(like='system.l3cache.bank_cfl_targetblk_memsp_fill_', axis=0).sum())
         else:
-            llc_blk_cpusprd_test.append(data_test.filter(like='system.l2cache.bank_blocked_reqs_cpusp_read_', axis=0).sum())
-            llc_blk_cpuspwr_test.append(data_test.filter(like='system.l2cache.bank_blocked_reqs_cpusp_write_', axis=0).sum())
-            llc_blk_mshrwb_test.append(data_test.filter(like='system.l2cache.bank_blocked_reqs_memsp_fill_', axis=0).sum())
-            llc_blk_cpusprd_train.append(data_train.filter(like='system.l2cache.bank_blocked_reqs_cpusp_read_', axis=0).sum())
-            llc_blk_cpuspwr_train.append(data_train.filter(like='system.l2cache.bank_blocked_reqs_cpusp_write_', axis=0).sum())
-            llc_blk_mshrwb_train.append(data_train.filter(like='system.l2cache.bank_blocked_reqs_memsp_fill_', axis=0).sum())
+            busyblk_cpusprd_test.append(data_test.filter(like='system.l2cache.bank_cfl_busyblk_cpusp_read_', axis=0).sum())
+            busyblk_cpuspwr_test.append(data_test.filter(like='system.l2cache.bank_cfl_busyblk_cpusp_write_', axis=0).sum())
+            busyblk_mshrfill_test.append(data_test.filter(like='system.l2cache.bank_cfl_busyblk_memsp_fill_', axis=0).sum())
+            busyblk_cpusprd_train.append(data_train.filter(like='system.l2cache.bank_cfl_busyblk_cpusp_read_', axis=0).sum())
+            busyblk_cpuspwr_train.append(data_train.filter(like='system.l2cache.bank_cfl_busyblk_cpusp_write_', axis=0).sum())
+            busyblk_mshrfill_train.append(data_train.filter(like='system.l2cache.bank_cfl_busyblk_memsp_fill_', axis=0).sum())
+            targetblk_cpusprd_test.append(data_test.filter(like='system.l2cache.bank_cfl_targetblk_cpusp_read_', axis=0).sum())
+            targetblk_cpuspwr_test.append(data_test.filter(like='system.l2cache.bank_cfl_targetblk_cpusp_write_', axis=0).sum())
+            targetblk_mshrfill_test.append(data_test.filter(like='system.l2cache.bank_cfl_targetblk_memsp_fill_', axis=0).sum())
+            targetblk_cpusprd_train.append(data_train.filter(like='system.l2cache.bank_cfl_targetblk_cpusp_read_', axis=0).sum())
+            targetblk_cpuspwr_train.append(data_train.filter(like='system.l2cache.bank_cfl_targetblk_cpusp_write_', axis=0).sum())
+            targetblk_mshrfill_train.append(data_train.filter(like='system.l2cache.bank_cfl_targetblk_memsp_fill_', axis=0).sum())
         op_memrd_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemRead', axis=0).sum())
         op_memwr_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(like='MemWrite', axis=0).sum())
         op_other_test.append(data_test.filter(regex='system.cpu.*op_class_0::', axis=0).filter(regex='^((?!MemRead|MemWrite).)*$', axis=0).sum())
@@ -219,6 +237,7 @@ if num_plots == 3:
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 plt.savefig(base_outpath + "mpki_test.png", bbox_inches = 'tight', pad_inches = 0.2)
+plt.close()
 
 # MPKI - Train
 num_plots = 2 if "i7-6700" not in base_outpath else 3
@@ -316,6 +335,7 @@ if num_plots == 3:
     plt.margins(x=0)
 plt.tight_layout(pad=4/(num_plots-1))
 plt.savefig(base_outpath + "mpki_train.png", bbox_inches = 'tight', pad_inches = 0.2)
+plt.close()
 
 # Slowdown - Test
 plt.figure(figsize=(7,8))
@@ -389,7 +409,7 @@ plt.margins(x=0)
 plt.ylim(ymin=1)
 plt.tight_layout(pad=4)
 plt.savefig(base_outpath + "slowdown.png", bbox_inches = 'tight', pad_inches = 0.2)
-
+plt.close()
 
 # CPI - Test
 plt.figure(figsize=(7,8))
@@ -463,7 +483,7 @@ plt.margins(x=0)
 plt.ylim(ymin=1)
 plt.tight_layout(pad=4)
 plt.savefig(base_outpath + "cpi.png", bbox_inches = 'tight', pad_inches = 0.2)
-
+plt.close()
 
 # Instruction type - Test
 plt.figure(figsize=(7,8))
@@ -515,27 +535,28 @@ plt.margins(x=0)
 plt.ylim(0, 1)
 plt.tight_layout(pad=4)
 plt.savefig(base_outpath + "opmix.png", bbox_inches = 'tight', pad_inches = 0.2)
+plt.close()
 
-
-# Bank conflicts - Test
+# Bank conflicts
 yfmt = ForceFormat()
 yfmt.set_powerlimits((0,0))
 for i, n in enumerate(legend):
+    # Busy block - Test
     plt.figure(figsize=(7,8))
     plt.subplot(2, 1, 1)
     ax = plt.gca()
-    ax.yaxis.set_major_formatter(yfmt)
+    #ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Test [' + legend[i] + ']')
-    plt.ylabel('Bank conflicts')
-    plt.gca().set_color_cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
-    #cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_test[i]), 1), llc_blk_cpusprd_test[i], 1)
-    #cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1, bottom=llc_blk_cpusprd_test[i])
-    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_test[i]), 1), llc_blk_cpuspwr_test[i], 1)
-    #mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=(llc_blk_cpusprd_test[i] + llc_blk_cpuspwr_test[i]))
-    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_test[i]), 1), llc_blk_mshrwb_test[i], 1, bottom=llc_blk_cpuspwr_test[i])
+    plt.ylabel('Bank conflicts - Busy Block')
+    plt.gca().set_prop_cycle('color', plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    #cpusprd = plt.bar(np.arange(0.5, len(busyblk_cpusprd_test[i]), 1), busyblk_cpusprd_test[i], 1)
+    #cpuspwr = plt.bar(np.arange(0.5, len(busyblk_cpuspwr_test[i]), 1), busyblk_cpuspwr_test[i], 1, bottom=busyblk_cpusprd_test[i])
+    cpuspwr = plt.bar(np.arange(0.5, len(busyblk_cpuspwr_test[i]), 1), busyblk_cpuspwr_test[i], 1)
+    #mshrfill = plt.bar(np.arange(0.5, len(busyblk_mshrfill_test[i]), 1), busyblk_mshrfill_test[i], 1, bottom=(busyblk_cpusprd_test[i] + busyblk_cpuspwr_test[i]))
+    mshrfill = plt.bar(np.arange(0.5, len(busyblk_mshrfill_test[i]), 1), busyblk_mshrfill_test[i], 1, bottom=busyblk_cpuspwr_test[i])
     #cpusprd.set_label('Read request')
     cpuspwr.set_label('Writeback')
-    mshrwb.set_label('Write fill')
+    mshrfill.set_label('Write fill')
     old_value = 0
     for v in vlines_test:
         plt.axvline(x=v[1], color='k', linestyle='--')
@@ -545,21 +566,21 @@ for i, n in enumerate(legend):
     plt.legend(loc='upper right')
     plt.margins(x=0)
 
-    # Bank conflicts - Train
+    # Busy block - Train
     plt.subplot(2, 1, 2)
     ax = plt.gca()
-    ax.yaxis.set_major_formatter(yfmt)
+    #ax.yaxis.set_major_formatter(yfmt)
     plt.xlabel('Simulation point - Train [' + legend[i] + ']')
-    plt.ylabel('Bank conflicts')
-    plt.gca().set_color_cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
-    #cpusprd  = plt.bar(np.arange(0.5, len(llc_blk_cpusprd_train[i]), 1), llc_blk_cpusprd_train[i], 1)
-    #cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1, bottom=llc_blk_cpusprd_train[i])
-    cpuspwr  = plt.bar(np.arange(0.5, len(llc_blk_cpuspwr_train[i]), 1), llc_blk_cpuspwr_train[i], 1)
-    #mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=(llc_blk_cpusprd_train[i] + llc_blk_cpuspwr_train[i]))
-    mshrwb = plt.bar(np.arange(0.5, len(llc_blk_mshrwb_train[i]), 1), llc_blk_mshrwb_train[i], 1, bottom=llc_blk_cpuspwr_train[i])
+    plt.ylabel('Bank conflicts - Busy Block')
+    plt.gca().set_prop_cycle('color', plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    #cpusprd = plt.bar(np.arange(0.5, len(busyblk_cpusprd_train[i]), 1), busyblk_cpusprd_train[i], 1)
+    #cpuspwr = plt.bar(np.arange(0.5, len(busyblk_cpuspwr_train[i]), 1), busyblk_cpuspwr_train[i], 1, bottom=busyblk_cpusprd_train[i])
+    cpuspwr = plt.bar(np.arange(0.5, len(busyblk_cpuspwr_train[i]), 1), busyblk_cpuspwr_train[i], 1)
+    #mshrfill = plt.bar(np.arange(0.5, len(busyblk_mshrfill_train[i]), 1), busyblk_mshrfill_train[i], 1, bottom=(busyblk_cpusprd_train[i] + busyblk_cpuspwr_train[i]))
+    mshrfill = plt.bar(np.arange(0.5, len(busyblk_mshrfill_train[i]), 1), busyblk_mshrfill_train[i], 1, bottom=busyblk_cpuspwr_train[i])
     #cpusprd.set_label('Read request')
     cpuspwr.set_label('Writeback')
-    mshrwb.set_label('Write fill')
+    mshrfill.set_label('Write fill')
     old_value = 0
     for v in vlines_train:
         plt.axvline(x=v[1], color='k', linestyle='--')
@@ -569,4 +590,57 @@ for i, n in enumerate(legend):
     plt.legend(loc='upper right')
     plt.margins(x=0)
     plt.tight_layout(pad=4)
-    plt.savefig(base_outpath + legend[i] + "_conflicts.png", bbox_inches = 'tight', pad_inches = 0.2)
+    plt.savefig(base_outpath + legend[i] + "_conflicts_busyblk.png", bbox_inches = 'tight', pad_inches = 0.2)
+    plt.close()
+
+    # Target block - Test
+    plt.figure(figsize=(7,8))
+    plt.subplot(2, 1, 1)
+    ax = plt.gca()
+    #ax.yaxis.set_major_formatter(yfmt)
+    plt.xlabel('Simulation point - Test [' + legend[i] + ']')
+    plt.ylabel('Bank conflicts - Target block')
+    plt.gca().set_prop_cycle('color', plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    cpusprd  = plt.bar(np.arange(0.5, len(targetblk_cpusprd_test[i]), 1), targetblk_cpusprd_test[i], 1)
+    #cpuspwr  = plt.bar(np.arange(0.5, len(targetblk_cpuspwr_test[i]), 1), targetblk_cpuspwr_test[i], 1, bottom=targetblk_cpusprd_test[i])
+    #cpuspwr  = plt.bar(np.arange(0.5, len(targetblk_cpuspwr_test[i]), 1), targetblk_cpuspwr_test[i], 1)
+    #mshrfill = plt.bar(np.arange(0.5, len(targetblk_mshrfill_test[i]), 1), targetblk_mshrfill_test[i], 1, bottom=(targetblk_cpusprd_test[i] + targetblk_cpuspwr_test[i]))
+    #mshrfill = plt.bar(np.arange(0.5, len(targetblk_mshrfill_test[i]), 1), targetblk_mshrfill_test[i], 1, bottom=targetblk_cpuspwr_test[i])
+    cpusprd.set_label('Read request')
+    #cpuspwr.set_label('Writeback')
+    #mshrfill.set_label('Write fill')
+    old_value = 0
+    for v in vlines_test:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
+        old_value = v[1]
+    plt.text((len(rel_ticks_test[0])+old_value)/2-magic_number_test, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.legend(loc='upper right')
+    plt.margins(x=0)
+
+    # Target block - Train
+    plt.subplot(2, 1, 2)
+    ax = plt.gca()
+    #ax.yaxis.set_major_formatter(yfmt)
+    plt.xlabel('Simulation point - Train [' + legend[i] + ']')
+    plt.ylabel('Bank conflicts - Target block')
+    plt.gca().set_prop_cycle('color', plt.rcParams['axes.prop_cycle'].by_key()['color'][1:])
+    cpusprd  = plt.bar(np.arange(0.5, len(targetblk_cpusprd_train[i]), 1), targetblk_cpusprd_train[i], 1)
+    #cpuspwr  = plt.bar(np.arange(0.5, len(targetblk_cpuspwr_train[i]), 1), targetblk_cpuspwr_train[i], 1, bottom=targetblk_cpusprd_train[i])
+    #cpuspwr  = plt.bar(np.arange(0.5, len(targetblk_cpuspwr_train[i]), 1), targetblk_cpuspwr_train[i], 1)
+    #mshrfill = plt.bar(np.arange(0.5, len(targetblk_mshrfill_train[i]), 1), targetblk_mshrfill_train[i], 1, bottom=(targetblk_cpusprd_train[i] + targetblk_cpuspwr_train[i]))
+    #mshrfill = plt.bar(np.arange(0.5, len(targetblk_mshrfill_train[i]), 1), targetblk_mshrfill_train[i], 1, bottom=targetblk_cpuspwr_train[i])
+    cpusprd.set_label('Read request')
+    #cpuspwr.set_label('Writeback')
+    #mshrfill.set_label('Write fill')
+    old_value = 0
+    for v in vlines_train:
+        plt.axvline(x=v[1], color='k', linestyle='--')
+        plt.text((v[1]+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, v[0])
+        old_value = v[1]
+    plt.text((len(rel_ticks_train[0])+old_value)/2-magic_number_train, plt.ylim()[1]+plt.ylim()[1]*0.02, benchmark_set[-1])
+    plt.legend(loc='upper right')
+    plt.margins(x=0)
+    plt.tight_layout(pad=4)
+    plt.savefig(base_outpath + legend[i] + "_conflicts_targetblk.png", bbox_inches = 'tight', pad_inches = 0.2)
+    plt.close()
