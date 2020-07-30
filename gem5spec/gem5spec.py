@@ -397,7 +397,8 @@ def execute(spawn_list, args, sem, limit_time=False):
                             details[4].replace("-", "") + "_" +
                             details[5].replace("-", "") + "_" +
                             details[6].replace("-", "") + "_" +
-                            "cpt" + details[7].split('_')[1])
+                            ("cpt" + details[7].split('_')[1])
+                             if "cpt" in out_path else "full")
 
             if out_path != work_path:
                 wp_files = []
@@ -541,7 +542,7 @@ def bbv_gen(args, sem):
             split_cmd = shlex.split(cmd)
             spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
 
-    execute(spawn_list, sem, args.keep_tmp, args.no_wd)
+    execute(spawn_list, args, sem)
     return
 
 
