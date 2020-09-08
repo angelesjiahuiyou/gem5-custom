@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+__author__ = "Tommaso Marinelli"
+__email__  = "tommarin@ucm.es"
+
 # Select the benchmark suite to use
 # (allowed values: spec2006, spec2017)
 benchsuite = "spec2017"
