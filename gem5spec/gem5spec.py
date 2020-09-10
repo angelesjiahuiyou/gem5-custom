@@ -470,7 +470,7 @@ def execute(spawn_list, args, sem, limit_time=False):
 
     try:
         # Periodically check resources utilization
-        while(spawn_thread.isAlive()):
+        while(spawn_thread.is_alive()):
             if (not args.no_wd):
                 watchdog(limit_time)
             time.sleep(1)
