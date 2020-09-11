@@ -757,19 +757,34 @@ def cp_sim(args, sem):
                     b_abbr + ".log")
 
                 cache = simparams.mem_configs[model_name]
+                l1ip = simparams.hwp_config.get(args.l1i_hwp, "")
+                l1dp = simparams.hwp_config.get(args.l1d_hwp, "")
+                l2p = simparams.hwp_config.get(args.l2_hwp, "")
+                l3p = simparams.hwp_config.get(args.l3_hwp, "")
                 cmd = (gem5_exe_path +
                     (" --debug-flags=AccessTrace" if args.atrace else "") +
                     (" --debug-flags=ConflictTrace" if args.ctrace else "") +
                     " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
                     model_conf) +
+                    " --hwp-override" +
                     " --caches" +
+                    (" --l1d-hwp-type=" + str(l1dp[0]) +
+                        (" --l1d-hwp-deg=" + str(l1dp[1]) if l1dp[1] else "") +
+                        (" --l1d-hwp-lat=" + str(l1dp[2]) if l1dp[2] else "") +
+                        (" --l1d-hwp-qs=" +  str(l1dp[3]) if l1dp[3] else "")
+                        if l1dp else "") +
                     " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
                     " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
                     " --l1d-resp-lat=" +  str(cache[hier[0]][case][0][3]) +
                     " --l1d_size=" +      str(cache[hier[0]][case][0][4]) +
                     " --l1d_assoc=" +     str(cache[hier[0]][case][0][5]) +
+                    (" --l1i-hwp-type=" + str(l1ip[0]) +
+                        (" --l1i-hwp-deg=" + str(l1ip[1]) if l1ip[1] else "") +
+                        (" --l1i-hwp-lat=" + str(l1ip[2]) if l1ip[2] else "") +
+                        (" --l1i-hwp-qs=" +  str(l1ip[3]) if l1ip[3] else "")
+                        if l1ip else "") +
                     " --l1i-data-lat=" +  str(cache[hier[1]][case][1][0]) +
                     " --l1i-write-lat=" + str(cache[hier[1]][case][1][1]) +
                     " --l1i-tag-lat=" +   str(cache[hier[1]][case][1][2]) +
@@ -779,6 +794,11 @@ def cp_sim(args, sem):
                     " --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.l2_banks)
                         if args.l2_banks else "") +
+                    (" --l2-hwp-type=" + str(l2p[0]) +
+                        (" --l2-hwp-deg=" + str(l2p[1]) if l2p[1] else "") +
+                        (" --l2-hwp-lat=" + str(l2p[2]) if l2p[2] else "") +
+                        (" --l2-hwp-qs=" +  str(l2p[3]) if l2p[3] else "")
+                        if l2p else "") +
                     " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
                     " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
                     " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
@@ -788,6 +808,11 @@ def cp_sim(args, sem):
                     (" --l3cache " +
                     (" --l3-enable-banks --l3-num-banks=" + str(args.l3_banks)
                         if args.l3_banks else "") +
+                    (" --l3-hwp-type=" + str(l3p[0]) +
+                        (" --l3-hwp-deg=" + str(l3p[1]) if l3p[1] else "") +
+                        (" --l3-hwp-lat=" + str(l3p[2]) if l3p[2] else "") +
+                        (" --l3-hwp-qs=" +  str(l3p[3]) if l3p[3] else "")
+                        if l3p else "") +
                     " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
                     " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
                     " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
@@ -884,19 +909,34 @@ def full_sim(args, sem):
                     b_abbr + ".log")
 
                 cache = simparams.mem_configs[model_name]
+                l1ip = simparams.hwp_config.get(args.l1i_hwp, "")
+                l1dp = simparams.hwp_config.get(args.l1d_hwp, "")
+                l2p = simparams.hwp_config.get(args.l2_hwp, "")
+                l3p = simparams.hwp_config.get(args.l3_hwp, "")
                 cmd = (gem5_exe_path +
                     (" --debug-flags=AccessTrace" if args.atrace else "") +
                     (" --debug-flags=ConflictTrace" if args.ctrace else "") +
                     " --outdir=" + out_dir +
                     " " + os.path.join(args.gem5_dir, "configs", "example",
                     model_conf) +
+                    " --hwp-override" +
                     " --caches" +
+                    (" --l1d-hwp-type=" + str(l1dp[0]) +
+                        (" --l1d-hwp-deg=" + str(l1dp[1]) if l1dp[1] else "") +
+                        (" --l1d-hwp-lat=" + str(l1dp[2]) if l1dp[2] else "") +
+                        (" --l1d-hwp-qs=" +  str(l1dp[3]) if l1dp[3] else "")
+                        if l1dp else "") +
                     " --l1d-data-lat=" +  str(cache[hier[0]][case][0][0]) +
                     " --l1d-write-lat=" + str(cache[hier[0]][case][0][1]) +
                     " --l1d-tag-lat=" +   str(cache[hier[0]][case][0][2]) +
                     " --l1d-resp-lat=" +  str(cache[hier[0]][case][0][3]) +
                     " --l1d_size=" +      str(cache[hier[0]][case][0][4]) +
                     " --l1d_assoc=" +     str(cache[hier[0]][case][0][5]) +
+                    (" --l1i-hwp-type=" + str(l1ip[0]) +
+                        (" --l1i-hwp-deg=" + str(l1ip[1]) if l1ip[1] else "") +
+                        (" --l1i-hwp-lat=" + str(l1ip[2]) if l1ip[2] else "") +
+                        (" --l1i-hwp-qs=" +  str(l1ip[3]) if l1ip[3] else "")
+                        if l1ip else "") +
                     " --l1i-data-lat=" +  str(cache[hier[1]][case][1][0]) +
                     " --l1i-write-lat=" + str(cache[hier[1]][case][1][1]) +
                     " --l1i-tag-lat=" +   str(cache[hier[1]][case][1][2]) +
@@ -906,6 +946,11 @@ def full_sim(args, sem):
                     " --l2cache" +
                     (" --l2-enable-banks --l2-num-banks=" + str(args.l2_banks)
                         if args.l2_banks else "") +
+                    (" --l2-hwp-type=" + str(l2p[0]) +
+                        (" --l2-hwp-deg=" + str(l2p[1]) if l2p[1] else "") +
+                        (" --l2-hwp-lat=" + str(l2p[2]) if l2p[2] else "") +
+                        (" --l2-hwp-qs=" +  str(l2p[3]) if l2p[3] else "")
+                        if l2p else "") +
                     " --l2-data-lat=" +   str(cache[hier[2]][case][2][0]) +
                     " --l2-write-lat=" +  str(cache[hier[2]][case][2][1]) +
                     " --l2-tag-lat=" +    str(cache[hier[2]][case][2][2]) +
@@ -915,6 +960,11 @@ def full_sim(args, sem):
                     (" --l3cache " +
                     (" --l3-enable-banks --l3-num-banks=" + str(args.l3_banks)
                         if args.l3_banks else "") +
+                    (" --l3-hwp-type=" + str(l3p[0]) +
+                        (" --l3-hwp-deg=" + str(l3p[1]) if l3p[1] else "") +
+                        (" --l3-hwp-lat=" + str(l3p[2]) if l3p[2] else "") +
+                        (" --l3-hwp-qs=" +  str(l3p[3]) if l3p[3] else "")
+                        if l3p else "") +
                     " --l3-data-lat=" +   str(cache[hier[3]][case][3][0]) +
                     " --l3-write-lat=" +  str(cache[hier[3]][case][3][1]) +
                     " --l3-tag-lat=" +    str(cache[hier[3]][case][3][2]) +
@@ -1039,6 +1089,18 @@ def main():
         default=4, help="number of banks in L2 cache (default: %(default)s)")
     parser.add_argument("--l3-banks", action="store", type=int, metavar="N",
         default=4, help="number of banks in L3 cache (default: %(default)s)")
+    parser.add_argument("--l1i-hwp", action="store", type=str, default=None,
+        choices=list(simparams.hwp_config), help="L1I prefetcher parameters" +
+        " (default: %(default)s)")
+    parser.add_argument("--l1d-hwp", action="store", type=str, default=None,
+        choices=list(simparams.hwp_config), help="L1D prefetcher parameters" +
+        " (default: %(default)s)")
+    parser.add_argument("--l2-hwp", action="store", type=str, default=None,
+        choices=list(simparams.hwp_config), help="L2 prefetcher parameters" +
+        " (default: %(default)s)")
+    parser.add_argument("--l3-hwp", action="store", type=str, default=None,
+        choices=list(simparams.hwp_config), help="L3 prefetcher parameters" +
+        " (default: %(default)s)")
     parser.add_argument("--max-proc", action="store", type=int, metavar="N",
         default=int(os.sysconf('SC_NPROCESSORS_ONLN')),
         help="number of processes that can run concurrently " +

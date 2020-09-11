@@ -51,6 +51,14 @@ mem_cases = {
     }
 }
 
+# PREFETCHER PARAMETERS
+# ---------------------
+# Tuple: (type, degree, latency, queue size)
+hwp_config = {
+    "stride1"   : ("StridePrefetcher", 1, 1, 0),
+    "stride4q"  : ("StridePrefetcher", 4, 0, 4),
+    "stride8"   : ("StridePrefetcher", 8, 1, 0)
+}
 
 # MEMORY CONFIGURATION
 # --------------------
