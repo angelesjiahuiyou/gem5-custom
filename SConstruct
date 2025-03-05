@@ -414,6 +414,8 @@ for variant_path in variant_paths:
 
         # We always compile using C++17
         env.Append(CXXFLAGS=['-std=c++17'])
+        # new
+        # env.Append(CXXFLAGS=['-DM5_PYTHON_PARAMS'])
 
         if sys.platform.startswith('freebsd'):
             env.Append(CCFLAGS=['-I/usr/local/include'])
@@ -446,6 +448,8 @@ for variant_path in variant_paths:
                     conf.CheckLinkFlag('-Wl,--threads')
                     conf.CheckLinkFlag(
                             '-Wl,--thread-count=%d' % GetOption('num_jobs'))
+                    
+
 
 
     else:

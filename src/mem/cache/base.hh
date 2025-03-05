@@ -389,7 +389,7 @@ class BaseCache : public ClockedObject
      * is an outstanding request that accesses the victim block) or
      * when we want to avoid allocation (e.g., exclusive caches)
      */
-    TempCacheBlk *tempBlock;
+    CacheBlk *tempBlock;
 
     /**
      * Upstream caches need this packet until true is returned, so

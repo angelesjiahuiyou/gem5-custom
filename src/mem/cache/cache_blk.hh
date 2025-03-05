@@ -497,53 +497,7 @@ class CacheBlk : public TaggedEntry
  * block address regeneration.
  * @sa Cache
  */
-class TempCacheBlk final : public CacheBlk
-{
-  private:
-    /**
-     * Copy of the block's address, used to regenerate tempBlock's address.
-     */
-    Addr _addr;
 
-  public:
-    /**
-     * Creates a temporary cache block, with its own storage.
-     * @param size The size (in bytes) of this cache block.
-     */
-    TempCacheBlk(unsigned size) : CacheBlk()
-    {
-        data = new uint8_t[size];
-    }
-    TempCacheBlk(const TempCacheBlk&) = delete;
-    TempCacheBlk& operator=(const TempCacheBlk&) = delete;
-    ~TempCacheBlk() { delete [] data; };
-
-    /**
-     * Invalidate the block and clear all state.
-     */
-    void invalidate() override {
-        CacheBlk::invalidate();
-
-        _addr = MaxAddr;
-    }
-
-    void
-    insert(const Addr addr, const bool is_secure) override
-    {
-        CacheBlk::insert(addr, is_secure);
-        _addr = addr;
-    }
-
-    /**
-     * Get block's address.
-     *
-     * @return addr Address value.
-     */
-    Addr getAddr() const
-    {
-        return _addr;
-    }
-};
 
 /**
  * Simple class to provide virtual print() method on cache blocks

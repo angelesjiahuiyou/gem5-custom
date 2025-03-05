@@ -53,6 +53,8 @@
 #include "base/types.hh"
 #include "mem/cache/base.hh"
 #include "mem/packet.hh"
+#include "base/statistics.hh"
+#include "sim/stat_control.hh"
 
 namespace gem5
 {
@@ -61,11 +63,25 @@ class CacheBlk;
 struct CacheParams;
 class MSHR;
 
+//new
+struct RTM_Track {
+    int position;      // position of the port about de each track
+    int track_length;  // 512 bits
+};
+
 /**
  * A coherent cache that can be arranged in flexible topologies.
  */
 class Cache : public BaseCache
 {
+  private:
+
+    //uint64_t total_shift_hit = 0;  // number of total shift hits
+    //uint64_t total_shift_miss = 0; // number of total shift miss
+
+    //new
+    std::vector<RTM_Track> rtm_tracks;  // info of all the track
+
   protected:
     /**
      * This cache should allocate a block on a line-sized write miss.
@@ -170,6 +186,31 @@ class Cache : public BaseCache
      * @return True if the port is waiting for a retry
      */
     bool sendMSHRQueuePacket(MSHR* mshr) override;
+
+    //new
+    bool isL2Cache;
+    uint64_t totalMissShiftCount;  // Miss shift count 
+    uint64_t totalHitShiftCount; // Hit shift count
+    
+    /*#ifndef __GEM5_PYTHON__
+      Scalar total_shift_hit;
+      Scalar total_shift_miss;
+    #endif*/
+    statistics::Scalar total_shift_hit;
+    statistics::Scalar total_shift_miss;
+    statistics::Scalar test;
+
+    //void printShiftStats();
+    //void calculateHitShift(PacketPtr pkt, CacheBlk *blk);
+    void initRTM(int num_tracks, int track_length);
+    void updateTrackPosition(int track_id, int new_position);
+    void printShiftStats();
+    int computeTargetPosition(CacheBlk *blk) const;
+    int computeReplacementPosition(Addr addr);
+    //void printShiftStats() const;
+    //~Cache();
+    virtual void regStats() override;
+
 };
 
 } // namespace gem5

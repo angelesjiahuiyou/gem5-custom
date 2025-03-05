@@ -350,5 +350,8 @@ Source('pybind11/event.cc', add_tags='python')
 Source('pybind11/object_file.cc', add_tags='python')
 Source('pybind11/stats.cc', add_tags='python')
 
+#Source('m5/objects/CacheBinding.cc', add_tags=['python', 'm5_module'])
+
+
 SimObject('m5/objects/SimObject.py', sim_objects=['SimObject'],
         enums=['ByteOrder'])

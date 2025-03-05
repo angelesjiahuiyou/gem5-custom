@@ -1,0 +1,7 @@
+digraph G {
+	graph [bb="0,0,90.992,36"];
+	node [label="\N"];
+	System	[height=0.5,
+		pos="45.496,18",
+		width=1.2638];
+}

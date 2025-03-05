@@ -62,16 +62,25 @@
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/request.hh"
 #include "params/Cache.hh"
+#include "base/statistics.hh"
+#include "sim/stat_control.hh"
 
 namespace gem5
 {
-
+//change
 Cache::Cache(const CacheParams &p)
     : BaseCache(p, p.system->cacheLineSize()),
       doFastWrites(true)
 {
+
+
     assert(p.tags);
     assert(p.replacement_policy);
+
+    //totalHitShiftCount = 0;
+    //totalMissShiftCount = 0;
+
+    initRTM(512, 512);
 }
 
 void
@@ -157,6 +166,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
 //
 /////////////////////////////////////////////////////
 
+//change
 bool
 Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
               PacketList &writebacks)
@@ -181,6 +191,47 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // lookupLatency is the latency in case the request is uncacheable.
         lat = lookupLatency;
         return false;
+    }
+
+    bool hit = BaseCache::access(pkt, blk, lat, writebacks);
+    //panic1
+    if (rtm_tracks.empty()) {
+        panic("ERROR1: RTM Tracks not initialized in access()!");
+    }
+
+    if (true) {
+        //calculate right position
+        Addr addr = pkt->getAddr();
+
+        //panic2
+        if (rtm_tracks.size() == 0) {
+            panic("ERROR2: RTM Tracks not initialized in access()!");
+        }
+        int track_id = (addr / system->cacheLineSize()) % rtm_tracks.size();
+
+        //panic3
+        if (track_id < 0 || track_id >= rtm_tracks.size()) {
+            panic("ERROR3: Invalid track_id %d, rtm_tracks.size() = %lu", track_id, rtm_tracks.size());
+        }
+
+        if (hit) {
+            int target_position = computeTargetPosition(blk);
+            int shift = std::abs(rtm_tracks[track_id].position - target_position);
+            totalHitShiftCount += shift;
+            // update pos
+            updateTrackPosition(track_id, target_position);
+        } else {//miss
+            // cache ini dir
+            int replacement_position = computeReplacementPosition(addr);
+            int total_shift_for_miss = 0;
+            for (int track = 0; track < rtm_tracks.size(); track++) {
+                int shift = std::abs(rtm_tracks[track].position - replacement_position);
+                total_shift_for_miss += shift;
+                // update pos
+                updateTrackPosition(track, replacement_position);
+             }
+            totalMissShiftCount += total_shift_for_miss;
+        }
     }
 
     return BaseCache::access(pkt, blk, lat, writebacks);
@@ -263,6 +314,7 @@ Cache::doWritebacksAtomic(PacketList& writebacks)
 }
 
 
+//change
 void
 Cache::recvTimingSnoopResp(PacketPtr pkt)
 {
@@ -1481,5 +1533,104 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
 
     return BaseCache::sendMSHRQueuePacket(mshr);
 }
+
+//new
+void Cache::initRTM(int num_tracks, int track_length) { //512 512
+    rtm_tracks.resize(num_tracks);
+    for (int i = 0; i < num_tracks; i++) {
+        rtm_tracks[i].position = 0;  // inicial of the port position
+        rtm_tracks[i].track_length = track_length; // 512
+    }
+    totalMissShiftCount = 0;
+    totalHitShiftCount = 0;
+    DPRINTF(Cache, "RTM initialized with %d tracks, each of length %d\n",
+        num_tracks, track_length);
+}
+
+void Cache::updateTrackPosition(int track_id, int new_position) {
+    rtm_tracks[track_id].position = new_position;  
+}
+
+int
+Cache::computeTargetPosition(CacheBlk *blk) const
+{
+    //panic456
+    if (!blk) {
+        panic("ERROR4: blk is NULL in computeTargetPosition!");
+    }
+    if (rtm_tracks.empty()) {
+        panic("ERROR5: rtm_tracks is empty in computeTargetPosition!");
+    }
+    Addr addr = blk->getTag(); //ini add of the cacheline
+    int track_length = 512;
+
+    // (int)(addr / cacheLineSize) calculate which line
+    // then calculate which pos on the line
+    int target_position = ((int)(addr / system->cacheLineSize())) % track_length;
+    if (target_position < 0 || target_position >= rtm_tracks[0].track_length) {
+        panic("ERROR6: Invalid target_position %d, track_length = %d", target_position, rtm_tracks[0].track_length);
+    }
+
+    return target_position;
+}
+
+int
+Cache::computeReplacementPosition(Addr addr) {
+
+    //panic89
+    if (rtm_tracks.empty()) {
+        panic("ERROR8: rtm_tracks is empty in computeReplacementPosition!");
+    }
+    // which track
+    int track_id = addr % rtm_tracks.size();
+    
+    // cacheline ini dir
+    int replacement_position = (addr / rtm_tracks.size()) % rtm_tracks[track_id].track_length;
+    if (replacement_position < 0 || replacement_position >= rtm_tracks[0].track_length) {
+        panic("ERROR9: Invalid replacement_position %d, track_length = %d", replacement_position, rtm_tracks[0].track_length);
+    }
+
+    return replacement_position;
+}
+
+void
+Cache::regStats()
+{
+    BaseCache::regStats();
+    using namespace statistics;
+
+    total_shift_hit = totalHitShiftCount;
+    total_shift_hit
+        .name(name() + ".total_shift_hit")
+        .desc("Total shift count for cache hits")
+        .precision(0);
+    
+    total_shift_miss = totalMissShiftCount;
+    total_shift_miss
+        .name(name() + ".total_shift_miss")
+        .desc("Total shift count for cache misses")
+        .precision(0);
+
+    //position = rtm_tracks[0].position;
+    
+    
+
+    test
+        .name(name() + ".test")
+        .desc("Current RTM access port position")
+        .precision(0)
+        .flags(total | nozero | nonan); 
+
+    test = 15;  
+    
+
+    std::cout << "[DEBUG] test set to: " << test.value() << std::endl;
+}
+
+/*Cache::~Cache() {
+    std::cout << "Final L2Cache total shift hit: " << totalHitShiftCount << std::endl;
+    std::cout << "Final L2Cache total shift miss: " << totalMissShiftCount << std::endl;
+    // 如果有其他析构工作，记得调用基类析构（如果需要）
+}*/
 
 } // namespace gem5

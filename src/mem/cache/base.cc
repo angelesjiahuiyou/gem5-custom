@@ -122,7 +122,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected requestor is actually snooping or not
 
-    tempBlock = new TempCacheBlk(blkSize);
+    tempBlock = new CacheBlk(); 
 
     tags->tagsInit();
     if (prefetcher)
@@ -185,7 +185,7 @@ BaseCache::regenerateBlkAddr(CacheBlk* blk)
     if (blk != tempBlock) {
         return tags->regenerateBlkAddr(blk);
     } else {
-        return tempBlock->getAddr();
+        return tempBlock->getTag();
     }
 }
 
