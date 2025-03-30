@@ -1042,6 +1042,489 @@ def profile(args, sem):
     execute(spawn_list, args, sem)
     return
 
+def counters(args, sem):
+    spawn_list = []
+#    check_prerequisites(args, True, False, False, False)
+
+    print("Hardware counters:")
+    for b_name in args.benchmarks:
+        print("- " + b_name)
+
+        b_spl = b_name.split('.')
+        b_abbr = b_spl[0] + b_spl[1]
+        b_set = args.set[0]
+
+        # Get benchmark general parameters from benchlist.py
+        success, b_params = get_params(args, b_name)
+
+        # Skip this benchmark if some error occurred
+        if not success:
+            continue
+
+        b_exe_name = b_params[0]
+        b_preproc  = b_params[1]
+
+        # Get benchmark subset parameters from benchlist.py
+        ss_params = get_ss_params(b_name, b_set)
+
+        for subset in ss_params:
+            # Prepare the execution environment
+            out_dir, tmp_dir = prepare_env(args, b_name, b_exe_name, b_preproc,
+                os.path.join("counter", subset[0]))
+
+            mem_filepath = os.path.join(out_dir, "mem." + b_abbr + "." +
+                subset[0])
+            log_filepath = os.path.join(out_dir, b_abbr + "." + subset[0] +
+                "beta.log")
+
+            # Execute perf (instead of perf stat, perf record)
+            cmd = ("perf stat -e duration_time -e armv8_pmuv3_0/cpu_cycles/ " +
+                    "-e armv8_pmuv3_0/exc_return/ -e armv8_pmuv3_0/l1d_cache/ " +
+                    "-e armv8_pmuv3_0/l1i_cache/ -e armv8_pmuv3_0/l2d_cache/ " +
+                    "-e armv8_pmuv3_0/l2i_cache/ -e armv8_pmuv3_0/ll_cache/ " +
+                    "-e armv8_pmuv3_0/ll_cache_miss/ -e armv8_pmuv3_0/mem_access/ " +
+                    "-e l1d_cache_rd -e l2d_cache_rd -e uncore_hisi_l3c.rd_cpipe " +
+                    "-e uncore_hisi_l3c.wr_cpipe -e cpu-cycles -e instructions " +
+                    "-e branch-misses -e bus-cycles -e cache-misses " +
+                    "-e cache-references -e cpu-cycles -e cycles -e instructions " +
+                    "-e stalled-cycles-backend -e idle-cycles-backend " +
+                    "-e stalled-cycles-frontend -e idle-cycles-frontend " +
+                    "-e alignment-faults -e bpf-output -e context-switches " +
+                    "-e cpu-clock -e cpu-migrations -e dummy -e emulation-faults " +
+                    "-e major-faults -e minor-faults -e page-faults " +
+                    "-e task-clock -e duration_time -e L1-dcache-load-misses " +
+                    "-e L1-dcache-loads -e L1-icache-load-misses -e L1-icache-loads " +
+                    "-e branch-load-misses -e branch-loads -e dTLB-load-misses " +
+                    "-e dTLB-loads -e iTLB-load-misses -e iTLB-loads " +
+                    "-e armv8_pmuv3_0/br_mis_pred/ -e armv8_pmuv3_0/br_mis_pred_retired/ " +
+                    "-e armv8_pmuv3_0/br_pred/ -e armv8_pmuv3_0/br_retired/ " +
+                    "-e armv8_pmuv3_0/br_return_retired/ -e armv8_pmuv3_0/bus_access/ " +
+                    "-e armv8_pmuv3_0/bus_cycles/ -e armv8_pmuv3_0/cid_write_retired/ " +
+                    "-e armv8_pmuv3_0/cpu_cycles/ -e  armv8_pmuv3_0/dtlb_walk/ " +
+                    "-e armv8_pmuv3_0/exc_return/ -e armv8_pmuv3_0/exc_taken/ " +
+                    "-e armv8_pmuv3_0/inst_retired/ -e armv8_pmuv3_0/inst_spec/ " +
+                    "-e armv8_pmuv3_0/itlb_walk/ -e armv8_pmuv3_0/l1d_cache/ " +
+                    "-e armv8_pmuv3_0/l1d_cache_refill/ -e armv8_pmuv3_0/l1d_cache_wb/ " +
+                    "-e armv8_pmuv3_0/l1d_tlb/ -e armv8_pmuv3_0/l1d_tlb_refill/ " +
+                    "-e armv8_pmuv3_0/l1i_cache/ -e armv8_pmuv3_0/l1i_cache_refill/ " +
+                    "-e armv8_pmuv3_0/l1i_tlb/ -e armv8_pmuv3_0/l1i_tlb_refill/ " +
+                    "-e armv8_pmuv3_0/l2d_cache/ -e armv8_pmuv3_0/l2d_cache_refill/ " +
+                    "-e armv8_pmuv3_0/l2d_cache_wb/ -e armv8_pmuv3_0/l2d_tlb/ " +
+                    "-e armv8_pmuv3_0/l2d_tlb_refill/ -e armv8_pmuv3_0/l2i_cache/ " +
+                    "-e armv8_pmuv3_0/l2i_cache_refill/ -e armv8_pmuv3_0/l2i_tlb/ " +
+                    "-e armv8_pmuv3_0/l2i_tlb_refill/ -e armv8_pmuv3_0/ll_cache/ " +
+                    "-e armv8_pmuv3_0/ll_cache_miss/ -e armv8_pmuv3_0/ll_cache_miss_rd/ " +
+                    "-e armv8_pmuv3_0/ll_cache_rd/ -e armv8_pmuv3_0/mem_access/ " +
+                    "-e armv8_pmuv3_0/memory_error/ -e armv8_pmuv3_0/remote_access/ " +
+                    "-e armv8_pmuv3_0/remote_access_rd/ -e armv8_pmuv3_0/sample_collision/ " +
+                    "-e armv8_pmuv3_0/sample_feed/ -e armv8_pmuv3_0/sample_filtrate/ " +
+                    "-e armv8_pmuv3_0/sample_pop/ -e armv8_pmuv3_0/stall_backend/ " +
+                    "-e armv8_pmuv3_0/stall_frontend/ -e armv8_pmuv3_0/sw_incr/ " +
+                    "-e armv8_pmuv3_0/ttbr_write_retired/ -e hisi_sccl1_ddrc0/act_cmd/ " +
+
+                    "-e hisi_sccl1_ddrc0/flux_rcmd/ -e hisi_sccl1_ddrc0/flux_rd/ " +
+                    "-e hisi_sccl1_ddrc0/flux_wcmd/ -e hisi_sccl1_ddrc0/flux_wr/ " +
+                    "-e hisi_sccl1_ddrc0/pre_cmd/ -e hisi_sccl1_ddrc0/rnk_chg/ " +
+                    "-e hisi_sccl1_ddrc0/rw_chg/ -e hisi_sccl1_ddrc1/act_cmd/ " +
+                    "-e hisi_sccl1_ddrc1/flux_rcmd/ -e hisi_sccl1_ddrc1/flux_rd/ " +
+                    "-e hisi_sccl1_ddrc1/flux_wcmd/ -e hisi_sccl1_ddrc1/flux_wr/ " +
+                    "-e hisi_sccl1_ddrc1/pre_cmd/ -e hisi_sccl1_ddrc1/rnk_chg/ " + 
+                    "-e hisi_sccl1_ddrc1/rw_chg/ -e hisi_sccl1_ddrc2/act_cmd/ " +
+                    "-e hisi_sccl1_ddrc2/flux_rcmd/ -e hisi_sccl1_ddrc2/flux_rd/ " +
+                    "-e hisi_sccl1_ddrc2/flux_wcmd/ -e hisi_sccl1_ddrc2/flux_wr/ " +
+                    "-e hisi_sccl1_ddrc2/pre_cmd/ -e hisi_sccl1_ddrc2/rnk_chg/ " +
+                    "-e hisi_sccl1_ddrc2/rw_chg/ -e hisi_sccl1_ddrc3/act_cmd/ " +
+                    "-e hisi_sccl1_ddrc3/flux_rcmd/ -e hisi_sccl1_ddrc3/flux_rd/ " +
+                    "-e hisi_sccl1_ddrc3/flux_wcmd/ -e hisi_sccl1_ddrc3/flux_wr/ " +
+                    "-e hisi_sccl1_ddrc3/pre_cmd/ -e hisi_sccl1_ddrc3/rnk_chg/ " +
+                  "-e hisi_sccl1_ddrc3/rw_chg/ -e hisi_sccl1_hha2/bi_num/ " +
+                    "-e hisi_sccl1_hha2/edir-hit/ -e hisi_sccl1_hha2/edir-home-migrate/ " +
+                    "-e hisi_sccl1_hha2/edir-lookup/ -e hisi_sccl1_hha2/mediated_num/ " +
+                    "-e hisi_sccl1_hha2/rd_ddr_128b/ -e hisi_sccl1_hha2/rd_ddr_64b/ " +
+                    "-e hisi_sccl1_hha2/rx_ccix/ -e hisi_sccl1_hha2/rx_ops_num/ " +
+                    "-e hisi_sccl1_hha2/rx_outer/ -e hisi_sccl1_hha2/rx_sccl/ " +
+                    "-e hisi_sccl1_hha2/rx_snprsp_outer/ -e hisi_sccl1_hha2/rx_snprspdata/ " +
+                    "-e hisi_sccl1_hha2/rx_wbi/ -e hisi_sccl1_hha2/rx_wbip/ " +
+                    "-e hisi_sccl1_hha2/rx_wtistash/ -e hisi_sccl1_hha2/sdir-hit/ " +
+                    "-e hisi_sccl1_hha2/sdir-home-migrate/ -e hisi_sccl1_hha2/sdir-lookup/ " +
+                    "-e hisi_sccl1_hha2/spill_num/ -e hisi_sccl1_hha2/spill_success/ " +
+                    "-e hisi_sccl1_hha2/tx_snp_ccix/ -e hisi_sccl1_hha2/tx_snp_num/ " +
+                    "-e hisi_sccl1_hha2/tx_snp_outer/ -e hisi_sccl1_hha2/wr_ddr_128b/ " +
+                    "-e hisi_sccl1_hha2/wr_ddr_64b/ -e hisi_sccl1_hha3/bi_num/ " +
+                    "-e hisi_sccl1_hha3/edir-hit/ -e hisi_sccl1_hha3/edir-home-migrate/ " +
+                    "-e hisi_sccl1_hha3/edir-lookup/ -e hisi_sccl1_hha3/mediated_num/ " +
+                    "-e hisi_sccl1_hha3/rd_ddr_128b/ -e hisi_sccl1_hha3/rd_ddr_64b/ " +
+                    "-e hisi_sccl1_hha3/rx_ccix/ -e hisi_sccl1_hha3/rx_ops_num/ " +
+                    "-e hisi_sccl1_hha3/rx_sccl/ -e hisi_sccl1_hha3/rx_snprsp_outer/ " +
+                    "-e hisi_sccl1_hha3/rx_snprspdata/ -e hisi_sccl1_hha3/rx_wbi/ " +
+                    "-e hisi_sccl1_hha3/rx_wbip/ -e hisi_sccl1_hha3/rx_wtistash/ " +
+                    "-e hisi_sccl1_hha3/sdir-hit/ -e hisi_sccl1_hha3/sdir-home-migrate/ " +
+                    "-e hisi_sccl1_hha3/sdir-lookup/ -e hisi_sccl1_hha3/spill_num/ " +
+                    "-e hisi_sccl1_hha3/spill_success/ -e hisi_sccl1_hha3/tx_snp_ccix/ " +
+                    "-e hisi_sccl1_hha3/tx_snp_num/ -e hisi_sccl1_hha3/tx_snp_outer/ " +
+                    "-e hisi_sccl1_hha3/wr_ddr_128b/ -e hisi_sccl1_hha3/wr_ddr_64b/ " +
+                    "-e hisi_sccl1_l3c10/back_invalid/ -e hisi_sccl1_l3c10/prefetch_drop/ " +
+                  "-e hisi_sccl1_l3c10/rd_cpipe/ -e hisi_sccl1_l3c10/rd_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c10/rd_hit_spipe/ -e hisi_sccl1_l3c10/rd_spipe/ " +
+                    "-e hisi_sccl1_l3c10/retry_cpu/ -e hisi_sccl1_l3c10/retry_ring/ " +
+                    "-e hisi_sccl1_l3c10/victim_num/ -e hisi_sccl1_l3c10/wr_cpipe/  " +
+                    "-e hisi_sccl1_l3c10/wr_hit_cpipe/ -e hisi_sccl1_l3c10/wr_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c10/wr_spipe/ -e hisi_sccl1_l3c11/back_invalid/ " +
+                    "-e hisi_sccl1_l3c11/prefetch_drop/ -e hisi_sccl1_l3c11/rd_cpipe/ " +
+                    "-e hisi_sccl1_l3c11/rd_hit_cpipe/ -e hisi_sccl1_l3c11/rd_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c11/rd_spipe/ -e hisi_sccl1_l3c11/retry_cpu/ " +
+                    "-e hisi_sccl1_l3c11/retry_ring/ -e hisi_sccl1_l3c11/victim_num/ "  +
+                    "-e hisi_sccl1_l3c11/wr_hit_cpipe/ -e hisi_sccl1_l3c11/wr_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c11/wr_spipe/ -e hisi_sccl1_l3c12/back_invalid/ " +
+                    "-e hisi_sccl1_l3c12/prefetch_drop/ -e hisi_sccl1_l3c12/rd_cpipe/ " +
+                    "-e hisi_sccl1_l3c12/rd_hit_cpipe/ -e hisi_sccl1_l3c12/rd_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c12/rd_spipe/ -e hisi_sccl1_l3c12/retry_cpu/ " +
+                    "-e hisi_sccl1_l3c12/retry_ring/ -e hisi_sccl1_l3c12/victim_num/ " +
+                    "-e hisi_sccl1_l3c12/wr_cpipe/ -e hisi_sccl1_l3c12/wr_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c12/wr_hit_spipe/ -e hisi_sccl1_l3c12/wr_spipe/ " +
+                    "-e hisi_sccl1_l3c13/back_invalid/ -e hisi_sccl1_l3c13/prefetch_drop/ " +
+                    "-e hisi_sccl1_l3c13/rd_cpipe/ -e hisi_sccl1_l3c13/rd_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c13/rd_hit_spipe/ -e hisi_sccl1_l3c13/rd_spipe/ " +
+                    "-e hisi_sccl1_l3c13/retry_cpu/ -e hisi_sccl1_l3c13/retry_ring/ " +
+                    "-e hisi_sccl1_l3c13/victim_num/ -e hisi_sccl1_l3c13/wr_cpipe/ " +
+                    "-e hisi_sccl1_l3c13/wr_hit_cpipe/ -e hisi_sccl1_l3c13/wr_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c13/wr_spipe/ -e hisi_sccl1_l3c14/back_invalid/ " + 
+                    "-e hisi_sccl1_l3c14/prefetch_drop/ -e hisi_sccl1_l3c14/rd_cpipe/ " +
+                    "-e hisi_sccl1_l3c14/rd_hit_cpipe/ -e hisi_sccl1_l3c14/rd_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c14/rd_spipe/ -e hisi_sccl1_l3c14/retry_cpu/ " +
+                    "-e hisi_sccl1_l3c14/retry_ring/ -e hisi_sccl1_l3c14/victim_num/ " +
+                    "-e hisi_sccl1_l3c14/wr_cpipe/ -e hisi_sccl1_l3c14/wr_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c14/wr_hit_spipe/ -e hisi_sccl1_l3c14/wr_spipe/ " +
+                    "-e hisi_sccl1_l3c15/back_invalid/ -e hisi_sccl1_l3c15/prefetch_drop/ " +
+                    "-e hisi_sccl1_l3c15/rd_cpipe/ -e hisi_sccl1_l3c15/rd_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c15/rd_hit_spipe/ -e hisi_sccl1_l3c15/rd_spipe/ " +
+                    "-e hisi_sccl1_l3c15/retry_cpu/ -e hisi_sccl1_l3c15/retry_ring/ " +
+                    "-e hisi_sccl1_l3c15/victim_num/ -e hisi_sccl1_l3c15/wr_cpipe/ " +
+                    "-e hisi_sccl1_l3c15/wr_hit_cpipe/ -e hisi_sccl1_l3c15/wr_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c15/wr_spipe/ -e hisi_sccl1_l3c8/back_invalid/ " +
+                    "-e hisi_sccl1_l3c8/prefetch_drop/ -e hisi_sccl1_l3c8/rd_cpipe/ " +
+                    "-e hisi_sccl1_l3c8/rd_hit_cpipe/ -e hisi_sccl1_l3c8/rd_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c8/rd_spipe/ -e hisi_sccl1_l3c8/retry_cpu/ " +
+                    "-e hisi_sccl1_l3c8/retry_ring/ -e hisi_sccl1_l3c8/victim_num/ " +
+                    "-e hisi_sccl1_l3c8/wr_cpipe/ -e hisi_sccl1_l3c8/wr_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c8/wr_hit_spipe/ -e hisi_sccl1_l3c8/wr_spipe/ " +
+                    "-e hisi_sccl1_l3c9/back_invalid/ -e hisi_sccl1_l3c9/prefetch_drop/ " +
+                    "-e hisi_sccl1_l3c9/rd_cpipe/ -e hisi_sccl1_l3c9/rd_hit_cpipe/ " +
+                    "-e hisi_sccl1_l3c9/rd_hit_spipe/ -e hisi_sccl1_l3c9/rd_spipe/ " +
+                    "-e hisi_sccl1_l3c9/retry_cpu/ -e hisi_sccl1_l3c9/retry_ring/ " +
+                    "-e hisi_sccl1_l3c9/victim_num/ -e hisi_sccl1_l3c9/wr_cpipe/ " +
+                    "-e hisi_sccl1_l3c9/wr_hit_cpipe/ -e hisi_sccl1_l3c9/wr_hit_spipe/ " +
+                    "-e hisi_sccl1_l3c9/wr_spipe/ -e hisi_sccl3_ddrc0/act_cmd/ " +
+                    "-e hisi_sccl3_ddrc0/flux_rcmd/ -e hisi_sccl3_ddrc0/flux_rd/ " +
+                    "-e hisi_sccl3_ddrc0/flux_wcmd/ -e hisi_sccl3_ddrc0/flux_wr/ " +
+                    "-e hisi_sccl3_ddrc0/pre_cmd/ -e hisi_sccl3_ddrc0/rnk_chg/ " +
+                    "-e hisi_sccl3_ddrc0/rw_chg/ -e hisi_sccl3_ddrc1/act_cmd/ " +
+                    "-e hisi_sccl3_ddrc1/flux_rcmd/ -e hisi_sccl3_ddrc1/flux_rd/ " +
+                    "-e hisi_sccl3_ddrc1/flux_wcmd/ -e hisi_sccl3_ddrc1/flux_wr/ " +
+                    "-e hisi_sccl3_ddrc1/pre_cmd/ -e hisi_sccl3_ddrc1/rnk_chg/ " +
+                    "-e hisi_sccl3_ddrc1/rw_chg/ -e hisi_sccl3_ddrc2/act_cmd/ " +
+                    "-e hisi_sccl3_ddrc2/flux_rcmd/ -e hisi_sccl3_ddrc2/flux_rd/ " +
+                    "-e hisi_sccl3_ddrc2/flux_wcmd/ -e hisi_sccl3_ddrc2/flux_wr/ " +
+                    "-e hisi_sccl3_ddrc2/pre_cmd/ -e hisi_sccl3_ddrc2/rnk_chg/ " +
+                    "-e hisi_sccl3_ddrc2/rw_chg/ -e hisi_sccl3_ddrc3/act_cmd/ " +
+                    "-e hisi_sccl3_ddrc3/flux_rcmd/ -e hisi_sccl3_ddrc3/flux_rd/ " +
+                    "-e hisi_sccl3_ddrc3/flux_wcmd/ -e hisi_sccl3_ddrc3/flux_wr/ " +
+                    "-e hisi_sccl3_ddrc3/pre_cmd/ -e hisi_sccl3_ddrc3/rnk_chg/ " +
+                    "-e hisi_sccl3_ddrc3/rw_chg/ -e hisi_sccl3_hha0/bi_num/ " +
+                    "-e hisi_sccl3_hha0/edir-hit/ -e hisi_sccl3_hha0/edir-home-migrate/ " +
+                    "-e hisi_sccl3_hha0/edir-lookup/ -e hisi_sccl3_hha0/mediated_num/ " +
+                    "-e hisi_sccl3_hha0/rd_ddr_128b/ -e hisi_sccl3_hha0/rd_ddr_64b/ " +
+                    "-e hisi_sccl3_hha0/rx_ccix/ -e hisi_sccl3_hha0/rx_ops_num/ " +
+                    "-e hisi_sccl3_hha0/rx_outer/ -e hisi_sccl3_hha0/rx_sccl/ " +
+                    "-e hisi_sccl3_hha0/rx_snprsp_outer/ -e hisi_sccl3_hha0/rx_snprspdata/ " +
+                    "-e hisi_sccl3_hha0/rx_wbi/ -e hisi_sccl3_hha0/rx_wbip/ " +
+                    "-e hisi_sccl3_hha0/rx_wtistash/ -e hisi_sccl3_hha0/sdir-hit/ " +
+                    "-e hisi_sccl3_hha0/sdir-home-migrate/ -e hisi_sccl3_hha0/sdir-lookup/ " +
+                    "-e hisi_sccl3_hha0/spill_num/ -e hisi_sccl3_hha0/spill_success/ " +
+                    "-e hisi_sccl3_hha0/tx_snp_ccix/ -e hisi_sccl3_hha0/tx_snp_num/ " +
+                    "-e hisi_sccl3_hha0/tx_snp_outer/ -e hisi_sccl3_hha0/wr_ddr_128b/ " +
+                    "-e hisi_sccl3_hha0/wr_ddr_64b/ -e hisi_sccl3_hha1/bi_num/ " +
+                    "-e hisi_sccl3_hha1/edir-hit/ -e hisi_sccl3_hha1/edir-home-migrate/ " +
+                    "-e hisi_sccl3_hha1/edir-lookup/ -e hisi_sccl3_hha1/mediated_num/ " +
+                    "-e hisi_sccl3_hha1/rd_ddr_128b/ -e hisi_sccl3_hha1/rd_ddr_64b/ " +
+                    "-e hisi_sccl3_hha1/rx_ccix/ -e hisi_sccl3_hha1/rx_ops_num/ " +
+                    "-e hisi_sccl3_hha1/rx_outer/ -e hisi_sccl3_hha1/rx_sccl/ " +
+                    "-e hisi_sccl3_hha1/rx_snprsp_outer/ -e hisi_sccl3_hha1/rx_snprspdata/ " +
+                    "-e hisi_sccl3_hha1/rx_wbi/ -e hisi_sccl3_hha1/rx_wbip/ " +
+                    "-e hisi_sccl3_hha1/rx_wtistash/ -e hisi_sccl3_hha1/sdir-hit/ " +
+                    "-e hisi_sccl3_hha1/sdir-home-migrate/ -e hisi_sccl3_hha1/sdir-lookup/ " +
+                    "-e hisi_sccl3_hha1/spill_num/ -e hisi_sccl3_hha1/spill_success/ " +
+                    "-e hisi_sccl3_hha1/tx_snp_ccix/ -e hisi_sccl3_hha1/tx_snp_num/ " +
+                    "-e hisi_sccl3_hha1/tx_snp_outer/ -e hisi_sccl3_hha1/wr_ddr_128b/ " + 
+                    "-e hisi_sccl3_hha1/wr_ddr_64b/ -e hisi_sccl3_l3c0/back_invalid/ " +
+                    "-e hisi_sccl3_l3c0/prefetch_drop/ -e hisi_sccl3_l3c0/rd_cpipe/  " +
+                    "-e hisi_sccl3_l3c0/rd_hit_cpipe/ -e hisi_sccl3_l3c0/rd_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c0/rd_spipe/ -e hisi_sccl3_l3c0/retry_cpu/ " +
+                    "-e hisi_sccl3_l3c0/retry_ring/ -e hisi_sccl3_l3c0/victim_num/ " +
+                    "-e hisi_sccl3_l3c0/wr_cpipe/ -e hisi_sccl3_l3c0/wr_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c0/wr_hit_spipe/ -e hisi_sccl3_l3c0/wr_spipe/ " +
+                    "-e hisi_sccl3_l3c1/back_invalid/ -e hisi_sccl3_l3c1/prefetch_drop/ " +
+                    "-e hisi_sccl3_l3c1/rd_cpipe/ -e hisi_sccl3_l3c1/rd_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c1/rd_hit_spipe/ -e hisi_sccl3_l3c1/rd_spipe/ " +
+                    "-e hisi_sccl3_l3c1/retry_cpu/ -e hisi_sccl3_l3c1/retry_ring/ " +
+                    "-e hisi_sccl3_l3c1/victim_num/ -e hisi_sccl3_l3c1/wr_cpipe/ " +
+                    "-e hisi_sccl3_l3c1/wr_hit_cpipe/ -e hisi_sccl3_l3c1/wr_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c1/wr_spipe/ -e hisi_sccl3_l3c2/back_invalid/ " +
+                    "-e hisi_sccl3_l3c2/prefetch_drop/ -e hisi_sccl3_l3c2/rd_cpipe/ " +
+                    "-e hisi_sccl3_l3c2/rd_hit_cpipe/ -e hisi_sccl3_l3c2/rd_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c2/rd_spipe/ -e hisi_sccl3_l3c2/retry_cpu/ " +
+                    "-e hisi_sccl3_l3c2/retry_ring/ -e hisi_sccl3_l3c2/victim_num/ " +
+                    "-e hisi_sccl3_l3c2/wr_cpipe/ -e hisi_sccl3_l3c2/wr_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c2/wr_hit_spipe/ -e hisi_sccl3_l3c2/wr_spipe/ " +
+                    "-e hisi_sccl3_l3c3/back_invalid/ -e hisi_sccl3_l3c3/prefetch_drop/ " +
+                    "-e hisi_sccl3_l3c3/rd_cpipe/ -e hisi_sccl3_l3c3/rd_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c3/rd_hit_spipe/ -e hisi_sccl3_l3c3/rd_spipe/ " +
+                    "-e hisi_sccl3_l3c3/retry_cpu/ -e hisi_sccl3_l3c3/retry_ring/ " +
+                    "-e hisi_sccl3_l3c3/victim_num/ -e hisi_sccl3_l3c3/wr_cpipe/ " +
+                    "-e hisi_sccl3_l3c3/wr_hit_cpipe/ -e hisi_sccl3_l3c3/wr_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c3/wr_spipe/ -e hisi_sccl3_l3c4/back_invalid/ " +
+                    "-e hisi_sccl3_l3c4/prefetch_drop/ -e hisi_sccl3_l3c4/rd_cpipe/ " +
+                    "-e hisi_sccl3_l3c4/rd_hit_cpipe/ -e hisi_sccl3_l3c4/rd_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c4/rd_spipe/ -e hisi_sccl3_l3c4/retry_cpu/ " +
+                    "-e hisi_sccl3_l3c4/retry_ring/ -e hisi_sccl3_l3c4/victim_num/ " +
+                    "-e hisi_sccl3_l3c4/wr_cpipe/ -e hisi_sccl3_l3c4/wr_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c4/wr_hit_spipe/ -e hisi_sccl3_l3c4/wr_spipe/ " +
+                    "-e hisi_sccl3_l3c5/back_invalid/ -e hisi_sccl3_l3c5/prefetch_drop/ " +
+                    "-e hisi_sccl3_l3c5/rd_cpipe/ -e hisi_sccl3_l3c5/rd_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c5/rd_hit_spipe/ -e hisi_sccl3_l3c5/rd_spipe/ " +
+                    "-e hisi_sccl3_l3c5/retry_cpu/ -e hisi_sccl3_l3c5/retry_ring/ " +
+                    "-e hisi_sccl3_l3c5/victim_num/ -e hisi_sccl3_l3c5/wr_cpipe/ " +
+                    "-e hisi_sccl3_l3c5/wr_hit_cpipe/ -e hisi_sccl3_l3c5/wr_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c5/wr_spipe/ -e hisi_sccl3_l3c6/back_invalid/ " +
+                    "-e hisi_sccl3_l3c6/prefetch_drop/ -e hisi_sccl3_l3c6/rd_cpipe/ " +
+                    "-e hisi_sccl3_l3c6/rd_hit_cpipe/ -e hisi_sccl3_l3c6/rd_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c6/rd_spipe/ -e hisi_sccl3_l3c6/retry_cpu/ " +
+                    "-e hisi_sccl3_l3c6/retry_ring/ -e hisi_sccl3_l3c6/victim_num/ " +
+                    "-e hisi_sccl3_l3c6/wr_cpipe/ -e hisi_sccl3_l3c6/wr_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c6/wr_hit_spipe/ -e hisi_sccl3_l3c6/wr_spipe/ " +
+                    "-e hisi_sccl3_l3c7/back_invalid/ -e hisi_sccl3_l3c7/prefetch_drop/ " +
+                    "-e hisi_sccl3_l3c7/rd_cpipe/ -e hisi_sccl3_l3c7/rd_hit_cpipe/ " +
+                    "-e hisi_sccl3_l3c7/rd_hit_spipe/ -e hisi_sccl3_l3c7/rd_spipe/ " +
+                    "-e hisi_sccl3_l3c7/retry_cpu/ -e hisi_sccl3_l3c7/retry_ring/ " +
+                    "-e hisi_sccl3_l3c7/victim_num/ -e hisi_sccl3_l3c7/wr_cpipe/ " +
+                    "-e hisi_sccl3_l3c7/wr_hit_cpipe/ -e  hisi_sccl3_l3c7/wr_hit_spipe/ " +
+                    "-e hisi_sccl3_l3c7/wr_spipe/ -e hisi_sccl5_ddrc0/act_cmd/ " +
+                    "-e hisi_sccl5_ddrc0/flux_rcmd/ -e hisi_sccl5_ddrc0/flux_rd/ " +                        
+                    "-e hisi_sccl5_ddrc0/flux_wcmd/ -e hisi_sccl5_ddrc0/flux_wr/ " +
+                    "-e hisi_sccl5_ddrc0/pre_cmd/ -e hisi_sccl5_ddrc0/rnk_chg/ " +
+                    "-e hisi_sccl5_ddrc0/rw_chg/ -e hisi_sccl5_ddrc1/act_cmd/ " +
+                    "-e hisi_sccl5_ddrc1/flux_rcmd/ -e hisi_sccl5_ddrc1/flux_rd/ " +
+                    "-e hisi_sccl5_ddrc1/flux_wcmd/ -e hisi_sccl5_ddrc1/flux_wr/ " +
+                    "-e hisi_sccl5_ddrc1/pre_cmd/ -e hisi_sccl5_ddrc1/rnk_chg/ " +
+                    "-e hisi_sccl5_ddrc1/rw_chg/ -e hisi_sccl5_ddrc2/act_cmd/ " +
+                    "-e hisi_sccl5_ddrc2/flux_rcmd/ -e hisi_sccl5_ddrc2/flux_rd/ " +
+                    "-e hisi_sccl5_ddrc2/flux_wcmd/ -e hisi_sccl5_ddrc2/flux_wr/ " +
+                    "-e hisi_sccl5_ddrc2/pre_cmd/ -e hisi_sccl5_ddrc2/rnk_chg/ " +
+                    "-e hisi_sccl5_ddrc2/rw_chg/ -e hisi_sccl5_ddrc3/act_cmd/ " +
+                    "-e hisi_sccl5_ddrc3/flux_rcmd/ -e hisi_sccl5_ddrc3/flux_rd/ " +
+                    "-e  hisi_sccl5_ddrc3/flux_wcmd/ -e hisi_sccl5_ddrc3/flux_wr/ " +
+                    "-e hisi_sccl5_ddrc3/pre_cmd/ -e hisi_sccl5_ddrc3/rnk_chg/ " +
+                    "-e hisi_sccl5_ddrc3/rw_chg/ -e hisi_sccl5_hha6/bi_num/ " +
+                    "-e hisi_sccl5_hha6/edir-hit/ -e hisi_sccl5_hha6/edir-home-migrate/ " +
+                    "-e hisi_sccl5_hha6/edir-lookup/ -e hisi_sccl5_hha6/mediated_num/ " +
+                    "-e hisi_sccl5_hha6/rd_ddr_128b/ -e hisi_sccl5_hha6/rd_ddr_64b/ " +
+                    "-e hisi_sccl5_hha6/rx_ccix/ -e hisi_sccl5_hha6/rx_ops_num/ " +
+                    "-e  hisi_sccl5_hha6/rx_outer/ -e hisi_sccl5_hha6/rx_sccl/ " +
+                   "-e  hisi_sccl5_hha6/rx_snprsp_outer/ -e hisi_sccl5_hha6/rx_snprspdata/ " +
+                    "-e hisi_sccl5_hha6/rx_wbi/ -e hisi_sccl5_hha6/rx_wbip/ " +
+                    "-e  hisi_sccl5_hha6/rx_wtistash/ -e hisi_sccl5_hha6/sdir-hit/ " +
+                    "-e hisi_sccl5_hha6/sdir-home-migrate/ -e hisi_sccl5_hha6/sdir-lookup/ " +
+                    "-e hisi_sccl5_hha6/spill_num/ -e hisi_sccl5_hha6/spill_success/ " +
+                    "-e hisi_sccl5_hha6/tx_snp_ccix/ -e hisi_sccl5_hha6/tx_snp_num/ " +
+                    "-e hisi_sccl5_hha6/tx_snp_outer/ -e hisi_sccl5_hha6/wr_ddr_128b/ " +
+                    "-e  hisi_sccl5_hha6/wr_ddr_64b/ -e  hisi_sccl5_hha7/bi_num/ " +
+                    "-e  hisi_sccl5_hha7/edir-hit/ -e hisi_sccl5_hha7/edir-home-migrate/ " +
+                    "-e hisi_sccl5_hha7/edir-lookup/ -e hisi_sccl5_hha7/mediated_num/ " +
+                    "-e hisi_sccl5_hha7/rd_ddr_128b/ -e hisi_sccl5_hha7/rd_ddr_64b/ " +
+                    "-e hisi_sccl5_hha7/rx_ccix/ -e hisi_sccl5_hha7/rx_ops_num/ " +
+                    "-e hisi_sccl5_hha7/rx_outer/ -e hisi_sccl5_hha7/rx_sccl/ " +
+                    "-e  hisi_sccl5_hha7/rx_snprsp_outer/ -e  hisi_sccl5_hha7/rx_snprspdata/ " +
+                    "-e  hisi_sccl5_hha7/rx_wbi/ -e hisi_sccl5_hha7/rx_wbip/ " +
+                    "-e  hisi_sccl5_hha7/rx_wtistash/ -e hisi_sccl5_hha7/sdir-hit/ " +
+                    "-e hisi_sccl5_hha7/sdir-home-migrate/ -e  hisi_sccl5_hha7/sdir-lookup/ " +
+                    "-e  hisi_sccl5_hha7/spill_num/ -e hisi_sccl5_hha7/spill_success/ " +
+                    "-e  hisi_sccl5_hha7/tx_snp_ccix/ -e hisi_sccl5_hha7/tx_snp_num/ " +
+                    "-e  hisi_sccl5_hha7/tx_snp_outer/ -e  hisi_sccl5_hha7/wr_ddr_128b/ " +
+                    "-e  hisi_sccl5_hha7/wr_ddr_64b/ -e hisi_sccl5_l3c24/back_invalid/ " +
+                    "-e  hisi_sccl5_l3c24/prefetch_drop/ -e  hisi_sccl5_l3c24/rd_cpipe/ " +
+                    "-e hisi_sccl5_l3c24/rd_hit_cpipe/ -e hisi_sccl5_l3c24/rd_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c24/rd_spipe/ -e hisi_sccl5_l3c24/retry_cpu/ " +
+                    "-e  hisi_sccl5_l3c24/retry_ring/ -e hisi_sccl5_l3c24/victim_num/ " +
+                    "-e  hisi_sccl5_l3c24/wr_cpipe/ -e hisi_sccl5_l3c24/wr_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c24/wr_hit_spipe/ -e  hisi_sccl5_l3c24/wr_spipe/ " +
+                    "-e hisi_sccl5_l3c25/back_invalid/ -e  hisi_sccl5_l3c25/prefetch_drop/ " +
+                    "-e hisi_sccl5_l3c25/rd_cpipe/ -e hisi_sccl5_l3c25/rd_hit_cpipe/ " +
+                    "-e hisi_sccl5_l3c25/rd_hit_spipe/ -e hisi_sccl5_l3c25/rd_spipe/ " +
+                    "-e  hisi_sccl5_l3c25/retry_cpu/ -e  hisi_sccl5_l3c25/retry_ring/ " +
+                    "-e  hisi_sccl5_l3c25/victim_num/ -e  hisi_sccl5_l3c25/wr_cpipe/ " +
+                    "-e  hisi_sccl5_l3c25/wr_hit_cpipe/ -e hisi_sccl5_l3c25/wr_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c25/wr_spipe/ -e  hisi_sccl5_l3c26/back_invalid/ " +
+                    "-e hisi_sccl5_l3c26/prefetch_drop/ -e hisi_sccl5_l3c26/rd_cpipe/ " +
+                    "-e  hisi_sccl5_l3c26/rd_hit_cpipe/ -e  hisi_sccl5_l3c26/rd_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c26/rd_spipe/ -e  hisi_sccl5_l3c26/retry_cpu/ " +
+                    "-e  hisi_sccl5_l3c26/retry_ring/ -e  hisi_sccl5_l3c26/victim_num/ " +
+                    "-e hisi_sccl5_l3c26/wr_cpipe/  -e hisi_sccl5_l3c26/wr_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c26/wr_hit_spipe/ -e  hisi_sccl5_l3c26/wr_spipe/ " +
+                    "-e  hisi_sccl5_l3c27/back_invalid/ -e  hisi_sccl5_l3c27/prefetch_drop/ " +
+                    "-e  hisi_sccl5_l3c27/rd_cpipe/ -e hisi_sccl5_l3c27/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c27/rd_hit_spipe/ -e  hisi_sccl5_l3c27/rd_spipe/ " +
+                    "-e  hisi_sccl5_l3c27/retry_cpu/ -e  hisi_sccl5_l3c27/retry_ring/ " +
+                    "-e  hisi_sccl5_l3c27/victim_num/ -e  hisi_sccl5_l3c27/wr_cpipe/ " +
+                    "-e hisi_sccl5_l3c27/wr_hit_cpipe/ -e hisi_sccl5_l3c27/wr_hit_spipe/ " +
+                    "-e hisi_sccl5_l3c27/wr_spipe/ -e  hisi_sccl5_l3c28/back_invalid/ " +
+                    "-e  hisi_sccl5_l3c28/prefetch_drop/ -e  hisi_sccl5_l3c28/rd_cpipe/ " +
+                    "-e  hisi_sccl5_l3c28/rd_hit_cpipe/ -e  hisi_sccl5_l3c28/rd_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c28/rd_spipe/ -e  hisi_sccl5_l3c28/retry_cpu/ " +
+                    "-e  hisi_sccl5_l3c28/retry_ring/ -e  hisi_sccl5_l3c28/victim_num/ " +
+                    "-e  hisi_sccl5_l3c28/wr_cpipe/ -e hisi_sccl5_l3c28/wr_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c28/wr_hit_spipe/ -e  hisi_sccl5_l3c28/wr_spipe/ " +
+                    "-e hisi_sccl5_l3c29/back_invalid/ -e hisi_sccl5_l3c29/prefetch_drop/ " +
+                    "-e hisi_sccl5_l3c29/rd_cpipe/ -e  hisi_sccl5_l3c29/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c29/rd_hit_spipe/ -e hisi_sccl5_l3c29/rd_spipe/ " +
+                    "-e  hisi_sccl5_l3c29/retry_cpu/ -e hisi_sccl5_l3c29/retry_ring/ " +
+                    "-e  hisi_sccl5_l3c29/victim_num/ -e  hisi_sccl5_l3c29/wr_cpipe/ " +
+                    "-e  hisi_sccl5_l3c29/wr_hit_cpipe/ -e  hisi_sccl5_l3c29/wr_hit_spipe/ " +
+                    "-e hisi_sccl5_l3c29/wr_spipe/ -e  hisi_sccl5_l3c30/back_invalid/ " +
+                    "-e  hisi_sccl5_l3c30/prefetch_drop/ -e  hisi_sccl5_l3c30/rd_cpipe/ " +
+                    "-e  hisi_sccl5_l3c30/rd_hit_cpipe/ -e  hisi_sccl5_l3c30/rd_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c30/rd_spipe/ -e  hisi_sccl5_l3c30/retry_cpu/ " +
+                    "-e  hisi_sccl5_l3c30/retry_ring/ -e  hisi_sccl5_l3c30/victim_num/ " +
+                    "-e  hisi_sccl5_l3c30/wr_cpipe/ -e  hisi_sccl5_l3c30/wr_hit_cpipe/ " +
+                    "-e hisi_sccl5_l3c30/wr_hit_spipe/ -e hisi_sccl5_l3c30/wr_spipe/ " +
+                    "-e  hisi_sccl5_l3c31/back_invalid/ -e  hisi_sccl5_l3c31/prefetch_drop/ " +
+                    "-e hisi_sccl5_l3c31/rd_cpipe/ -e  hisi_sccl5_l3c31/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl5_l3c31/rd_hit_spipe/ -e  hisi_sccl5_l3c31/rd_spipe/ " +
+                    "-e  hisi_sccl5_l3c31/retry_cpu/ -e  hisi_sccl5_l3c31/retry_ring/ " +
+                    "-e  hisi_sccl5_l3c31/victim_num/ -e  hisi_sccl5_l3c31/wr_cpipe/ " +
+                    "-e hisi_sccl5_l3c31/wr_hit_cpipe/ -e  hisi_sccl5_l3c31/wr_hit_spipe/ " +
+                    "-e  hisi_sccl5_l3c31/wr_spipe/ -e  hisi_sccl7_ddrc0/act_cmd/ " +
+                    "-e  hisi_sccl7_ddrc0/flux_rcmd/ -e  hisi_sccl7_ddrc0/flux_rd/ " +
+                    "-e  hisi_sccl7_ddrc0/flux_wcmd/ -e hisi_sccl7_ddrc0/flux_wr/ " +
+                    "-e  hisi_sccl7_ddrc0/pre_cmd/  -e hisi_sccl7_ddrc0/rnk_chg/ " +
+                    "-e  hisi_sccl7_ddrc0/rw_chg/ -e hisi_sccl7_ddrc1/act_cmd/ " + 
+                    "-e  hisi_sccl7_ddrc1/flux_rcmd/ -e  hisi_sccl7_ddrc1/flux_rd/ " +
+                    "-e  hisi_sccl7_ddrc1/flux_wcmd/ -e  hisi_sccl7_ddrc1/flux_wr/ " +
+                    "-e  hisi_sccl7_ddrc1/pre_cmd/ -e hisi_sccl7_ddrc1/rnk_chg/ " +
+                    "-e  hisi_sccl7_ddrc1/rw_chg/ -e  hisi_sccl7_ddrc2/act_cmd/ " +
+                    "-e hisi_sccl7_ddrc2/flux_rcmd/ -e  hisi_sccl7_ddrc2/flux_rd/ " +
+                    "-e  hisi_sccl7_ddrc2/flux_wcmd/ -e  hisi_sccl7_ddrc2/flux_wr/ " +
+                    "-e  hisi_sccl7_ddrc2/pre_cmd/ -e  hisi_sccl7_ddrc2/rnk_chg/ " +
+                    "-e hisi_sccl7_ddrc2/rw_chg/ -e  hisi_sccl7_ddrc3/act_cmd/ " +
+                    "-e hisi_sccl7_ddrc3/flux_rcmd/ -e  hisi_sccl7_ddrc3/flux_rd/ " +
+                    "-e hisi_sccl7_ddrc3/flux_wcmd/ -e  hisi_sccl7_ddrc3/flux_wr/ " +
+                    "-e  hisi_sccl7_ddrc3/pre_cmd/ -e  hisi_sccl7_ddrc3/rnk_chg/ " +
+                    "-e  hisi_sccl7_ddrc3/rw_chg/ -e  hisi_sccl7_hha4/bi_num/ " +
+                    "-e  hisi_sccl7_hha4/edir-hit/ -e  hisi_sccl7_hha4/edir-home-migrate/ " +
+                    "-e  hisi_sccl7_hha4/edir-lookup/ -e  hisi_sccl7_hha4/mediated_num/ " +
+                    "-e  hisi_sccl7_hha4/rd_ddr_128b/ -e  hisi_sccl7_hha4/rd_ddr_64b/ " +
+                    "-e  hisi_sccl7_hha4/rx_ccix/ -e  hisi_sccl7_hha4/rx_ops_num/ " +
+                    "-e  hisi_sccl7_hha4/rx_outer/ -e  hisi_sccl7_hha4/rx_sccl/ " +
+                    "-e  hisi_sccl7_hha4/rx_snprsp_outer/ -e  hisi_sccl7_hha4/rx_snprspdata/ " +
+                    "-e  hisi_sccl7_hha4/rx_wbi/ -e  hisi_sccl7_hha4/rx_wbip/ " +
+                    "-e  hisi_sccl7_hha4/rx_wtistash/ -e  hisi_sccl7_hha4/sdir-hit/ " + #
+                    "-e  hisi_sccl7_hha4/sdir-home-migrate/ -e  hisi_sccl7_hha4/sdir-lookup/ " +
+                    "-e  hisi_sccl7_hha4/spill_num/ -e  hisi_sccl7_hha4/spill_success/ " +
+                    "-e  hisi_sccl7_hha4/tx_snp_ccix/ -e  hisi_sccl7_hha4/tx_snp_num/ " +
+                    "-e  hisi_sccl7_hha4/tx_snp_outer/ -e  hisi_sccl7_hha4/wr_ddr_128b/ " +
+                    "-e  hisi_sccl7_hha4/wr_ddr_64b/ -e  hisi_sccl7_hha5/bi_num/ " +
+                    "-e hisi_sccl7_hha5/edir-hit/ -e  hisi_sccl7_hha5/edir-home-migrate/ " +
+                    "-e  hisi_sccl7_hha5/edir-lookup/ -e hisi_sccl7_hha5/mediated_num/ " +
+                    "-e  hisi_sccl7_hha5/rd_ddr_128b/ -e  hisi_sccl7_hha5/rd_ddr_64b/ " +
+                    "-e  hisi_sccl7_hha5/rx_ccix/ -e  hisi_sccl7_hha5/rx_ops_num/ " +
+                    "-e  hisi_sccl7_hha5/rx_outer/ -e  hisi_sccl7_hha5/rx_sccl/ " +
+                    "-e  hisi_sccl7_hha5/rx_snprsp_outer/ -e  hisi_sccl7_hha5/rx_snprspdata/ " +
+                    "-e  hisi_sccl7_hha5/rx_wbi/ -e  hisi_sccl7_hha5/rx_wbip/ " +
+                    "-e  hisi_sccl7_hha5/rx_wtistash/ -e  hisi_sccl7_hha5/sdir-hit/ " +
+                    "-e  hisi_sccl7_hha5/sdir-home-migrate/ -e  hisi_sccl7_hha5/sdir-lookup/ " +
+                    "-e  hisi_sccl7_hha5/spill_num/ -e hisi_sccl7_hha5/spill_success/ " +
+                    "-e  hisi_sccl7_hha5/tx_snp_ccix/ -e  hisi_sccl7_hha5/tx_snp_num/ " +
+                    "-e  hisi_sccl7_hha5/tx_snp_outer/ -e  hisi_sccl7_hha5/wr_ddr_128b/ " +
+                    "-e hisi_sccl7_hha5/wr_ddr_64b/ -e  hisi_sccl7_l3c16/back_invalid/ " +
+                    "-e  hisi_sccl7_l3c16/prefetch_drop/ -e  hisi_sccl7_l3c16/rd_cpipe/ " +
+                    "-e  hisi_sccl7_l3c16/rd_hit_cpipe/ -e  hisi_sccl7_l3c16/rd_hit_spipe/ " +
+                    "-e  hisi_sccl7_l3c16/rd_spipe/ -e  hisi_sccl7_l3c16/retry_cpu/ " +
+                    "-e  hisi_sccl7_l3c16/retry_ring/ -e  hisi_sccl7_l3c16/victim_num/ " +
+                    "-e  hisi_sccl7_l3c16/wr_cpipe/ -e  hisi_sccl7_l3c16/wr_hit_cpipe/ " +
+                    "-e hisi_sccl7_l3c16/wr_hit_spipe/ -e  hisi_sccl7_l3c16/wr_spipe/ " +
+                    "-e  hisi_sccl7_l3c17/back_invalid/ -e  hisi_sccl7_l3c17/prefetch_drop/ " +
+                    "-e  hisi_sccl7_l3c17/rd_cpipe/ -e  hisi_sccl7_l3c17/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c17/rd_hit_spipe/ -e  hisi_sccl7_l3c17/rd_spipe/ " +
+                    "-e  hisi_sccl7_l3c17/retry_cpu/ -e  hisi_sccl7_l3c17/retry_ring/ " +
+                    "-e  hisi_sccl7_l3c17/victim_num/ -e hisi_sccl7_l3c17/wr_cpipe/ " +
+                    "-e  hisi_sccl7_l3c17/wr_hit_cpipe/ -e  hisi_sccl7_l3c17/wr_hit_spipe/ " +
+                    "-e  hisi_sccl7_l3c17/wr_spipe/ -e  hisi_sccl7_l3c18/back_invalid/ " +
+                    "-e  hisi_sccl7_l3c18/prefetch_drop/ -e  hisi_sccl7_l3c18/rd_cpipe/ " +
+                    "-e  hisi_sccl7_l3c18/rd_hit_cpipe/ -e  hisi_sccl7_l3c18/rd_hit_spipe/ " +
+                    "-e  hisi_sccl7_l3c18/rd_spipe/ -e  hisi_sccl7_l3c18/retry_cpu/ " +
+                    "-e  hisi_sccl7_l3c18/retry_ring/ -e  hisi_sccl7_l3c18/victim_num/ " +
+                    "-e  hisi_sccl7_l3c18/wr_cpipe/ -e  hisi_sccl7_l3c18/wr_hit_cpipe/ " +
+                    "-e hisi_sccl7_l3c18/wr_hit_spipe/ -e  hisi_sccl7_l3c18/wr_spipe/ " +
+                    "-e  hisi_sccl7_l3c19/back_invalid/ -e  hisi_sccl7_l3c19/prefetch_drop/ " +
+                    "-e  hisi_sccl7_l3c19/rd_cpipe/ -e  hisi_sccl7_l3c19/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c19/rd_hit_spipe/ -e  hisi_sccl7_l3c19/rd_spipe/ " +
+                    "-e  hisi_sccl7_l3c19/retry_cpu/ -e  hisi_sccl7_l3c19/retry_ring/ " +
+                    "-e  hisi_sccl7_l3c19/victim_num/ -e  hisi_sccl7_l3c19/wr_cpipe/ " +
+                    "-e  hisi_sccl7_l3c19/wr_hit_cpipe/ -e  hisi_sccl7_l3c19/wr_hit_spipe/ " +
+                    "-e  hisi_sccl7_l3c19/wr_spipe/ -e  hisi_sccl7_l3c20/back_invalid/ " +
+                    "-e  hisi_sccl7_l3c20/prefetch_drop/ -e hisi_sccl7_l3c20/rd_cpipe/ " +
+                    "-e  hisi_sccl7_l3c20/rd_hit_cpipe/ -e  hisi_sccl7_l3c20/rd_hit_spipe/ " +
+                    "-e hisi_sccl7_l3c20/rd_spipe/ -e  hisi_sccl7_l3c20/retry_cpu/ " +
+                    "-e  hisi_sccl7_l3c20/retry_ring/ -e  hisi_sccl7_l3c20/victim_num/ " +
+                    "-e  hisi_sccl7_l3c20/wr_cpipe/ -e  hisi_sccl7_l3c20/wr_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c20/wr_hit_spipe/ -e  hisi_sccl7_l3c20/wr_spipe/ " +
+                    "-e  hisi_sccl7_l3c21/back_invalid/ -e  hisi_sccl7_l3c21/prefetch_drop/ " +
+                    "-e  hisi_sccl7_l3c21/rd_cpipe/ -e  hisi_sccl7_l3c21/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c21/rd_hit_spipe/ -e  hisi_sccl7_l3c21/rd_spipe/ " +
+                    "-e  hisi_sccl7_l3c21/retry_cpu/ -e  hisi_sccl7_l3c21/retry_ring/ " +
+                    "-e  hisi_sccl7_l3c21/victim_num/ -e  hisi_sccl7_l3c21/wr_cpipe/ " +
+                    "-e hisi_sccl7_l3c21/wr_hit_cpipe/ -e  hisi_sccl7_l3c21/wr_hit_spipe/ " +
+                    "-e  hisi_sccl7_l3c21/wr_spipe/ -e  hisi_sccl7_l3c22/back_invalid/ " +
+                    "-e  hisi_sccl7_l3c22/prefetch_drop/ -e  hisi_sccl7_l3c22/rd_cpipe/ " +
+                   "-e  hisi_sccl7_l3c22/rd_hit_cpipe/ -e  hisi_sccl7_l3c22/rd_hit_spipe/ " +
+                "-e  hisi_sccl7_l3c22/rd_spipe/ -e hisi_sccl7_l3c22/retry_cpu/ " +
+                   "-e  hisi_sccl7_l3c22/retry_ring/ -e  hisi_sccl7_l3c22/victim_num/ " +
+                    "-e  hisi_sccl7_l3c22/wr_cpipe/ -e  hisi_sccl7_l3c22/wr_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c22/wr_hit_spipe/ -e  hisi_sccl7_l3c22/wr_spipe/ " +
+                    "-e  hisi_sccl7_l3c23/back_invalid/ -e  hisi_sccl7_l3c23/prefetch_drop/ " +
+                    "-e  hisi_sccl7_l3c23/rd_cpipe/ -e hisi_sccl7_l3c23/rd_hit_cpipe/ " +
+                    "-e  hisi_sccl7_l3c23/rd_hit_spipe/ -e  hisi_sccl7_l3c23/rd_spipe/ " +
+                    "-e  hisi_sccl7_l3c23/retry_cpu/ -e  hisi_sccl7_l3c23/retry_ring/ " +
+                    "-e  hisi_sccl7_l3c23/victim_num/ -e  hisi_sccl7_l3c23/wr_cpipe/ " +
+                    "-e  hisi_sccl7_l3c23/wr_hit_cpipe/ -e  hisi_sccl7_l3c23/wr_hit_spipe/ " +
+
+                    "-e  hisi_sccl7_l3c23/wr_spipe/ -e exe_stall_cycle -e fetch_bubble " +
+                    "-e  hit_on_prf -e if_is_stall -e iq_is_empty -e  l1d_cache_inval " +
+                    "-e  l1d_cache_rd -e  l1d_cache_refill_rd -e  l1d_cache_refill_wr " +
+                    "-e  l1d_cache_wb_clean -e  l1d_cache_wb_victim -e  l1d_cache_wr " +
+                    "-e  l1d_tlb_rd -e  l1d_tlb_refill_rd -e  l1d_tlb_refill_wr " +
+                    "-e  l1d_tlb_wr -e  l1i_cache_prf -e  l1i_cache_prf_refill " +
+                    "-e  l2d_cache_inval -e  l2d_cache_rd -e  l2d_cache_refill_rd " +
+                    "-e  l2d_cache_refill_wr -e  l2d_cache_wb_clean -e  l2d_cache_wb_victim " +
+                    "-e  l2d_cache_wr -e  mem_stall_anyload -e  mem_stall_l1miss " +
+                    "-e  mem_stall_l2miss -e  prf_req -e uncore_hisi_ddrc.act_cmd " +
+                    "-e uncore_hisi_ddrc.flux_rcmd -e  uncore_hisi_ddrc.flux_wcmd " +
+                    "-e  uncore_hisi_ddrc.pre_cmd -e  uncore_hisi_ddrc.rnk_chg " +
+                    "-e  uncore_hisi_ddrc.rw_chg -e  uncore_hisi_hha.rd_ddr_128b " +
+                    "-e  uncore_hisi_hha.rd_ddr_64b -e  uncore_hisi_hha.rx_ops_num " +
+                    "-e uncore_hisi_hha.rx_outer -e  uncore_hisi_hha.rx_sccl " +
+                    "-e uncore_hisi_hha.wr_ddr_128b -e uncore_hisi_hha.wr_dr_64b " +
+                    "-e uncore_hisi_l3c.rd_cpipe -e uncore_hisi_l3c.rd_hit_cpipe " +
+                    "-e uncore_hisi_l3c.victim_num -e uncore_hisi_l3c.wr_cpipe " +
+                    "-e uncore_hisi_l3c.wr_hit_cpipe " + #-e rNNN " +
+                    " ./" + b_exe_name + " " + subset[1])
+            in_name = subset[2]
+            split_cmd = shlex.split(cmd)
+            spawn_list.append((split_cmd, in_name, tmp_dir, log_filepath))
+
+    execute(spawn_list, args, sem)
+    return
+
+
 
 def main():
     global count_pids
@@ -1076,6 +1559,9 @@ def main():
         help="simulate target benchmarks normally")
     parser.add_argument("-p", "--profile", action="store_true",
         help="profile benchmarks memory utilization with valgrind and massif")
+    parser.add_argument("-k", "--counters", action="store_true",
+        help="Run benchmark natively registering statistics"+
+            " from hardware counters")
     parser.add_argument("--arch", action="store", type=str, default="aarch64",
         choices=["aarch64","armhf","x86-64"], help="cpu architecture " +
         "(default: %(default)s)")
@@ -1161,6 +1647,7 @@ def main():
     ops.append(args.execute)
     ops.append(args.full)
     ops.append(args.profile)
+    ops.append(args.counters)
 
     # Check if any operation has been selected
     if not True in ops:
@@ -1198,6 +1685,8 @@ def main():
                 full_sim(args, sem)
             elif i == 5:
                 profile(args, sem)
+            elif i == 6:
+                counters(args, sem)
 
             # Print some statistics
             print("OK!\n")

@@ -129,10 +129,11 @@ subset = {
         "503.bwaves_r"       : ("bwaves1", "bwaves2", "bwaves3", "bwaves4"),
         "525.x264_r"         : ("pass1", "pass2", "seek"),
         "557.xz_r"           : ("cld", "cpu2006docs", "combined"),
-        "600.perlbench_s"    : ("checkspam", "diffmail", "splitmail"),
+        "600.perlbench_s"    : ("checkspam","diffmail", "splitmail"),
         "602.gcc_s"          : ("noil", "il1000", "il24000"),
         "603.bwaves_s"       : ("bwaves1", "bwaves2"),
-        "625.x264_s"         : ("pass1", "pass2", "seek"),
+        "625.x264_s"         : ("pass1","pass2", "seek"),
+###        "625.x264_s"         : ("pass2", "seek"),
         "657.xz_s"           : ("cld", "cpu2006docs")
     }
 }
@@ -292,7 +293,7 @@ params = {
                              "cpu2006docs.tar.xz 250 055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 23047774 23513385 6e",
                              "input.combined.xz 250 a841f68f38572a49d86226b7ff5baeb31bd19dc637a922a972b2e6d1257a890f6a544ecab967c313e370478c74f760eb229d4eef8a8d2836d233d3e9dd1430bf 40401484 41217675 7"
                             ),
-        "600.perlbench_s" : ("-I./lib checkspam.pl 2500 5 25 11 150 1 1 1 1", "-I./lib diffmail.pl 4 800 10 17 19 300", "-I./lib splitmail.pl 6400 12 26 16 100 0"),
+        "600.perlbench_s" : ("-I./lib checkspam.pl 2500 5 25 11 150 1 1 1 1","-I./lib diffmail.pl 4 800 10 17 19 300", "-I./lib splitmail.pl 6400 12 26 16 100 0"),
         "602.gcc_s"       : ("gcc-pp.c -O5 -fipa-pta -o gcc-pp.opts-O5_-fipa-pta.s",
                              "gcc-pp.c -O5 -finline-limit=1000 -fselective-scheduling -fselective-scheduling2 -o gcc-pp.opts-O5_-finline-limit_1000_-fselective-scheduling_-fselective-scheduling2.s",
                              "gcc-pp.c -O5 -finline-limit=24000 -fgcse -fgcse-las -fgcse-lm -fgcse-sm -o gcc-pp.opts-O5_-finline-limit_24000_-fgcse_-fgcse-las_-fgcse-lm_-fgcse-sm.s"),
@@ -304,11 +305,12 @@ params = {
 ##        "620.omnetpp_s"   : ("omnetpp.ini"), TODO this file exists as in spec2006
         "623.xalancbmk_s" : ("-v t5.xml xalanc.xsl"),
         "625.x264_s"      : ("--pass 1 --stats x264_stats.log --bitrate 1000 --frames 1000 -o BuckBunny_New.264 BuckBunny.yuv 1280x720",
+        #"625.x264_s"      : (
                              "--pass 2 --stats x264_stats.log --bitrate 1000 --dumpyuv 200 --frames 1000 -o BuckBunny_New.264 BuckBunny.yuv 1280x720",
                              "--seek 500 --dumpyuv 200 --frames 1250 -o BuckBunny_New.264 BuckBunny.yuv 1280x720"
                             ),
         "631.deepsjeng_s" : ("ref.txt"),
-        "638.imagick_s"   : ("-limit disk 0 refspeed_input.tga -resize 817% -rotate -2.76 -shave 540x375 -alpha remove -auto-level -contrast-stretch 1x1% -colorspace Lab -channel R -equalize +channel -colorspace sRGB -define histogram:unique-colors=false -adaptive-blur 0x5 -despeckle -auto-gamma -adaptive-sharpen 55 -enhance -brightness-contrast10x10 -resize 30% refspeed_output.tga"),
+        "638.imagick_s"   : ("-limit disk 0 refspeed_input.tga -resize 817% -rotate -2.76 -shave 540x375 -alpha remove -auto-level -contrast-stretch 1x1% -colorspace Lab -channel R -equalize +channel -colorspace sRGB -define histogram:unique-colors=false -adaptive-blur 0x5 -despeckle -auto-gamma -adaptive-sharpen 55 -enhance -brightness-contrast 10x10 -resize 30% refspeed_output.tga"),
         "641.leela_s"     : ("ref.sgf"),
         "644.nab_s"       : ("3j1n 20140317 220"),
         "648.exchange2_s" : ("6"),

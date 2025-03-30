@@ -3,8 +3,9 @@
 # Tuple: (core type, configuration file, voltage, frequency)
 cpu_models = {
     "aarch64" : {
-        "sc-a53-odn2"   : ("HPI", "se.py", "0.82V", "1.536GHz"),
-        "sc-imec-a15"   : ("CortexA15", "se.py", "1.32V", "2.1GHz")   # TODO: figure out whether this is still ok
+        "taishan"   : ("DerivO3CPU", "se.py", "0.9V", "2.6GHz")
+        #"sc-a53-odn2"   : ("HPI", "se.py", "0.82V", "1.536GHz"),
+       # "sc-imec-a15"   : ("CortexA15", "se.py", "1.32V", "2.1GHz")   # TODO: figure out whether this is still ok
     },
     "armhf" : {
         "sc-imec-a7"    : ("CortexA7",  "se.py", "1.27V", "1.4GHz"),
@@ -24,8 +25,9 @@ cpu_models = {
 # Tuple: (L1D, L1I, L2)
 mem_technologies = {
     "default": {
-        "stt-l2"        : ("sram", "sram", "stt-mram", "none"),
-        "sram-only"     : ("sram", "sram", "sram", "none")
+        "sram-only"     : ("sram", "sram", "sram", "sram")
+        #"stt-l2"        : ("sram", "sram", "stt-mram", "none"),
+        #"sram-only"     : ("sram", "sram", "sram", "none")
     },
     "sc-i7-6700": {
         "stt-l3"        : ("sram", "sram", "sram", "stt-mram"),
@@ -38,9 +40,9 @@ mem_technologies = {
 # ------------
 mem_cases = {
     "default": {
-        "typical",
-        "w-write",
-        "worst"
+        "typical"#,
+        #"w-write",
+       # "worst"
     },
     "sram-only": {
         "typical"
@@ -67,6 +69,13 @@ hwp_config = {
 # Notes: for now SRAM typical = SRAM worst,
 #        for now O3CPU latencies = A15 latencies
 mem_configs = {
+    "taishan" : {    # L3 response latency guessed, L3 size is the average per-core (2MB x 4 = 8MB total) TODO taishan
+        "sram" : {
+            "typical"   : ((4, 4, 2, 2, '64kB', 4), (4, 4, 2, 2, '64kB', 4), (8, 8, 2, 2, '512kB', 8), (37, 37, 37, 27, '1MB', 16))#,
+            #"w-write"   : ((4, 4, 4, 4, '32kB', 8), (4, 4, 4, 4, '32kB', 8), (8, 8, 8, 8, '256kB', 4), (30, 30, 30, 20, '2MB', 16)),
+            #"worst"     : ((4, 4, 4, 4, '32kB', 8), (4, 4, 4, 4, '32kB', 8), (8, 8, 8, 8, '256kB', 4), (30, 30, 30, 20, '2MB', 16))
+        }
+    },
     "sc-i7-6700" : {    # L3 response latency guessed, L3 size is the average per-core (2MB x 4 = 8MB total)
         "sram" : {
             "typical"   : ((4, 4, 4, 4, '32kB', 8), (4, 4, 4, 4, '32kB', 8), (8, 8, 8, 8, '256kB', 4), (30, 30, 30, 20, '2MB', 16)),
