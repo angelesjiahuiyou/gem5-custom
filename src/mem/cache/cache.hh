@@ -186,30 +186,7 @@ class Cache : public BaseCache
      * @return True if the port is waiting for a retry
      */
     bool sendMSHRQueuePacket(MSHR* mshr) override;
-
-    //new
-    bool isL2Cache;
-    uint64_t totalMissShiftCount;  // Miss shift count 
-    uint64_t totalHitShiftCount; // Hit shift count
     
-    /*#ifndef __GEM5_PYTHON__
-      Scalar total_shift_hit;
-      Scalar total_shift_miss;
-    #endif*/
-    statistics::Scalar total_shift_hit;
-    statistics::Scalar total_shift_miss;
-    statistics::Scalar test;
-
-    //void printShiftStats();
-    //void calculateHitShift(PacketPtr pkt, CacheBlk *blk);
-    void initRTM(int num_tracks, int track_length);
-    void updateTrackPosition(int track_id, int new_position);
-    void printShiftStats();
-    int computeTargetPosition(CacheBlk *blk) const;
-    int computeReplacementPosition(Addr addr);
-    //void printShiftStats() const;
-    //~Cache();
-    virtual void regStats() override;
 
 };
 

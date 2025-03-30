@@ -94,6 +94,11 @@ struct BaseCacheParams;
 class BaseCache : public ClockedObject
 {
   protected:
+
+    //new
+    unsigned long totalHitShiftCount;
+    unsigned long totalMissShiftCount;
+
     /**
      * Indexes to enumerate the MSHR queues.
      */
@@ -333,6 +338,8 @@ class BaseCache : public ClockedObject
 
     CpuSidePort cpuSidePort;
     MemSidePort memSidePort;
+    //new
+    std::string cacheName;
 
   protected:
 
@@ -473,8 +480,9 @@ class BaseCache : public ClockedObject
      * @param lookup_lat Latency of the respective tag lookup.
      * @return The number of ticks that pass due to a block access.
      */
+    //change
     Cycles calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
-                                  const Cycles lookup_lat) const;
+                                  const Cycles lookup_lat, PacketPtr pkt) const;
 
     /**
      * Does all the processing necessary to perform the provided request.
@@ -1140,6 +1148,12 @@ class BaseCache : public ClockedObject
 
         /** Per-command statistics */
         std::vector<std::unique_ptr<CacheCmdStats>> cmd;
+
+        //new
+        statistics::Scalar hitTotal;
+        statistics::Scalar missTotal;
+        statistics::Scalar readLatencyTotal;
+        statistics::Scalar writeLatencyTotal;
     } stats;
 
     /** Registers probes. */

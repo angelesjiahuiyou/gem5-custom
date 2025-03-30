@@ -65,9 +65,21 @@ BaseTags::BaseTags(const Params &p)
       warmupBound((p.warmup_percentage/100.0) * (p.size / p.block_size)),
       warmedUp(false), numBlocks(p.size / p.block_size),
       dataBlks(new uint8_t[p.size]), // Allocate data storage in one big chunk
-      stats(*this)
+      stats(*this),
+      //new
+      rtmSetPointer(indexingPolicy->getNumSets(), 0),// ini esch set pointer = 0
+      numSets(indexingPolicy->getNumSets())
+      //
+      
 {
     registerExitCallback([this]() { cleanupRefs(); });
+    if (!indexingPolicy) {
+        std::cerr << "ERROR: indexingPolicy is NULL in BaseTags constructor!" << std::endl;
+        abort(); 
+    }
+    //test
+    //std::cout << "BaseTags constructor: indexingPolicy is initialized!" << std::endl;
+    //std::cout << "indexingPolicy->getNumSets() = " << indexingPolicy->getNumSets() << std::endl;
 }
 
 ReplaceableEntry*
@@ -102,6 +114,17 @@ void
 BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     assert(!blk->isValid());
+    // new：get setId and Way
+    
+    //std::cout << "BaseIndexingPolicy numSets = " << numSets << std::endl;
+    unsigned set = (pkt->getAddr() / blkSize) % numSets;  
+    unsigned way = blk->getWay(); 
+
+    rtmSetPointer[set] = way;
+
+    /*std::cout << "Insert Block: Set = " << set 
+    << ", Way = " << way 
+    << ", New Exit Pointer = " << rtmSetPointer[set] << std::endl;*/
 
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
@@ -298,5 +321,9 @@ BaseTags::BaseTagStats::preDumpStats()
 
     tags.computeStats();
 }
+
+//new
+uint32_t
+BaseTags::getNumSet() const { return numSets; }
 
 } // namespace gem5

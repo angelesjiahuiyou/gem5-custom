@@ -77,6 +77,9 @@ BaseIndexingPolicy::getEntry(const uint32_t set, const uint32_t way) const
     return sets[set][way];
 }
 
+uint32_t
+gem5::BaseIndexingPolicy::getNumSets() const { return numSets; }
+
 void
 BaseIndexingPolicy::setEntry(ReplaceableEntry* entry, const uint64_t index)
 {

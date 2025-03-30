@@ -79,8 +79,11 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
 
 BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : ClockedObject(p),
+      totalHitShiftCount(0),
+      totalMissShiftCount(0),
       cpuSidePort (p.name + ".cpu_side_port", *this, "CpuSidePort"),
       memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
+      cacheName(p.name),
       mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name),
       writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
@@ -135,6 +138,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+    std::cout << "[DEBUG] Cache Name: " << p.name << std::endl;
 }
 
 BaseCache::~BaseCache()
@@ -1192,9 +1196,10 @@ BaseCache::calculateTagOnlyLatency(const uint32_t delay,
     return ticksToCycles(delay) + lookup_lat;
 }
 
+//change
 Cycles
 BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
-                                  const Cycles lookup_lat) const
+                                  const Cycles lookup_lat, PacketPtr pkt) const
 {
     Cycles lat(0);
 
@@ -1202,12 +1207,20 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
         // As soon as the access arrives, for sequential accesses first access
         // tags, then the data entry. In the case of parallel accesses the
         // latency is dictated by the slowest of tag and data latencies.
-        if (sequentialAccess) {
-            lat = ticksToCycles(delay) + lookup_lat + dataLatency;
-        } else {
-            lat = ticksToCycles(delay) + std::max(lookup_lat, dataLatency);
+        //change
+        if(cacheName == "system.l2cache"){
+            if(pkt->isRead()){
+                lat = ticksToCycles(delay) + lookup_lat + Cycles(5);
+            }else{
+                lat = ticksToCycles(delay) + std::max(lookup_lat, Cycles(8));
+            }
+        }else{
+            if (sequentialAccess) {
+                lat = ticksToCycles(delay) + lookup_lat + dataLatency;
+            } else {
+                lat = ticksToCycles(delay) + std::max(lookup_lat, dataLatency);
+            }
         }
-
         // Check if the block to be accessed is available. If not, apply the
         // access latency on top of when the block is ready to be accessed.
         const Tick tick = curTick() + delay;
@@ -1241,8 +1254,32 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt, tag_latency);
 
+
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
+
+    //change 
+    if (cacheName == "system.l2cache") {  
+        Addr blockAddr = pkt->getAddr();
+        int set_index = (blockAddr / blkSize) % tags->getNumSet();  // Index set
+        int new_position = (blockAddr / blkSize) % 512; // 计算 block 在 RTM 里的偏移
+
+        // **使用 rtmSetPointer**
+        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
+
+        if (blk) { // **Hit Case**
+            //totalHitShiftCount += shift_count; // 记录 hit shift 总次数
+            stats.hitTotal += shift_count;   
+            // **计算 RTM 读取 latency**
+            Cycles rtm_read_latency = Cycles(5 + shift_count * 2);
+            stats.readLatencyTotal += rtm_read_latency;
+        }
+
+        // 更新 set 在 RTM 中的当前位置
+        tags->setRtmSetPointer(set_index, new_position);
+
+        
+    }
 
     if (pkt->req->isCacheMaintenance()) {
         // A cache maintenance operation is always forwarded to the
@@ -1461,8 +1498,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         incHitCount(pkt);
 
         // Calculate access latency based on the need to access the data array
+        //change
         if (pkt->isRead()) {
-            lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+            //change
+            lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency, pkt);
 
             // When a block is compressed, it must first be decompressed
             // before being read. This adds to the access latency.
@@ -1483,8 +1522,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // or have block but need writable
 
     incMissCount(pkt);
-
-    lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+    //change
+    lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency, pkt);
 
     if (!blk && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
@@ -1655,6 +1694,26 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     if (compressor) {
         compressor->setSizeBits(victim, blk_size_bits);
         compressor->setDecompressionLatency(victim, decompression_lat);
+    }
+
+    //change
+    // **在这里计算 Miss Shift**
+    if(cacheName == "system.l2cache"){
+        Addr blockAddr = pkt->getAddr();
+        int set_index = (blockAddr / blkSize) % tags->getNumSet();  // 计算 set index
+        int new_position = (blockAddr / blkSize) % 512;  // 计算 block 在 RTM 里的偏移
+
+        // **计算 shift**
+        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
+        //totalMissShiftCount += shift_count;
+        stats.missTotal += shift_count;
+
+        // **计算 RTM 写入 latency**
+        Cycles rtm_write_latency = Cycles(9 + shift_count * 2);
+        stats.writeLatencyTotal += rtm_write_latency;
+
+        // **更新 RTM set 位置**
+        tags->setRtmSetPointer(set_index, new_position);
     }
 
     return victim;
@@ -2273,7 +2332,16 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
              "number of data expansions"),
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
-    cmd(MemCmd::NUM_MEM_CMDS)
+    cmd(MemCmd::NUM_MEM_CMDS),
+    //new
+    ADD_STAT(hitTotal, statistics::units::Count::get(),
+            "Total number of shifts for hits lalala"),
+    ADD_STAT(missTotal, statistics::units::Count::get(),
+            "Total number of shifts for misses"),
+    ADD_STAT(readLatencyTotal, statistics::units::Cycle::get(),
+                    "Total RTM read latency"),
+    ADD_STAT(writeLatencyTotal, statistics::units::Cycle::get(),
+                    "Total RTM write latency")
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
         cmd[idx].reset(new CacheCmdStats(c, MemCmd(idx).toString()));
@@ -2502,6 +2570,19 @@ BaseCache::CacheStats::regStats()
 
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
+
+    //new
+    // 绑定 RTM shift 统计变量
+    hitTotal
+        .flags(total | nozero | nonan);
+
+    missTotal
+        .flags(total | nozero | nonan);
+
+    
+    readLatencyTotal.flags(total | nozero | nonan);
+    //readLatencyTotal = 18;
+    writeLatencyTotal.flags(total | nozero | nonan);
 }
 
 void

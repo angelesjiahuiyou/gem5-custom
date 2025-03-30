@@ -107,6 +107,7 @@ class CacheBlk : public TaggedEntry
      * meaningful if the block is valid.
      */
     Tick whenReady = 0;
+    
 
   protected:
     /**

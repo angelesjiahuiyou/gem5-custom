@@ -97,6 +97,8 @@ class BaseIndexingPolicy : public SimObject
     const int tagShift;
 
   public:
+    
+    uint32_t getNumSets() const;
     /**
      * Convenience typedef.
      */

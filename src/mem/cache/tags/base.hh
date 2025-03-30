@@ -73,6 +73,8 @@ class ReplaceableEntry;
 class BaseTags : public ClockedObject
 {
   protected:
+    
+
     /** The block size of the cache. */
     const unsigned blkSize;
     /** Mask out all bits that aren't part of the block offset. */
@@ -157,6 +159,12 @@ class BaseTags : public ClockedObject
         statistics::Scalar dataAccesses;
     } stats;
 
+    //new
+    /** Pointer for each set, representing the current RTM DBC exit location */
+    std::vector<int> rtmSetPointer;
+    unsigned numSets;
+
+
   public:
     typedef BaseTagsParams Params;
     BaseTags(const Params &p);
@@ -165,6 +173,19 @@ class BaseTags : public ClockedObject
      * Destructor.
      */
     virtual ~BaseTags() {}
+
+    //new
+    unsigned getNumSet() const;
+
+    // get set_i position
+    int getRtmSetPointer(int set_index) const {
+        return rtmSetPointer[set_index];
+    }
+
+    // set set_i position
+    void setRtmSetPointer(int set_index, int new_position) {
+        rtmSetPointer[set_index] = new_position;
+    }
 
     /**
      * Initialize blocks. Must be overriden by every subclass that uses
@@ -363,6 +384,8 @@ class BaseTags : public ClockedObject
      * @param blk The input block
      */
     void computeStatsVisitor(CacheBlk &blk);
+
+    
 };
 
 } // namespace gem5
