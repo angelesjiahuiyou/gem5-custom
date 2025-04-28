@@ -114,6 +114,9 @@ class BaseSetAssoc : public BaseTags
      */
     void invalidate(CacheBlk *blk) override;
 
+    //new
+    CacheBlk* findBlockWithWay(Addr addr, bool is_secure, int& way_index) const;
+
     /**
      * Access block and update replacement data. May not succeed, in which case
      * nullptr is returned. This has all the implications of a cache access and

@@ -62,6 +62,9 @@
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/cache/tags/base_set_assoc.hh"
+
 
 namespace gem5
 {
@@ -1259,26 +1262,31 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk ? "hit " + blk->print() : "miss");
 
     //change 
-    if (cacheName == "system.l2cache") {  
+    if (cacheName == "system.l2cache" && blk) {  
         Addr blockAddr = pkt->getAddr();
         int set_index = (blockAddr / blkSize) % tags->getNumSet();  // Index set
-        int new_position = (blockAddr / blkSize) % 512; // 计算 block 在 RTM 里的偏移
-
+        //int new_position = (blockAddr / blkSize) % 512; // 计算 block 在 RTM 里的偏移
+        BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
+        const auto possibleEntries = my_tags->indexingPolicy->getPossibleEntries(blockAddr);
+        int new_position = -1;
+        bool is_secure = pkt->isSecure();
+        CacheBlk* blk_aux = my_tags->findBlockWithWay(blockAddr, is_secure, new_position);
+        
         // **使用 rtmSetPointer**
         int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
+        std::cout << "new position " << new_position << "old position = " << tags->getRtmSetPointer(set_index) << std::endl;
 
-        if (blk) { // **Hit Case**
-            //totalHitShiftCount += shift_count; // 记录 hit shift 总次数
-            stats.hitTotal += shift_count;   
-            // **计算 RTM 读取 latency**
-            Cycles rtm_read_latency = Cycles(5 + shift_count * 2);
-            stats.readLatencyTotal += rtm_read_latency;
-        }
+        //std::cout << "hitTotal before = " << stats.hitTotal.value() << ", shift = " << shift_count << std::endl;
+        stats.hitTotal += shift_count;
+        //std::cout << "hitTotal after = " << stats.hitTotal.value() << std::endl;
+        //std::cout << "hitTotal after = " << shift_count << std::endl;
+        // **计算 RTM 读取 latency**
+        Cycles rtm_read_latency = Cycles(5 + shift_count * 2);
+        stats.readLatencyTotal += rtm_read_latency;
+
 
         // 更新 set 在 RTM 中的当前位置
         tags->setRtmSetPointer(set_index, new_position);
-
-        
     }
 
     if (pkt->req->isCacheMaintenance()) {
@@ -1689,6 +1697,31 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Insert new block at victimized entry
     tags->insertBlock(pkt, victim);
 
+    //change
+    if(cacheName == "system.l2cache"){
+        Addr blockAddr = pkt->getAddr();
+        bool is_secure = pkt->isSecure();
+
+        int set_index = (blockAddr / blkSize) % tags->getNumSet();  // calcular set index
+        //casting
+        BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
+        int new_position1 = -1;
+        //find new way
+        CacheBlk* blk_aux1 = my_tags->findBlockWithWay(blockAddr, is_secure, new_position1);
+
+        // **calcular shift**
+        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position1);
+        //totalMissShiftCount += shift_count;
+        stats.missTotal += shift_count;
+
+        // **calucular write latency**
+        Cycles rtm_write_latency = Cycles(8 + shift_count * 2);
+        stats.writeLatencyTotal += rtm_write_latency;
+
+        // **update RTM set position**
+        tags->setRtmSetPointer(set_index, new_position1);
+    }
+
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
     if (compressor) {
@@ -1696,25 +1729,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         compressor->setDecompressionLatency(victim, decompression_lat);
     }
 
-    //change
-    // **在这里计算 Miss Shift**
-    if(cacheName == "system.l2cache"){
-        Addr blockAddr = pkt->getAddr();
-        int set_index = (blockAddr / blkSize) % tags->getNumSet();  // 计算 set index
-        int new_position = (blockAddr / blkSize) % 512;  // 计算 block 在 RTM 里的偏移
-
-        // **计算 shift**
-        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
-        //totalMissShiftCount += shift_count;
-        stats.missTotal += shift_count;
-
-        // **计算 RTM 写入 latency**
-        Cycles rtm_write_latency = Cycles(9 + shift_count * 2);
-        stats.writeLatencyTotal += rtm_write_latency;
-
-        // **更新 RTM set 位置**
-        tags->setRtmSetPointer(set_index, new_position);
-    }
+    
 
     return victim;
 }
@@ -2573,15 +2588,9 @@ BaseCache::CacheStats::regStats()
 
     //new
     // 绑定 RTM shift 统计变量
-    hitTotal
-        .flags(total | nozero | nonan);
-
-    missTotal
-        .flags(total | nozero | nonan);
-
-    
+    hitTotal.flags(total | nozero | nonan);
+    missTotal.flags(total | nozero | nonan);
     readLatencyTotal.flags(total | nozero | nonan);
-    //readLatencyTotal = 18;
     writeLatencyTotal.flags(total | nozero | nonan);
 }
 

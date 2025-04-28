@@ -1,4 +1,4 @@
-from m5.objects import Cache, BaseTags, RRIPRP, SetAssociative
+from m5.objects import Cache, BaseTags, RRIPRP, SetAssociative, BaseSetAssoc
 
 # L1
 class L1Cache(Cache):
@@ -45,7 +45,7 @@ class L2Cache(Cache):
     tgts_per_mshr = 12
     replacement_policy = RRIPRP()  
     indexing_policy = SetAssociative(entry_size=64)
-    tags_class = BaseTags
+    tags_class = BaseTags  
 
     def connectCPUSideBus(self, bus):
         self.cpu_side = bus.mem_side_ports

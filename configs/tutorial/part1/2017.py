@@ -67,9 +67,6 @@ system.workload = SEWorkload.init_compatible(binary)
 root = Root(full_system=False, system=system)
 m5.instantiate()
 
-system.cpu.max_insts_any_thread = 1000
-
-
 print("Beginning simulation!")
 exit_event = m5.simulate()
 

@@ -109,4 +109,24 @@ BaseSetAssoc::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
     replacementPolicy->reset(dest_blk->replacementData);
 }
 
+//new
+CacheBlk*
+BaseSetAssoc::findBlockWithWay(Addr addr, bool is_secure, int& way_index) const
+{
+    const auto possibleEntries = indexingPolicy->getPossibleEntries(addr);
+
+    int idx = 0;
+    for (auto& entry : possibleEntries) {
+        CacheBlk* blk = static_cast<CacheBlk*>(entry);
+        if (blk->isValid() && blk->matchTag(addr, is_secure)) {
+            way_index = idx;
+            return blk;
+        }
+        idx++;
+    }
+
+    way_index = -1;
+    return nullptr;
+}
+
 } // namespace gem5
