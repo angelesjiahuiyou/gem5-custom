@@ -1267,7 +1267,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         int set_index = (blockAddr / blkSize) % tags->getNumSet();  // Index set
         //int new_position = (blockAddr / blkSize) % 512; // 计算 block 在 RTM 里的偏移
         BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
-        const auto possibleEntries = my_tags->indexingPolicy->getPossibleEntries(blockAddr);
         int new_position = -1;
         bool is_secure = pkt->isSecure();
         CacheBlk* blk_aux = my_tags->findBlockWithWay(blockAddr, is_secure, new_position);
