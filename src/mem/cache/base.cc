@@ -1265,24 +1265,28 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     if (cacheName == "system.l2cache" && blk) {  
         Addr blockAddr = pkt->getAddr();
         int set_index = (blockAddr / blkSize) % tags->getNumSet();  // Index set
-        //int new_position = (blockAddr / blkSize) % 512; // 计算 block 在 RTM 里的偏移
-        BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
-        int new_position = -1;
-        bool is_secure = pkt->isSecure();
-        CacheBlk* blk_aux = my_tags->findBlockWithWay(blockAddr, is_secure, new_position);
         
-        // **使用 rtmSetPointer**
+        BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
+        auto entries = my_tags->getPossibleEntries(pkt->getAddr());
+
+        int new_position = -1, idx = 0;
+        for (auto e : entries) {
+            if (e == blk) {
+                new_position = idx;
+                break;
+            }
+            idx++;
+        }
+
+        assert(new_position != -1);
+        
         int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
         std::cout << "new position " << new_position << "old position = " << tags->getRtmSetPointer(set_index) << std::endl;
-
         //std::cout << "hitTotal before = " << stats.hitTotal.value() << ", shift = " << shift_count << std::endl;
         stats.hitTotal += shift_count;
-        //std::cout << "hitTotal after = " << stats.hitTotal.value() << std::endl;
-        //std::cout << "hitTotal after = " << shift_count << std::endl;
         // **计算 RTM 读取 latency**
         Cycles rtm_read_latency = Cycles(5 + shift_count * 2);
         stats.readLatencyTotal += rtm_read_latency;
-
 
         // 更新 set 在 RTM 中的当前位置
         tags->setRtmSetPointer(set_index, new_position);
@@ -1699,17 +1703,25 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     //change
     if(cacheName == "system.l2cache"){
         Addr blockAddr = pkt->getAddr();
-        bool is_secure = pkt->isSecure();
 
         int set_index = (blockAddr / blkSize) % tags->getNumSet();  // calcular set index
-        //casting
+
         BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
-        int new_position1 = -1;
-        //find new way
-        CacheBlk* blk_aux1 = my_tags->findBlockWithWay(blockAddr, is_secure, new_position1);
+        auto entries = my_tags->getPossibleEntries(pkt->getAddr());
+
+        int new_position = -1, idx = 0;
+        for (auto e : entries) {
+            if (e == victim) {
+                new_position = idx;
+                break;
+            }
+            idx++;
+        }
+
+        assert(new_position != -1);
 
         // **calcular shift**
-        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position1);
+        int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
         //totalMissShiftCount += shift_count;
         stats.missTotal += shift_count;
 
@@ -1718,7 +1730,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         stats.writeLatencyTotal += rtm_write_latency;
 
         // **update RTM set position**
-        tags->setRtmSetPointer(set_index, new_position1);
+        tags->setRtmSetPointer(set_index, new_position);
     }
 
     // If using a compressor, set compression data. This must be done after

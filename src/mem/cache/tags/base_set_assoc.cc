@@ -129,4 +129,11 @@ BaseSetAssoc::findBlockWithWay(Addr addr, bool is_secure, int& way_index) const
     return nullptr;
 }
 
+std::vector<ReplaceableEntry*>
+BaseSetAssoc::getPossibleEntries(Addr addr) const
+{
+    return indexingPolicy->getPossibleEntries(addr);
+}
+
+
 } // namespace gem5

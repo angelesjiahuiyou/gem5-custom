@@ -116,6 +116,8 @@ class BaseSetAssoc : public BaseTags
 
     //new
     CacheBlk* findBlockWithWay(Addr addr, bool is_secure, int& way_index) const;
+    std::vector<ReplaceableEntry*> getPossibleEntries(Addr addr) const;
+
 
     /**
      * Access block and update replacement data. May not succeed, in which case
