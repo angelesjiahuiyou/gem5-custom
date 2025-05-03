@@ -1281,7 +1281,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         assert(new_position != -1);
         
         int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
-        std::cout << "new position " << new_position << "old position = " << tags->getRtmSetPointer(set_index) << std::endl;
+        //std::cout << "new position " << new_position << "old position = " << tags->getRtmSetPointer(set_index) << std::endl;
         //std::cout << "hitTotal before = " << stats.hitTotal.value() << ", shift = " << shift_count << std::endl;
         stats.hitTotal += shift_count;
         // **计算 RTM 读取 latency**
