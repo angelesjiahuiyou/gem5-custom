@@ -1692,22 +1692,15 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Print victim block's information
     DPRINTF(CacheRepl, "Replacement victim: %s\n", victim->print());
 
-    // Try to evict blocks; if it fails, give up on allocation
-    if (!handleEvictions(evict_blks, writebacks)) {
-        return nullptr;
-    }
-
-    // Insert new block at victimized entry
-    tags->insertBlock(pkt, victim);
+    BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
+    auto entries = my_tags->getPossibleEntries(pkt->getAddr());
 
     //change
     if(cacheName == "system.l2cache"){
         Addr blockAddr = pkt->getAddr();
 
         int set_index = (blockAddr / blkSize) % tags->getNumSet();  // calcular set index
-
-        BaseSetAssoc* my_tags = dynamic_cast<BaseSetAssoc*>(tags);
-        auto entries = my_tags->getPossibleEntries(pkt->getAddr());
+        //std::cout <<"old position = " << tags->getRtmSetPointer(set_index) << std::endl;
 
         int new_position = -1, idx = 0;
         for (auto e : entries) {
@@ -1722,6 +1715,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
         // **calcular shift**
         int shift_count = abs(tags->getRtmSetPointer(set_index) - new_position);
+        //std::cout << "new position " << new_position << "old position = " << tags->getRtmSetPointer(set_index) << std::endl;
         //totalMissShiftCount += shift_count;
         stats.missTotal += shift_count;
 
@@ -1732,6 +1726,16 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         // **update RTM set position**
         tags->setRtmSetPointer(set_index, new_position);
     }
+
+    // Try to evict blocks; if it fails, give up on allocation
+    if (!handleEvictions(evict_blks, writebacks)) {
+        return nullptr;
+    }
+
+    // Insert new block at victimized entry
+    tags->insertBlock(pkt, victim);
+
+    
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
